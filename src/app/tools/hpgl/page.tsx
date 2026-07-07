@@ -12,16 +12,29 @@ import { hpglApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HPGLPath {
-  type: 'line' | 'arc' | 'circle';
+  type: 'polyline' | 'arc' | 'circle' | 'rectangle' | 'label';
   points?: [number, number][];
   cx?: number; cy?: number; radius?: number;
   startAngle?: number; endAngle?: number;
+  pen?: number;
+  lineType?: number;
+  penWidth?: number;
+  closed?: boolean;
+  text?: string;
+  x?: number; y?: number;
 }
 
 interface HPGLData {
   paths: HPGLPath[];
-  meta: { total_paths: number; lines: number; arcs: number; circles: number; dimensions: { width: number; height: number } };
+  meta: {
+    total_paths: number; polylines: number; arcs: number; circles: number;
+    rectangles: number; labels: number;
+    dimensions: { width: number; height: number };
+    pens: number[];
+  };
 }
+
+const APP_VERSION = '1.0.0';
 
 export default function HPGLViewerPage() {
   const router = useRouter();
@@ -54,21 +67,57 @@ export default function HPGLViewerPage() {
     } catch {
       const text = await file.text();
       const paths: HPGLPath[] = [];
-      let cx = 0, cy = 0, penDown = false;
-      const lines = Array.from(text.matchAll(/(PU|PD|PA|PR|AA|CI|SP)\s*((?:-?\d+(?:\.\d+)?\s*,?\s*)*)/gi));
+      let cx = 0, cy = 0, penDown = false, currentPen = 0, currentPoly: HPGLPath | null = null;
+      const flush = () => {
+        if (currentPoly && currentPoly.points!.length >= 2) {
+          const pts = currentPoly.points!;
+          const first = pts[0], last = pts[pts.length - 1];
+          currentPoly.closed = Math.abs(first[0] - last[0]) < 0.5 && Math.abs(first[1] - last[1]) < 0.5;
+          paths.push(currentPoly);
+        }
+        currentPoly = null;
+      };
+      const lines = Array.from(text.matchAll(/(IN|PU|PD|PA|PR|AA|CI|SP|LT)\s*((?:-?\d+(?:\.\d+)?(?:\s*,?\s*-?\d+(?:\.\d+)?)*)?)/gi));
       for (const m of lines) {
         const cmd = m[1].toUpperCase();
         const nums = m[2].trim().split(/[\s,]+/).filter(Boolean).map(Number);
-        if (cmd === 'PU' && nums.length >= 2) { cx = nums[0]; cy = nums[1]; penDown = false; }
-        else if (cmd === 'PD' && nums.length >= 2) {
-          if (!penDown) { penDown = true; cx = nums[0]; cy = nums[1]; }
-          else { paths.push({ type: 'line', points: [[cx, cy], [nums[0], nums[1]]] }); cx = nums[0]; cy = nums[1]; }
+        if (cmd === 'IN') { flush(); cx = cy = 0; penDown = false; currentPen = 0; }
+        else if (cmd === 'SP' && nums.length >= 1) { flush(); currentPen = Math.abs(nums[0]) % 12; }
+        else if (cmd === 'LT' && nums.length >= 1) { /* line type tracking */ }
+        else if (cmd === 'PU') {
+          flush(); penDown = false;
+          if (nums.length >= 2) { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; }
         }
-        else if (cmd === 'PA' && nums.length >= 2) { cx = nums[0]; cy = nums[1]; }
-        else if (cmd === 'CI' && nums.length >= 1) { paths.push({ type: 'circle', cx, cy, radius: nums[0] }); }
-        else if (cmd === 'AA' && nums.length >= 3) { paths.push({ type: 'arc', cx: nums[0], cy: nums[1], radius: Math.abs(nums[2]), startAngle: 0, endAngle: 360 }); }
+        else if (cmd === 'PD') {
+          if (nums.length >= 2) {
+            if (!penDown) { penDown = true; currentPoly = { type: 'polyline', points: [[cx, cy]], pen: currentPen, lineType: 0, penWidth: 0.25, closed: false }; }
+            for (let i = 0; i < nums.length; i += 2) {
+              const x = nums[i], y = nums[i + 1];
+              if (currentPoly) currentPoly.points!.push([x, y]);
+              cx = x; cy = y;
+            }
+          } else { penDown = true; if (!currentPoly) currentPoly = { type: 'polyline', points: [[cx, cy]], pen: currentPen, lineType: 0, penWidth: 0.25, closed: false }; }
+        }
+        else if (cmd === 'PA' && nums.length >= 2) {
+          if (penDown) {
+            if (!currentPoly) currentPoly = { type: 'polyline', points: [[cx, cy]], pen: currentPen, lineType: 0, penWidth: 0.25, closed: false };
+            for (let i = 0; i < nums.length; i += 2) { const x = nums[i], y = nums[i + 1]; currentPoly.points!.push([x, y]); cx = x; cy = y; }
+          } else { cx = nums[nums.length - 2]; cy = nums[nums.length - 1]; }
+        }
+        else if (cmd === 'PR' && nums.length >= 2) {
+          const dx = nums[nums.length - 2], dy = nums[nums.length - 1];
+          if (penDown) {
+            if (!currentPoly) currentPoly = { type: 'polyline', points: [[cx, cy]], pen: currentPen, lineType: 0, penWidth: 0.25, closed: false };
+            currentPoly.points!.push([cx + dx, cy + dy]);
+          }
+          cx += dx; cy += dy;
+        }
+        else if (cmd === 'CI' && nums.length >= 1) { flush(); paths.push({ type: 'circle', cx, cy, radius: Math.abs(nums[0]), pen: currentPen, lineType: 0, penWidth: 0.25, closed: true }); }
+        else if (cmd === 'AA' && nums.length >= 3) { flush(); paths.push({ type: 'arc', cx: nums[0], cy: nums[1], radius: Math.abs(nums[2]), startAngle: 0, endAngle: 360, pen: currentPen, lineType: 0, penWidth: 0.25 }); }
       }
-      setHpglData({ paths, meta: { total_paths: paths.length, lines: paths.filter(p => p.type === 'line').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, dimensions: { width: 400, height: 300 } } });
+      flush();
+      const pens = paths.reduce<number[]>((acc, p) => { const pen = p.pen ?? 0; if (!acc.includes(pen)) acc.push(pen); return acc; }, []);
+      setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: paths.filter(p => p.type === 'label').length, dimensions: { width: 400, height: 300 }, pens } });
     }
   }, []);
 

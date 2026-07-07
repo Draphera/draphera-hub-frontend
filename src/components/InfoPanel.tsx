@@ -3,8 +3,14 @@
 import { useTranslation } from '@/lib/i18n';
 
 interface HPGLMeta {
-  total_paths: number; lines: number; arcs: number; circles: number;
+  total_paths: number;
+  polylines: number;
+  arcs: number;
+  circles: number;
+  rectangles: number;
+  labels: number;
   dimensions: { width: number; height: number };
+  pens: number[];
 }
 
 interface Props {
@@ -13,6 +19,8 @@ interface Props {
   viewMode: 'outline' | 'tack' | 'measurement';
   onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
 }
+
+const APP_VERSION = '1.0.0';
 
 export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange }: Props) {
   const { t } = useTranslation();
@@ -30,9 +38,12 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange }
             { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]' },
             { label: t('info.dimensions'), value: meta ? `${meta.dimensions.width.toFixed(1)} \u00d7 ${meta.dimensions.height.toFixed(1)}` : '\u2014' },
             { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014' },
-            { label: t('info.lines'), value: meta?.lines ?? '\u2014' },
+            { label: 'Polylines', value: meta?.polylines ?? '\u2014' },
             { label: t('info.arcs'), value: meta?.arcs ?? '\u2014' },
             { label: t('info.circles'), value: meta?.circles ?? '\u2014' },
+            { label: 'Rettangoli', value: meta?.rectangles ?? '\u2014' },
+            { label: 'Etichette', value: meta?.labels ?? '\u2014' },
+            { label: 'Penne', value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '\u2014' },
           ].map(f => (
             <div key={f.label} className="flex justify-between py-1.5 border-b border-drapera-border/40">
               <span className="tech-label">{f.label}</span>
@@ -64,6 +75,10 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange }
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="mt-6 pt-4 border-t border-drapera-border/30">
+          <p className="text-[10px] text-gray-600 text-center">Draphera Hub HPGL Viewer v{APP_VERSION}</p>
         </div>
       </div>
     </aside>

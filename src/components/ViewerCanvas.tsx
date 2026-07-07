@@ -3,15 +3,26 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 
 interface HPGLPath {
-  type: 'line' | 'arc' | 'circle';
+  type: 'polyline' | 'arc' | 'circle' | 'rectangle' | 'label';
   points?: [number, number][];
   cx?: number; cy?: number; radius?: number;
   startAngle?: number; endAngle?: number;
+  pen?: number;
+  lineType?: number;
+  penWidth?: number;
+  closed?: boolean;
+  text?: string;
+  x?: number; y?: number;
 }
 
 interface HPGLData {
   paths: HPGLPath[];
-  meta: { total_paths: number; lines: number; arcs: number; circles: number; dimensions: { width: number; height: number } };
+  meta: {
+    total_paths: number; polylines: number; arcs: number; circles: number;
+    rectangles: number; labels: number;
+    dimensions: { width: number; height: number };
+    pens: number[];
+  };
 }
 
 interface Props {
@@ -26,22 +37,28 @@ const PAD = 40;
 const VIEW_W = 800;
 const VIEW_H = 600;
 
+const PEN_COLORS = [
+  '#F2C94C', '#00E5FF', '#FF4081', '#00E676',
+  '#FF9100', '#448AFF', '#E040FB', '#FF1744',
+  '#FFFFFF', '#69F0AE', '#FFD740', '#40C4FF',
+];
+
+const LT_PATTERNS: Record<number, string> = {
+  0: '', 1: '8,4', 2: '4,4', 3: '8,4,2,4',
+  4: '12,4,2,4,2,4', 5: '12,4,2,4,2,4,2,4', 6: '2,4',
+};
+
 type BBox = { minX: number; minY: number; maxX: number; maxY: number; cx: number; cy: number; w: number; h: number };
 
 function calcBounds(paths: HPGLPath[]): BBox {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const p of paths) {
-    if (p.type === 'line' && p.points) {
-      for (const [x, y] of p.points) {
-        if (x < minX) minX = x; if (y < minY) minY = y;
-        if (x > maxX) maxX = x; if (y > maxY) maxY = y;
-      }
-    } else if (p.type === 'circle' && p.cx !== undefined && p.cy !== undefined && p.radius !== undefined) {
-      const x1 = p.cx - p.radius, x2 = p.cx + p.radius;
-      const y1 = p.cy - p.radius, y2 = p.cy + p.radius;
-      if (x1 < minX) minX = x1; if (y1 < minY) minY = y1;
-      if (x2 > maxX) maxX = x2; if (y2 > maxY) maxY = y2;
-    } else if (p.type === 'arc' && p.cx !== undefined && p.cy !== undefined && p.radius !== undefined) {
+    const pts = p.type === 'polyline' || p.type === 'rectangle' ? p.points : null;
+    if (pts) for (const [x, y] of pts) {
+      if (x < minX) minX = x; if (y < minY) minY = y;
+      if (x > maxX) maxX = x; if (y > maxY) maxY = y;
+    }
+    if ((p.type === 'circle' || p.type === 'arc') && p.cx !== undefined && p.cy !== undefined && p.radius !== undefined) {
       const x1 = p.cx - p.radius, x2 = p.cx + p.radius;
       const y1 = p.cy - p.radius, y2 = p.cy + p.radius;
       if (x1 < minX) minX = x1; if (y1 < minY) minY = y1;
@@ -69,7 +86,6 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
-  const strokeColor = invertColors ? '#00e5ff' : '#F2C94C';
   const gridSize = snapGrid ? 20 : 30;
 
   const bounds = useMemo(() => data ? calcBounds(data.paths) : null, [data]);
@@ -78,10 +94,7 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
   useEffect(() => {
     if (bounds) {
       const s = calcFitScale(bounds);
-      setPan({
-        x: VIEW_W / 2 - bounds.cx * s,
-        y: VIEW_H / 2 - bounds.cy * s,
-      });
+      setPan({ x: VIEW_W / 2 - bounds.cx * s, y: VIEW_H / 2 - bounds.cy * s });
     }
   }, [bounds]);
 
@@ -93,13 +106,25 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
     );
   }
 
+  const fillColor = invertColors ? 'rgba(0,229,255,0.06)' : 'rgba(242,201,76,0.06)';
+
   const renderPaths = () => {
     if (!data) return null;
     return data.paths.map((path, idx) => {
-      if (path.type === 'line' && path.points) {
+      const pen = path.pen ?? 0;
+      const lt = path.lineType ?? 0;
+      const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
+      const sw = Math.max(0.5, (path.penWidth ?? 0.25) * 10) / fitScale;
+      const dash = LT_PATTERNS[lt] || undefined;
+
+      if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
-        return <polyline key={`l${idx}`} points={pts} fill="none" stroke={strokeColor} strokeWidth={1.5 / fitScale} strokeLinejoin="round" strokeLinecap="round" />;
+        if (path.closed) {
+          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeDasharray={dash} />;
+        }
+        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={dash} />;
       }
+
       if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
         const cx = path.cx, cy = path.cy, r = path.radius;
         const sa = (path.startAngle || 0) * Math.PI / 180;
@@ -107,11 +132,17 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
         const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
         const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
         const large = (ea - sa) > Math.PI ? 1 : 0;
-        return <path key={`a${idx}`} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={strokeColor} strokeWidth={1.5 / fitScale} />;
+        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={dash} />;
       }
+
       if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
-        return <circle key={`c${idx}`} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={strokeColor} strokeWidth={1.5 / fitScale} />;
+        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={dash} />;
       }
+
+      if (path.type === 'label' && path.text) {
+        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={8 / fitScale} fontFamily="monospace">{path.text}</text>;
+      }
+
       return null;
     });
   };
@@ -119,9 +150,9 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
   const renderTackMarks = () => {
     if (!data || viewMode !== 'tack') return null;
     return data.paths.flatMap((path, idx) =>
-      path.type === 'line' && path.points
+      (path.type === 'polyline' || path.type === 'rectangle') && path.points
         ? path.points.filter((_, pi) => pi % 5 === 0).map((pt, pi) => (
-            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={2 / fitScale} fill={strokeColor} opacity={0.5} />
+            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={2 / fitScale} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.5} />
           ))
         : []
     );
