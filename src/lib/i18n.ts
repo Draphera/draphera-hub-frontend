@@ -1,0 +1,214 @@
+'use client';
+
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+
+type Lang = 'it' | 'en';
+
+const translations: Record<Lang, Record<string, string>> = {
+  it: {
+    'nav.dashboard': 'Dashboard',
+    'nav.hpgl_viewer': 'HPGL Viewer',
+    'nav.tools': 'Strumenti',
+    'nav.export': 'Export',
+    'nav.generate_zip': 'Generate ZIP',
+    'nav.signin': 'Accedi',
+    'nav.signup': 'Registrati',
+    'nav.signout': 'Esci',
+    'lang.it': 'IT',
+    'lang.en': 'EN',
+
+    'sidebar.upload_title': 'Upload HPGL File',
+    'sidebar.upload_hint': 'Trascina o seleziona .hpgl',
+    'sidebar.settings': 'Settings',
+    'sidebar.invert_colors': 'Invert Colors',
+    'sidebar.zoom': 'Zoom',
+    'sidebar.units': 'Units',
+    'sidebar.snap_grid': 'Snap Grid',
+    'sidebar.cm': 'cm',
+    'sidebar.inch': 'inch',
+
+    'viewer.hint': 'Carica un file HPGL per visualizzare il rendering',
+    'viewer.x': 'X',
+    'viewer.y': 'Y',
+    'viewer.scale': 'Scale',
+
+    'info.title': 'Info Panel',
+    'info.file_name': 'File Name',
+    'info.dimensions': 'Dimensions',
+    'info.total_paths': 'Total Paths',
+    'info.lines': 'Lines',
+    'info.arcs': 'Arcs',
+    'info.circles': 'Circles',
+    'info.view_mode': 'View Mode',
+    'info.outline': 'Outline',
+    'info.tack_marks': 'Tack Marks',
+    'info.measurement': 'Measurement',
+
+    'footer.zoom_in': 'Zoom In',
+    'footer.zoom_out': 'Zoom Out',
+    'footer.fit_to_screen': 'Fit to Screen',
+    'footer.measure': 'Measure',
+    'footer.grid': 'Grid',
+    'footer.export_png': 'Export PNG',
+    'footer.export_svg': 'Export SVG',
+
+    'home.hero_badge': 'HPGL Viewer — ora disponibile',
+    'home.title1': 'Il portale tecnico',
+    'home.title2': 'per la moda',
+    'home.title3': 'che unisce stile e produzione',
+    'home.subtitle': 'Draphera Hub centralizza strumenti CAD, normalizzazione materiali, generazione BOM e verifiche qualità per tutti gli uffici coinvolti nel processo produttivo.',
+    'home.cta_hpgl': 'Apri HPGL Viewer',
+    'home.cta_discover': 'Scopri la piattaforma',
+    'home.section_title': 'Strumenti tecnici',
+    'home.section_sub': 'Tutti i tool necessari per il workflow tecnico della calzatura e accessori moda.',
+
+    'dashboard.title': 'Dashboard',
+    'dashboard.subtitle': 'Benvenuto su Draphera Hub.',
+    'dashboard.open_hpgl': 'Apri HPGL Viewer',
+    'dashboard.tools': 'Strumenti',
+    'dashboard.active': 'ATTIVO',
+    'dashboard.soon': 'PRESTO',
+    'dashboard.info': 'Info',
+    'dashboard.active_count': 'Tools attivi',
+    'dashboard.dev_count': 'In sviluppo',
+    'dashboard.go_hpgl': 'Vai a HPGL Viewer',
+
+    'auth.signin_title': 'Accedi a Draphera Hub',
+    'auth.signin_sub': 'Inserisci le tue credenziali per accedere alla piattaforma.',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.signin_btn': 'Accedi',
+    'auth.signup_link': 'Non hai un account?',
+    'auth.signup_cta': 'Registrati',
+    'auth.signup_title': 'Crea il tuo account',
+    'auth.signup_sub': 'Registrati per accedere a tutti gli strumenti Draphera Hub.',
+    'auth.signup_btn': 'Registrati',
+    'auth.signin_link': 'Hai già un account?',
+    'auth.signin_cta': 'Accedi',
+    'auth.error_required': 'Compila tutti i campi',
+    'auth.error_invalid': 'Credenziali non valide',
+    'auth.signout_success': 'Sessione terminata',
+
+    'coming_soon.title': 'In arrivo',
+    'coming_soon.desc': 'Questo strumento è in fase di sviluppo e sarà disponibile a breve.',
+    'coming_soon.back': 'Vai a HPGL Viewer (attivo)',
+  },
+  en: {
+    'nav.dashboard': 'Dashboard',
+    'nav.hpgl_viewer': 'HPGL Viewer',
+    'nav.tools': 'Tools',
+    'nav.export': 'Export',
+    'nav.generate_zip': 'Generate ZIP',
+    'nav.signin': 'Sign In',
+    'nav.signup': 'Sign Up',
+    'nav.signout': 'Sign Out',
+    'lang.it': 'IT',
+    'lang.en': 'EN',
+
+    'sidebar.upload_title': 'Upload HPGL File',
+    'sidebar.upload_hint': 'Drop or select .hpgl',
+    'sidebar.settings': 'Settings',
+    'sidebar.invert_colors': 'Invert Colors',
+    'sidebar.zoom': 'Zoom',
+    'sidebar.units': 'Units',
+    'sidebar.snap_grid': 'Snap Grid',
+    'sidebar.cm': 'cm',
+    'sidebar.inch': 'inch',
+
+    'viewer.hint': 'Upload an HPGL file to render',
+    'viewer.x': 'X',
+    'viewer.y': 'Y',
+    'viewer.scale': 'Scale',
+
+    'info.title': 'Info Panel',
+    'info.file_name': 'File Name',
+    'info.dimensions': 'Dimensions',
+    'info.total_paths': 'Total Paths',
+    'info.lines': 'Lines',
+    'info.arcs': 'Arcs',
+    'info.circles': 'Circles',
+    'info.view_mode': 'View Mode',
+    'info.outline': 'Outline',
+    'info.tack_marks': 'Tack Marks',
+    'info.measurement': 'Measurement',
+
+    'footer.zoom_in': 'Zoom In',
+    'footer.zoom_out': 'Zoom Out',
+    'footer.fit_to_screen': 'Fit to Screen',
+    'footer.measure': 'Measure',
+    'footer.grid': 'Grid',
+    'footer.export_png': 'Export PNG',
+    'footer.export_svg': 'Export SVG',
+
+    'home.hero_badge': 'HPGL Viewer — now available',
+    'home.title1': 'The technical portal',
+    'home.title2': 'for fashion',
+    'home.title3': 'connecting style and production',
+    'home.subtitle': 'Draphera Hub centralizes CAD tools, material normalization, BOM generation and quality checks for all departments involved in the production process.',
+    'home.cta_hpgl': 'Open HPGL Viewer',
+    'home.cta_discover': 'Discover the platform',
+    'home.section_title': 'Technical Tools',
+    'home.section_sub': 'All the tools needed for the technical workflow of footwear and fashion accessories.',
+
+    'dashboard.title': 'Dashboard',
+    'dashboard.subtitle': 'Welcome to Draphera Hub.',
+    'dashboard.open_hpgl': 'Open HPGL Viewer',
+    'dashboard.tools': 'Tools',
+    'dashboard.active': 'ACTIVE',
+    'dashboard.soon': 'SOON',
+    'dashboard.info': 'Info',
+    'dashboard.active_count': 'Active tools',
+    'dashboard.dev_count': 'In development',
+    'dashboard.go_hpgl': 'Go to HPGL Viewer',
+
+    'auth.signin_title': 'Sign In to Draphera Hub',
+    'auth.signin_sub': 'Enter your credentials to access the platform.',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.signin_btn': 'Sign In',
+    'auth.signup_link': "Don't have an account?",
+    'auth.signup_cta': 'Sign Up',
+    'auth.signup_title': 'Create your account',
+    'auth.signup_sub': 'Register to access all Draphera Hub tools.',
+    'auth.signup_btn': 'Sign Up',
+    'auth.signin_link': 'Already have an account?',
+    'auth.signin_cta': 'Sign In',
+    'auth.error_required': 'Fill in all fields',
+    'auth.error_invalid': 'Invalid credentials',
+    'auth.signout_success': 'Session ended',
+
+    'coming_soon.title': 'Coming Soon',
+    'coming_soon.desc': 'This tool is under development and will be available shortly.',
+    'coming_soon.back': 'Go to HPGL Viewer (active)',
+  },
+};
+
+interface I18nCtx {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: string) => string;
+}
+
+const I18nContext = createContext<I18nCtx>({ lang: 'it', setLang: () => {}, t: (k) => k });
+
+export function I18nProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>('it');
+
+  useEffect(() => {
+    const stored = localStorage.getItem('draphera-lang') as Lang | null;
+    if (stored === 'it' || stored === 'en') setLangState(stored);
+  }, []);
+
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    localStorage.setItem('draphera-lang', l);
+  }, []);
+
+  const t = useCallback((key: string) => translations[lang][key] ?? key, [lang]);
+
+  return React.createElement(I18nContext.Provider, { value: { lang, setLang, t } }, children);
+}
+
+export function useTranslation() {
+  return useContext(I18nContext);
+}

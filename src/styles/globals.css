@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    @apply bg-drapera-dark text-gray-100 font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(45,27,105,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(45,27,105,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(45,27,105,0.06) 0%, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+  ::selection { @apply bg-drapera-gold/30 text-drapera-gold; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-drapera-dark; }
+  ::-webkit-scrollbar-thumb { @apply bg-drapera-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-drapera-steel-light; }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-drapera-midnight/80 backdrop-blur-xl border border-drapera-border rounded-xl shadow-premium;
+  }
+  .premium-card {
+    @apply bg-drapera-surface/80 backdrop-blur-xl border border-drapera-border rounded-2xl shadow-premium p-6 md:p-8 transition-all duration-300;
+  }
+  .premium-card:hover {
+    @apply border-drapera-steel-light/50 shadow-gold-glow;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-drapera-gold text-drapera-dark font-semibold rounded-lg transition-all duration-300 hover:bg-drapera-gold-dark hover:shadow-gold-glow active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed text-sm;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 border border-drapera-border text-gray-400 font-medium rounded-lg transition-all duration-300 hover:border-drapera-gold/40 hover:text-drapera-gold hover:bg-drapera-gold/5 active:scale-[0.97] text-sm;
+  }
+  .btn-icon {
+    @apply w-9 h-9 flex items-center justify-center rounded-lg border border-drapera-border text-gray-500 hover:text-drapera-gold hover:border-drapera-gold/40 hover:bg-drapera-gold/5 transition-all;
+  }
+  .section-title {
+    @apply font-display text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight;
+  }
+  .section-subtitle {
+    @apply text-drapera-steel-light text-lg md:text-xl max-w-2xl;
+  }
+  .tech-label {
+    @apply text-xs font-medium text-drapera-steel-light uppercase tracking-wider;
+  }
+  .tech-value {
+    @apply text-sm text-white font-medium;
+  }
+  .tech-input {
+    @apply w-full px-3 py-2 bg-drapera-dark/60 border border-drapera-border rounded-lg text-gray-100 text-sm placeholder-drapera-steel-light/40 focus:outline-none focus:border-drapera-gold/40 focus:ring-1 focus:ring-drapera-gold/20 transition-all;
+  }
+  .gold-text { @apply text-drapera-gold; }
+  .gradient-text {
+    @apply bg-gradient-to-r from-drapera-gold via-amber-300 to-drapera-gold bg-clip-text text-transparent;
+  }
+  .wireframe-decoration {
+    @apply absolute pointer-events-none opacity-[0.03];
+  }
+  .grid-bg {
+    @apply bg-grid-pattern bg-[length:40px_40px];
+  }
+  .coming-soon-card {
+    @apply relative overflow-hidden rounded-2xl border border-drapera-border bg-drapera-surface/40 p-8 text-center;
+  }
+  .coming-soon-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(242, 201, 76, 0.015) 10px,
+      rgba(242, 201, 76, 0.015) 20px
+    );
+    pointer-events: none;
+  }
+}
