@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;
 
 async function getHeaders() {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
