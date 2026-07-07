@@ -23,6 +23,7 @@ export default function AdminPage() {
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [msg, setMsg] = useState('');
   const [cleanInput, setCleanInput] = useState('');
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -30,6 +31,7 @@ export default function AdminPage() {
       if (!data.session) { router.push('/auth/signin?redirect=/admin'); return; }
       try {
         const a = await adminApi.check();
+        if (a.error) setAuthError(`${a.error}: ${a.detail || ''}`);
         setIsAdmin(a.is_admin);
         if (a.is_admin) {
           const u = await adminApi.listUploads();
@@ -77,7 +79,12 @@ export default function AdminPage() {
         <Header />
         <div className="max-w-3xl mx-auto px-4 py-10 pt-24 text-center">
           <h1 className="section-title text-white mb-4">{t('admin.title')}</h1>
-          <p className="text-drapera-steel-light">{t('admin.no_access')}</p>
+          <p className="text-drapera-steel-light mb-3">{t('admin.no_access')}</p>
+          {authError && (
+            <div className="inline-block px-4 py-2 rounded-lg bg-red-900/20 border border-red-500/30 text-xs text-red-400 font-mono">
+              {authError}
+            </div>
+          )}
         </div>
       </div>
     );
