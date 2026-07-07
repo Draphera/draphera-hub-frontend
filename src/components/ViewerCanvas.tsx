@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 
 interface HPGLPath {
   type: 'polyline' | 'arc' | 'circle' | 'rectangle' | 'label';
@@ -28,6 +28,7 @@ interface HPGLData {
 interface Props {
   data: HPGLData | null;
   zoom: number;
+  onZoomChange?: (z: number) => void;
   invertColors: boolean;
   snapGrid: boolean;
   viewMode: 'outline' | 'tack' | 'measurement';
@@ -42,11 +43,6 @@ const PEN_COLORS = [
   '#FF9100', '#448AFF', '#E040FB', '#FF1744',
   '#FFFFFF', '#69F0AE', '#FFD740', '#40C4FF',
 ];
-
-const LT_PATTERNS: Record<number, string> = {
-  0: '', 1: '8,4', 2: '4,4', 3: '8,4,2,4',
-  4: '12,4,2,4,2,4', 5: '12,4,2,4,2,4,2,4', 6: '2,4',
-};
 
 type BBox = { minX: number; minY: number; maxX: number; maxY: number; cx: number; cy: number; w: number; h: number };
 
@@ -77,12 +73,13 @@ function calcFitScale(bounds: BBox): number {
   return Math.min(sx, sy, 5);
 }
 
-export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewMode }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [wheelZoom, setWheelZoom] = useState(1);
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
@@ -95,8 +92,31 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
     if (bounds) {
       const s = calcFitScale(bounds);
       setPan({ x: VIEW_W / 2 - bounds.cx * s, y: VIEW_H / 2 - bounds.cy * s });
+      setWheelZoom(1);
     }
   }, [bounds]);
+
+  const effectiveZoom = zoom * fitScale * wheelZoom;
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect || !bounds) return;
+
+    const delta = -e.deltaY * 0.001;
+    const factor = 1 + delta;
+    const newWheelZoom = Math.max(0.05, Math.min(50, wheelZoom * factor));
+    const ratio = newWheelZoom / wheelZoom;
+
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    setPan(prev => ({
+      x: mouseX - (mouseX - prev.x) * ratio,
+      y: mouseY - (mouseY - prev.y) * ratio,
+    }));
+    setWheelZoom(newWheelZoom);
+  }, [wheelZoom, bounds]);
 
   const gridLines: JSX.Element[] = [];
   for (let i = -2000; i < 2000; i += gridSize) {
@@ -112,17 +132,15 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
     if (!data) return null;
     return data.paths.map((path, idx) => {
       const pen = path.pen ?? 0;
-      const lt = path.lineType ?? 0;
       const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
-      const sw = Math.max(0.5, (path.penWidth ?? 0.25) * 10) / fitScale;
-      const dash = LT_PATTERNS[lt] || undefined;
+      const sw = 0.5 / effectiveZoom;
 
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeDasharray={dash} />;
+          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" />;
         }
-        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={dash} />;
+        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" />;
       }
 
       if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
@@ -132,15 +150,15 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
         const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
         const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
         const large = (ea - sa) > Math.PI ? 1 : 0;
-        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={dash} />;
+        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} />;
       }
 
       if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
-        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} strokeDasharray={dash} />;
+        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} />;
       }
 
       if (path.type === 'label' && path.text) {
-        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={8 / fitScale} fontFamily="monospace">{path.text}</text>;
+        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={6 / effectiveZoom} fontFamily="monospace">{path.text}</text>;
       }
 
       return null;
@@ -151,8 +169,8 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
     if (!data || viewMode !== 'tack') return null;
     return data.paths.flatMap((path, idx) =>
       (path.type === 'polyline' || path.type === 'rectangle') && path.points
-        ? path.points.filter((_, pi) => pi % 5 === 0).map((pt, pi) => (
-            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={2 / fitScale} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.5} />
+        ? path.points.filter((_, pi) => pi % 8 === 0).map((pt, pi) => (
+            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={1.5 / effectiveZoom} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.4} />
           ))
         : []
     );
@@ -163,21 +181,19 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
     const { cx, cy, w, h } = bounds;
     return (
       <g>
-        <line x1={cx - w / 2 - 10} y1={cy} x2={cx + w / 2 + 10} y2={cy} stroke="#ff6b6b" strokeWidth={1 / fitScale} strokeDasharray="4 3" />
-        <line x1={cx} y1={cy - h / 2 - 10} x2={cx} y2={cy + h / 2 + 10} stroke="#ff6b6b" strokeWidth={1 / fitScale} strokeDasharray="4 3" />
-        <text x={cx} y={cy - h / 2 - 15} textAnchor="middle" fill="#ff6b6b" fontSize={11 / fitScale} fontFamily="Inter">{w.toFixed(1)}</text>
-        <text x={cx + w / 2 + 15} y={cy} textAnchor="start" dominantBaseline="central" fill="#ff6b6b" fontSize={11 / fitScale} fontFamily="Inter">{h.toFixed(1)}</text>
+        <line x1={cx - w / 2 - 10} y1={cy} x2={cx + w / 2 + 10} y2={cy} stroke="#ff6b6b" strokeWidth={0.5 / effectiveZoom} strokeDasharray="4 3" />
+        <line x1={cx} y1={cy - h / 2 - 10} x2={cx} y2={cy + h / 2 + 10} stroke="#ff6b6b" strokeWidth={0.5 / effectiveZoom} strokeDasharray="4 3" />
+        <text x={cx} y={cy - h / 2 - 15} textAnchor="middle" fill="#ff6b6b" fontSize={8 / effectiveZoom} fontFamily="Inter">{w.toFixed(1)}</text>
+        <text x={cx + w / 2 + 15} y={cy} textAnchor="start" dominantBaseline="central" fill="#ff6b6b" fontSize={8 / effectiveZoom} fontFamily="Inter">{h.toFixed(1)}</text>
       </g>
     );
   };
 
-  const effectiveZoom = zoom * fitScale;
-
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = svgRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = (e.clientX - rect.left) / effectiveZoom - pan.x / effectiveZoom;
-    const y = (e.clientY - rect.top) / effectiveZoom - pan.y / effectiveZoom;
+    const x = (e.clientX - rect.left - pan.x) / effectiveZoom;
+    const y = (e.clientY - rect.top - pan.y) / effectiveZoom;
     setMousePos({ x, y });
     if (isPanning) {
       setPan(prev => ({ x: prev.x + (e.clientX - panStart.x), y: prev.y + (e.clientY - panStart.y) }));
@@ -201,6 +217,7 @@ export default function ViewerCanvas({ data, zoom, invertColors, snapGrid, viewM
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onWheel={handleWheel}
       >
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         {data ? (
