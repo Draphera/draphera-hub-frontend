@@ -73,6 +73,14 @@ function calcFitScale(bounds: BBox): number {
   return Math.min(sx, sy, 5);
 }
 
+function screenToViewbox(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const rect = svg.getBoundingClientRect();
+  return {
+    x: (clientX - rect.left) * (VIEW_W / rect.width),
+    y: (clientY - rect.top) * (VIEW_H / rect.height),
+  };
+}
+
 export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -100,20 +108,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect || !bounds) return;
+    const svg = svgRef.current;
+    if (!svg || !bounds) return;
 
     const delta = -e.deltaY * 0.001;
     const factor = 1 + delta;
     const newWheelZoom = Math.max(0.05, Math.min(50, wheelZoom * factor));
     const ratio = newWheelZoom / wheelZoom;
 
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const vb = screenToViewbox(svg, e.clientX, e.clientY);
 
     setPan(prev => ({
-      x: mouseX - (mouseX - prev.x) * ratio,
-      y: mouseY - (mouseY - prev.y) * ratio,
+      x: vb.x - (vb.x - prev.x) * ratio,
+      y: vb.y - (vb.y - prev.y) * ratio,
     }));
     setWheelZoom(newWheelZoom);
   }, [wheelZoom, bounds]);
@@ -189,21 +196,24 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   };
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) { setIsPanning(true); setPanStart({ x: e.clientX, y: e.clientY }); }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
-    const rect = svgRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const x = (e.clientX - rect.left - pan.x) / effectiveZoom;
-    const y = (e.clientY - rect.top - pan.y) / effectiveZoom;
-    setMousePos({ x, y });
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const vb = screenToViewbox(svg, e.clientX, e.clientY);
+
+    setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
+
     if (isPanning) {
-      setPan(prev => ({ x: prev.x + (e.clientX - panStart.x), y: prev.y + (e.clientY - panStart.y) }));
+      setPan(prev => ({ x: prev.x + (vb.x - panStart.x), y: prev.y + (vb.y - panStart.y) }));
       setPanStart({ x: e.clientX, y: e.clientY });
     }
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 1 || e.shiftKey) { setIsPanning(true); setPanStart({ x: e.clientX, y: e.clientY }); }
-  };
   const handleMouseUp = () => setIsPanning(false);
 
   return (
