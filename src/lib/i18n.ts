@@ -88,6 +88,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.error_required': 'Compila tutti i campi',
     'auth.error_invalid': 'Credenziali non valide',
     'auth.signout_success': 'Sessione terminata',
+    'auth.or_continue': 'oppure continua con',
+    'auth.google': 'Google',
+    'auth.facebook': 'Facebook',
+    'auth.linkedin': 'LinkedIn',
+    'auth.github': 'GitHub',
 
     'coming_soon.title': 'In arrivo',
     'coming_soon.desc': 'Questo strumento è in fase di sviluppo e sarà disponibile a breve.',
@@ -176,6 +181,11 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.error_required': 'Fill in all fields',
     'auth.error_invalid': 'Invalid credentials',
     'auth.signout_success': 'Session ended',
+    'auth.or_continue': 'or continue with',
+    'auth.google': 'Google',
+    'auth.facebook': 'Facebook',
+    'auth.linkedin': 'LinkedIn',
+    'auth.github': 'GitHub',
 
     'coming_soon.title': 'Coming Soon',
     'coming_soon.desc': 'This tool is under development and will be available shortly.',
