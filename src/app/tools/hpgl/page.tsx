@@ -55,7 +55,7 @@ export default function HPGLViewerPage() {
       const text = await file.text();
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false;
-      const lines = text.matchAll(/(PU|PD|PA|PR|AA|CI|SP)\s*((?:-?\d+(?:\.\d+)?\s*,?\s*)*)/gi);
+      const lines = Array.from(text.matchAll(/(PU|PD|PA|PR|AA|CI|SP)\s*((?:-?\d+(?:\.\d+)?\s*,?\s*)*)/gi));
       for (const m of lines) {
         const cmd = m[1].toUpperCase();
         const nums = m[2].trim().split(/[\s,]+/).filter(Boolean).map(Number);
