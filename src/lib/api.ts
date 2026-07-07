@@ -39,6 +39,57 @@ export const api = {
   },
 };
 
+export const profileApi = {
+  async get() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/profile`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async update(data: Record<string, string>) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/profile`, {
+      method: 'PUT', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
+export const adminApi = {
+  async check() {
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(`${API_BASE}/api/admin/check`, { headers });
+      return res.ok ? res.json() : { is_admin: false };
+    } catch { return { is_admin: false }; }
+  },
+  async listUploads() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/uploads`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async downloadUpload(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/uploads/${id}/download`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.text();
+  },
+  async deleteUpload(id: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/uploads/${id}`, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async cleanAll() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/uploads?confirm=DELETE_ALL`, { method: 'DELETE', headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
 export const hpglApi = {
   async parse(file: File) {
     const form = new FormData(); form.append('file', file);
