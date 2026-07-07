@@ -24,6 +24,7 @@ export default function AdminPage() {
   const [msg, setMsg] = useState('');
   const [cleanInput, setCleanInput] = useState('');
   const [authError, setAuthError] = useState('');
+  const [authAlg, setAuthAlg] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -31,6 +32,7 @@ export default function AdminPage() {
       if (!data.session) { router.push('/auth/signin?redirect=/admin'); return; }
       try {
         const a = await adminApi.check();
+        if (a.alg) setAuthAlg(a.alg);
         if (a.error) setAuthError(`${a.error}: ${a.detail || ''}`);
         setIsAdmin(a.is_admin);
         if (a.is_admin) {
@@ -81,8 +83,8 @@ export default function AdminPage() {
           <h1 className="section-title text-white mb-4">{t('admin.title')}</h1>
           <p className="text-drapera-steel-light mb-3">{t('admin.no_access')}</p>
           {authError && (
-            <div className="inline-block px-4 py-2 rounded-lg bg-red-900/20 border border-red-500/30 text-xs text-red-400 font-mono">
-              {authError}
+            <div className="inline-block px-4 py-2 rounded-lg bg-red-900/20 border border-red-500/30 text-xs text-red-400 font-mono whitespace-pre text-left">
+              {authError}{authAlg ? `\nalg: ${authAlg}` : ''}
             </div>
           )}
         </div>
