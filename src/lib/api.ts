@@ -183,6 +183,39 @@ export const correctionApi = {
   },
 };
 
+export const waitlistApi = {
+  async list() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async approve(email: string) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist/approve`, {
+      method: 'POST', headers, body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async getRegState() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/registration-state`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async updateRegState(data: Record<string, number | boolean>) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/registration-state`, {
+      method: 'PUT', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
 export const trainingApi = {
   async trainModel() {
     const headers = await getHeaders();

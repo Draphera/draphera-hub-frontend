@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
-import { adminApi, adminCadApi, trainingApi } from '@/lib/api';
+import { adminApi, adminCadApi, trainingApi, waitlistApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface Upload {
@@ -39,7 +39,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer';
+type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -70,6 +70,43 @@ export default function AdminPage() {
   const [mlTraining, setMlTraining] = useState(false);
   const [mlResult, setMlResult] = useState<{ accuracy?: number; samples?: number; test_samples?: number; classes?: string[]; error?: string } | null>(null);
   const [trainingCount, setTrainingCount] = useState(0);
+
+  const [waitlist, setWaitlist] = useState<Array<{ id: string; email: string; name: string; position: number; created_at: string; approved: boolean }>>([]);
+  const [regConfig, setRegConfig] = useState<{ max_users: number; current_users: number; registration_open: boolean } | null>(null);
+  const [regMaxInput, setRegMaxInput] = useState('100');
+
+  const loadWaitlist = async () => {
+    try {
+      const [w, r] = await Promise.all([waitlistApi.list(), waitlistApi.getRegState()]);
+      setWaitlist(w.records ?? []);
+      setRegConfig(r);
+      setRegMaxInput(String(r.max_users ?? 100));
+    } catch {}
+  };
+
+  const handleApproveWaitlist = async (email: string) => {
+    try {
+      await waitlistApi.approve(email);
+      setMsg(`Approvato: ${email}`);
+      await loadWaitlist();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleUpdateRegConfig = async () => {
+    try {
+      await waitlistApi.updateRegState({ max_users: parseInt(regMaxInput) || 100 });
+      setMsg('Config aggiornata');
+      await loadWaitlist();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleToggleRegistration = async () => {
+    try {
+      await waitlistApi.updateRegState({ registration_open: !regConfig?.registration_open });
+      setMsg(regConfig?.registration_open ? 'Registrazione chiusa' : 'Registrazione aperta');
+      await loadWaitlist();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
 
   const handleTrainModel = async () => {
     setMlTraining(true); setMlResult(null);
@@ -220,6 +257,9 @@ export default function AdminPage() {
     if (tab === 'cad') {
       await loadTrainingCount();
     }
+    if (tab === 'waitlist') {
+      await loadWaitlist();
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
@@ -248,6 +288,7 @@ export default function AdminPage() {
     { key: 'uploads', label: t('admin.tab_uploads') },
     { key: 'cad', label: t('admin.tab_cad') },
     { key: 'trainer', label: t('admin.tab_trainer') },
+    { key: 'waitlist', label: 'Waitlist' },
   ];
 
   return (
@@ -672,6 +713,68 @@ export default function AdminPage() {
                 ) : (
                   <p className="text-gray-600 text-xs">Carica un file e seleziona un CAD per avviare il training.</p>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'waitlist' && (
+          <div>
+            <div className="premium-card mb-6">
+              <h3 className="font-display font-bold text-base text-white mb-3">Configurazione Accesso</h3>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-500">Max utenti:</span>
+                  <input type="number" value={regMaxInput} onChange={e => setRegMaxInput(e.target.value)}
+                    className="w-20 bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-sm text-white text-center" />
+                  <button onClick={handleUpdateRegConfig} className="btn-ghost text-xs px-2 py-1">Aggiorna</button>
+                </div>
+                <button onClick={handleToggleRegistration}
+                  className={`text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${regConfig?.registration_open ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
+                  {regConfig?.registration_open ? 'Aperta' : 'Chiusa'}
+                </button>
+                <span className="text-xs text-gray-500">{regConfig?.current_users ?? 0} / {regConfig?.max_users ?? 100} utenti</span>
+              </div>
+            </div>
+
+            <div className="premium-card overflow-hidden">
+              <h3 className="font-display font-bold text-base text-white mb-3">Waitlist ({waitlist.length})</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 font-medium">#</th>
+                      <th className="px-4 py-3 font-medium">Email</th>
+                      <th className="px-4 py-3 font-medium">Nome</th>
+                      <th className="px-4 py-3 font-medium">Data</th>
+                      <th className="px-4 py-3 font-medium">Stato</th>
+                      <th className="px-4 py-3 font-medium text-right">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {waitlist.map((w, i) => (
+                      <tr key={w.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                        <td className="px-4 py-3 text-xs text-gray-500">{i + 1}</td>
+                        <td className="px-4 py-3 text-xs text-white">{w.email}</td>
+                        <td className="px-4 py-3 text-xs">{w.name || '-'}</td>
+                        <td className="px-4 py-3 text-xs">{new Date(w.created_at).toLocaleDateString()}</td>
+                        <td className="px-4 py-3">
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${w.approved ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                            {w.approved ? 'Approvato' : 'In attesa'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {!w.approved && (
+                            <button onClick={() => handleApproveWaitlist(w.email)} className="text-drapera-gold hover:text-amber-400 text-xs">Approva</button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {waitlist.length === 0 && (
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">Nessuno in waitlist</td></tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

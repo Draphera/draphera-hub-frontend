@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/i18n';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 const providers = ['google', 'github'] as const;
 type Provider = (typeof providers)[number];
 
@@ -21,6 +22,18 @@ export default function SignUpPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [regState, setRegState] = useState<{ open: boolean; remaining: number; current_users: number; max_users: number } | null>(null);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistName, setWaitlistName] = useState('');
+  const [waitlistMsg, setWaitlistMsg] = useState('');
+  const [waitlistPos, setWaitlistPos] = useState(0);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/profile/registration-state`)
+      .then(r => r.json())
+      .then(setRegState)
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +54,57 @@ export default function SignUpPage() {
     if (error) setError(error.message);
   };
 
+  const handleWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWaitlistMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/api/profile/waitlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: waitlistEmail, name: waitlistName }),
+      });
+      const data = await res.json();
+      if (data.status === 'can_register') {
+        setWaitlistMsg('Puoi registrarti ora! Usa il modulo sopra.');
+      } else {
+        setWaitlistPos(data.position || 0);
+        setWaitlistMsg(`Sei in coda! Posizione: #${data.position || 0}`);
+      }
+    } catch { setWaitlistMsg('Errore. Riprova.'); }
+  };
+
+  if (regState && !regState.open) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="premium-card max-w-md w-full text-center">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center mx-auto mb-4">
+            <span className="text-drapera-dark font-display font-extrabold text-lg">D</span>
+          </div>
+          <h1 className="font-display font-bold text-2xl text-white mb-2">Early Access Completato</h1>
+          <p className="text-sm text-drapera-steel-light mb-6">
+            I primi {regState.max_users} posti sono stati occupati.
+          </p>
+          <div className="bg-drapera-gold/5 border border-drapera-gold/15 rounded-lg p-4 mb-6">
+            <p className="text-xs text-gray-400 mb-4">
+              Lascia la tua email per entrare nella waitlist. Ti avviseremo quando si libera un posto.
+            </p>
+            <form onSubmit={handleWaitlist} className="space-y-3">
+              <input type="email" value={waitlistEmail} onChange={e => setWaitlistEmail(e.target.value)}
+                className="tech-input" placeholder="La tua email" required />
+              <input type="text" value={waitlistName} onChange={e => setWaitlistName(e.target.value)}
+                className="tech-input" placeholder="Il tuo nome (opzionale)" />
+              <button type="submit" className="btn-gold w-full">Entra in waitlist</button>
+            </form>
+            {waitlistMsg && <p className="text-xs text-drapera-gold mt-3">{waitlistMsg}</p>}
+          </div>
+          <p className="text-xs text-gray-500">
+            Hai già un account? <Link href="/auth/signin" className="text-drapera-gold hover:underline">Accedi</Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="premium-card max-w-md w-full">
@@ -50,6 +114,11 @@ export default function SignUpPage() {
           </div>
           <h1 className="font-display font-bold text-2xl text-white">{t('auth.signup_title')}</h1>
           <p className="text-sm text-drapera-steel-light mt-1">{t('auth.signup_sub')}</p>
+          {regState && (
+            <span className="inline-block mt-2 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+              Early Access — {regState.remaining} posti disponibili
+            </span>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
