@@ -6,6 +6,7 @@ interface Props {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onFitToScreen: () => void;
+  onToggleMeasure: () => void;
   gridOn: boolean;
   onToggleGrid: () => void;
   onExportPng: () => void;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export default function FooterActions({
-  onZoomIn, onZoomOut, onFitToScreen, gridOn, onToggleGrid, onExportPng, onExportSvg, hasFile,
+  onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, gridOn, onToggleGrid, onExportPng, onExportSvg, hasFile,
 }: Props) {
   const { t } = useTranslation();
 
@@ -30,7 +31,7 @@ export default function FooterActions({
 
   const handlers: Record<string, () => void> = {
     zoomin: onZoomIn, zoomout: onZoomOut, fit: onFitToScreen,
-    measure: () => {}, grid: onToggleGrid, png: onExportPng, svg: onExportSvg,
+    measure: onToggleMeasure, grid: onToggleGrid, png: onExportPng, svg: onExportSvg,
   };
 
   return (

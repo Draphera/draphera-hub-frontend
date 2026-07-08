@@ -51,7 +51,7 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
         <div className="space-y-2.5">
           {[
             { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]' },
-            { label: t('info.dimensions'), value: meta ? `${meta.dimensions.width.toFixed(1)} \u00d7 ${meta.dimensions.height.toFixed(1)}` : '\u2014' },
+            { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? meta.dimensions.width.toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? meta.dimensions.height.toFixed(1) : '0'}` : '\u2014' },
             { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014' },
             { label: 'Polylines', value: meta?.polylines ?? '\u2014' },
             { label: t('info.arcs'), value: meta?.arcs ?? '\u2014' },

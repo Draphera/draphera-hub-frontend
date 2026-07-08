@@ -188,6 +188,67 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+
+        <div className="mt-10 premium-card p-5 border border-red-500/20">
+          <h2 className="section-title text-red-400 text-lg mb-2">{t('dashboard.danger_zone')}</h2>
+          <p className="text-sm text-gray-500 mb-6">{t('dashboard.danger_zone_desc')}</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-white font-semibold text-sm mb-2">{t('dashboard.delete_account')}</h3>
+              <p className="text-xs text-gray-500 mb-4">{t('dashboard.delete_account_desc')}</p>
+              <div className="space-y-3">
+                <p className="text-xs text-red-400/80 font-medium">{t('dashboard.delete_confirm')}</p>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const form = e.target as HTMLFormElement;
+                  const confirmInput = form.confirm_text as HTMLInputElement;
+                  if (!confirmInput.value || confirmInput.value !== 'DELETE') return;
+                  try {
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    const hdrs: Record<string, string> = {};
+                    if (sessionData?.session?.access_token) {
+                      hdrs['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+                    }
+                    const res = await fetch(`${API_BASE}/api/profile/account`, {
+                      method: 'DELETE', headers: hdrs,
+                    });
+                    if (!res.ok) throw new Error(await res.text());
+                    setMsg(t('dashboard.account_deleted'));
+                    await supabase.auth.signOut();
+                    router.push('/');
+                  } catch { setMsg(t('dashboard.account_delete_error')); }
+                }}>
+                  <input
+                    name="confirm_text"
+                    className="w-full bg-drapera-dark border border-red-500/30 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-red-500/50 transition-colors"
+                    placeholder="Scrivi DELETE per confermare"
+                  />
+                  <button type="submit" className="mt-2 w-full px-4 py-2 bg-red-600/20 border border-red-600/40 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition-colors">
+                    {t('dashboard.delete_confirm_btn')}
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold text-sm mb-2">{t('dashboard.legal_links')}</h3>
+              <p className="text-xs text-gray-500 mb-4">Documenti legali e privacy.</p>
+              <div className="space-y-2">
+                <Link href="/termini" className="flex items-center gap-2 text-xs text-gray-400 hover:text-drapera-gold transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  {t('dashboard.legal_terms')}
+                </Link>
+                <Link href="/privacy" className="flex items-center gap-2 text-xs text-gray-400 hover:text-drapera-gold transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  {t('dashboard.legal_privacy')}
+                </Link>
+                <Link href="/cancellazione-dati" className="flex items-center gap-2 text-xs text-gray-400 hover:text-drapera-gold transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  {t('dashboard.legal_data_deletion')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

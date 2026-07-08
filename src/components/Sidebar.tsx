@@ -20,8 +20,18 @@ export default function Sidebar({
 }: SidebarProps) {
   const { t } = useTranslation();
 
-  const handleDrop = (e: React.DragEvent) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) onFileUpload(f); };
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) onFileUpload(f); };
+  const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg', '.iso', '.dxf'];
+  const isValidFile = (f: File) => VALID_EXTENSIONS.some(ext => f.name.toLowerCase().endsWith(ext));
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const f = e.dataTransfer.files[0];
+    if (f && isValidFile(f)) onFileUpload(f);
+  };
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f && isValidFile(f)) onFileUpload(f);
+  };
 
   return (
     <aside className="fixed left-0 top-14 bottom-0 w-[260px] bg-drapera-midnight border-r border-drapera-border overflow-y-auto z-40">
@@ -37,7 +47,7 @@ export default function Sidebar({
             </svg>
             <p className="text-[11px] text-drapera-steel-light group-hover:text-gray-300 transition-colors">{t('sidebar.upload_hint')}</p>
           </div>
-          <input id="hpgl-upload" type="file" accept=".hpgl,.plt,.hpg" onChange={handleInput} className="hidden" />
+          <input id="hpgl-upload" type="file" accept=".hpgl,.plt,.hpg,.iso,.dxf" onChange={handleInput} className="hidden" />
         </div>
 
         <div className="h-px bg-drapera-border" />

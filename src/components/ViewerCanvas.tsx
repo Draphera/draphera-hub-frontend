@@ -231,7 +231,16 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
 
     if (isPanning) {
-      setPan(prev => ({ x: prev.x + (vb.x - panStart.x), y: prev.y + (vb.y - panStart.y) }));
+      const dx = vb.x - panStart.x, dy = vb.y - panStart.y;
+      setPan(prev => {
+        const newPanX = prev.x + dx, newPanY = prev.y + dy;
+        const cw = (bounds?.w ?? 400) * effectiveZoom;
+        const ch = (bounds?.h ?? 300) * effectiveZoom;
+        return {
+          x: Math.min(VIEW_W * 0.5, Math.max(-cw + VIEW_W * 0.5, newPanX)),
+          y: Math.min(VIEW_H * 0.5, Math.max(-ch + VIEW_H * 0.5, newPanY)),
+        };
+      });
       setPanStart({ x: vb.x, y: vb.y });
     }
   };

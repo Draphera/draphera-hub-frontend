@@ -43,6 +43,7 @@ export default function HPGLViewerPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [hpglData, setHpglData] = useState<HPGLData | null>(null);
+  const [parsing, setParsing] = useState(false);
   const [fileName, setFileName] = useState('');
   const [rawFile, setRawFile] = useState<File | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -63,11 +64,14 @@ export default function HPGLViewerPage() {
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
     setRawFile(file);
+    setParsing(true);
     try {
       const result = await hpglApi.parse(file);
       setHpglData(result);
+      setParsing(false);
     } catch {
-      const text = await file.text();
+      try {
+        const text = await file.text();
       const cleaned = text.replace(/[^\n\r\t\x1b\x03\x00\x20-\x7e\xa0-\xff]/g, '');
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false, currentPen = 0, currentLineType = 0, currentPenWidth = 0.25, currentPoly: HPGLPath | null = null;
@@ -141,10 +145,24 @@ export default function HPGLViewerPage() {
       flush();
       const pens = paths.reduce<number[]>((acc, p) => { const pen = p.pen ?? 0; if (!acc.includes(pen)) acc.push(pen); return acc; }, []);
 
-      let cadId = 'unknown';
-      const totalText = text;
-      if (/LB/.test(totalText)) { /* check signatures */ }
-      setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: paths.filter(p => p.type === 'label').length, dimensions: { width: 400, height: 300 }, pens } });
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const p of paths) {
+        for (const pt of (p.type === 'polyline' || p.type === 'rectangle') ? (p.points ?? []) : []) {
+          if (pt[0] < minX) minX = pt[0]; if (pt[1] < minY) minY = pt[1];
+          if (pt[0] > maxX) maxX = pt[0]; if (pt[1] > maxY) maxY = pt[1];
+        }
+        if ((p.type === 'circle' || p.type === 'arc') && p.cx !== undefined && p.cy !== undefined && p.radius !== undefined) {
+          const x1 = p.cx - p.radius, x2 = p.cx + p.radius;
+          const y1 = p.cy - p.radius, y2 = p.cy + p.radius;
+          if (x1 < minX) minX = x1; if (y1 < minY) minY = y1;
+          if (x2 > maxX) maxX = x2; if (y2 > maxY) maxY = y2;
+        }
+      }
+      const w = minX === Infinity ? 400 : maxX - minX || 400;
+      const h = minY === Infinity ? 300 : maxY - minY || 300;
+      setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: paths.filter(p => p.type === 'label').length, dimensions: { width: w, height: h }, pens } });
+      } catch { /* client-side parse also failed */ }
+      setParsing(false);
     }
   }, []);
 
@@ -174,6 +192,7 @@ export default function HPGLViewerPage() {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
   if (!session) return null;
+  if (parsing) return <div className="min-h-screen flex items-center justify-center"><div className="flex flex-col items-center gap-3"><div className="w-8 h-8 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /><span className="text-sm text-drapera-steel-light">Parsing file...</span></div></div>;
 
   return (
     <div className="min-h-screen bg-drapera-dark">
@@ -193,6 +212,7 @@ export default function HPGLViewerPage() {
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}
         onFitToScreen={() => setZoom(1)}
+        onToggleMeasure={() => setViewMode(v => v === 'measurement' ? 'outline' : 'measurement')}
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
         onExportPng={handleExportPng} onExportSvg={handleExportSvg} hasFile={!!hpglData}
       />
