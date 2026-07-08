@@ -48,6 +48,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [uploads, setUploads] = useState<Upload[]>([]);
+  const [uploadTotal, setUploadTotal] = useState(0);
+  const [uploadOffset, setUploadOffset] = useState(0);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [msg, setMsg] = useState('');
   const [cleanInput, setCleanInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -125,11 +128,19 @@ export default function AdminPage() {
     } catch {}
   };
 
-  const load = async (ft: string) => {
+  const load = async (ft: string, append = false) => {
+    setUploadLoading(true);
     try {
-      const u = ft ? await adminApi.listUploads(ft) : await adminApi.listUploads();
-      setUploads(u.uploads ?? []);
+      const u = ft ? await adminApi.listUploads(ft, 50, append ? uploadOffset : 0) : await adminApi.listUploads(undefined, 50, append ? uploadOffset : 0);
+      if (append) {
+        setUploads(prev => [...prev, ...(u.uploads ?? [])]);
+      } else {
+        setUploads(u.uploads ?? []);
+      }
+      setUploadTotal(u.total ?? u.uploads?.length ?? 0);
+      setUploadOffset(append ? uploadOffset + 50 : 50);
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+    setUploadLoading(false);
   };
 
   const loadCadSystems = async () => {
@@ -159,7 +170,8 @@ export default function AdminPage() {
 
   const handleFilter = async (ft: string) => {
     setFilterType(ft);
-    await load(ft);
+    setUploadOffset(0);
+    await load(ft, false);
   };
 
   const handleExportZip = async () => {
@@ -389,6 +401,15 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+              {uploads.length > 0 && (
+                <div className="px-4 py-3 border-t border-drapera-border/50 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{uploads.length} uploads</span>
+                  <button onClick={() => load(filterType, true)} disabled={uploadLoading}
+                    className="text-xs text-drapera-gold hover:underline disabled:opacity-40">
+                    {uploadLoading ? 'Caricamento...' : 'Carica altri'}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid md:grid-cols-2 gap-4">

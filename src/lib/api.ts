@@ -62,9 +62,10 @@ export const adminApi = {
       return res.ok ? res.json() : { is_admin: false };
     } catch { return { is_admin: false }; }
   },
-  async listUploads(type?: string) {
+  async listUploads(type?: string, limit = 50, offset = 0) {
     const headers = await getHeaders();
-    const url = type ? `${API_BASE}/api/admin/uploads?type=${type}` : `${API_BASE}/api/admin/uploads`;
+    const params = `limit=${limit}&offset=${offset}`;
+    const url = type ? `${API_BASE}/api/admin/uploads?type=${type}&${params}` : `${API_BASE}/api/admin/uploads?${params}`;
     const res = await fetchWithTimeout(url, { headers });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
