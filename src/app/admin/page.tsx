@@ -597,18 +597,14 @@ export default function AdminPage() {
                       onDragOver={e => e.preventDefault()}
                       onDrop={e => {
                         e.preventDefault();
-                        const files = Array.from(e.dataTransfer.files).filter(f => {
-                          const ext = '.' + (f.name.split('.').pop()?.toLowerCase() || '');
-                          return ['.hpgl', '.plt', '.hpg', '.iso', '.dxf'].includes(ext);
-                        });
+                        const files = Array.from(e.dataTransfer.files);
                         if (files.length) setTrainFiles(prev => [...prev, ...files]);
-                        else setMsg('Formato non supportato. Usa .hpgl .plt .hpg .iso .dxf');
                       }}
                     >
                       <input
                         type="file"
                         multiple
-                        accept=".hpgl,.plt,.hpg,.iso,.dxf"
+                        accept=".hpgl,.plt,.hpg,.iso,.dxf,.pin,.ass,.mod,.p99,.zl,.pd"
                         className="hidden"
                         id="train-file-input"
                         onChange={e => {
