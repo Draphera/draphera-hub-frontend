@@ -43,7 +43,7 @@ export default function SignUpPage() {
     const { error: authError } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (authError) { setError(authError.message); return; }
-    router.push('/dashboard');
+    router.push('/onboarding/office');
   };
 
   const handleOAuth = async (provider: Provider) => {

@@ -49,7 +49,7 @@ export default function SettingsPage() {
     setSaving(true); setMsg('');
     try {
       const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
+      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
         const v = profile[key];
         if (v !== undefined && v !== null) updates[key] = v;
       }
@@ -94,6 +94,17 @@ export default function SettingsPage() {
     );
   }
   if (!session) return null;
+
+  const OFFICE_OPTIONS = [
+    { value: '', label: 'Seleziona ufficio' },
+    { value: 'stile', label: 'Ufficio Stile' },
+    { value: 'modellistica', label: 'Modellista' },
+    { value: 'cad', label: 'CAD' },
+    { value: 'prototipia', label: 'Prototipia' },
+    { value: 'produzione', label: 'Produzione' },
+    { value: 'fornitore', label: 'Fornitore' },
+    { value: 'freelance', label: 'Freelance' },
+  ];
 
   const fields = [
     { key: 'full_name', label: t('profile.full_name') },
@@ -172,6 +183,18 @@ export default function SettingsPage() {
               <option value="">{t('cad.none')}</option>
               {cadSystems.map(s => (
                 <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-400 mb-1.5 block">Ufficio</label>
+            <select
+              className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-drapera-gold/50 transition-colors appearance-none cursor-pointer"
+              value={profile.office ?? ''}
+              onChange={e => set('office', e.target.value)}
+            >
+              {OFFICE_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
           </div>

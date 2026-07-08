@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { profileApi } from '@/lib/api';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -14,11 +15,18 @@ export default function AuthCallbackPage() {
       );
       if (error) {
         router.push('/auth/signin?error=auth_callback_error');
-      } else {
-        const params = new URLSearchParams(window.location.search);
-        const next = params.get('next') || '/dashboard';
-        router.push(next);
+        return;
       }
+      try {
+        const profile = await profileApi.get();
+        if (!profile.office) {
+          router.push('/onboarding/office');
+          return;
+        }
+      } catch {}
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get('next') || '/dashboard';
+      router.push(next);
     };
     handleCallback();
   }, [router]);

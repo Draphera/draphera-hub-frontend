@@ -57,17 +57,32 @@ export default function HomePage() {
     } catch { setWlMsg('Errore. Riprova.'); }
   };
 
-  const tools = [
-    { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
-    { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
-    { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
-    { title: 'TechSheet Light', description: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
-    { title: 'Material Normalizer', description: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
-    { title: 'Accessory Normalizer', description: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
-    { title: 'BOM Generator', description: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
-    { title: 'Checklist Qualità', description: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
-    { title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
-  ];
+  const officeTools: Record<string, { title: string; desc: string; href: string; premium?: boolean; active?: boolean; comingSoon?: boolean }[]> = {
+    'Ufficio Stile': [
+      { title: 'TechSheet Light', desc: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
+      { title: 'Generatore Etichette', desc: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
+      { title: 'Material Normalizer', desc: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
+    ],
+    Modellistica: [
+      { title: 'HPGL Viewer', desc: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
+      { title: 'ISO Viewer', desc: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
+      { title: 'DXF Viewer', desc: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    ],
+    CAD: [
+      { title: 'HPGL Viewer', desc: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
+      { title: 'ISO Viewer', desc: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
+      { title: 'DXF Viewer', desc: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    ],
+    Produzione: [
+      { title: 'BOM Generator', desc: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
+      { title: 'Checklist Qualità', desc: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
+      { title: 'Accessory Normalizer', desc: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
+    ],
+    Prototipia: [
+      { title: 'TechSheet Light', desc: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
+      { title: 'Material Normalizer', desc: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
+    ],
+  };
 
   const isOpen = regState?.open ?? true;
   const remaining = regState?.remaining ?? 0;
@@ -232,9 +247,18 @@ export default function HomePage() {
             <h2 className="section-title text-white mb-4">{t('home.section_title')}</h2>
             <p className="section-subtitle mx-auto">{t('home.section_sub')}</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {tools.map(tool => <CardTool key={tool.href} {...tool} />)}
-          </div>
+          {Object.entries(officeTools).map(([office, ts]) => (
+            <div key={office} className="mb-10">
+              <h3 className="text-sm font-semibold text-drapera-gold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+                {office}
+              </h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {ts.map(tool => <CardTool key={tool.href} title={tool.title} description={tool.desc} href={tool.href} premium={tool.premium} active={tool.active} comingSoon={tool.comingSoon} />)}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
