@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 interface CardToolProps {
   title: string;
@@ -11,6 +12,7 @@ interface CardToolProps {
 }
 
 export default function CardTool({ title, description, href, icon, premium, active, comingSoon }: CardToolProps) {
+  const { t } = useTranslation();
   const Wrapper = comingSoon ? 'div' : Link;
 
   return (
@@ -18,12 +20,12 @@ export default function CardTool({ title, description, href, icon, premium, acti
       <div className={`premium-card h-full flex flex-col relative overflow-hidden ${premium && !comingSoon ? 'border-drapera-gold/20' : ''} ${comingSoon ? 'opacity-50' : ''}`}>
         {premium && !comingSoon && (
           <div className="absolute top-3 right-3">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-drapera-gold bg-drapera-gold/10 px-2 py-1 rounded-md">Premium</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-drapera-gold bg-drapera-gold/10 px-2 py-1 rounded-md">{t('cardtool.premium')}</span>
           </div>
         )}
         {comingSoon && (
           <div className="absolute top-3 right-3">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-drapera-steel-light bg-drapera-border/50 px-2 py-1 rounded-md">Presto</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-drapera-steel-light bg-drapera-border/50 px-2 py-1 rounded-md">{t('cardtool.coming_soon')}</span>
           </div>
         )}
 
@@ -51,7 +53,7 @@ export default function CardTool({ title, description, href, icon, premium, acti
 
         {!comingSoon && (
           <div className="mt-auto pt-4 flex items-center text-sm text-drapera-gold font-medium">
-            <span>Avvia strumento</span>
+            <span>{t('cardtool.start')}</span>
             <svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -60,7 +62,7 @@ export default function CardTool({ title, description, href, icon, premium, acti
 
         {comingSoon && (
           <div className="mt-auto pt-4 flex items-center text-sm text-gray-600 font-medium">
-            <span>In arrivo</span>
+            <span>{t('cardtool.coming_soon')}</span>
           </div>
         )}
       </div>

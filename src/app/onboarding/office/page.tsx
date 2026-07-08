@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { profileApi } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 
 const OFFICES = [
   { id: 'modellistica', label: 'Modellista', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7' },
@@ -13,6 +14,7 @@ const OFFICES = [
 ];
 
 export default function OnboardingOfficePage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [selected, setSelected] = useState('');
   const [saving, setSaving] = useState(false);
@@ -39,8 +41,8 @@ export default function OnboardingOfficePage() {
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center mx-auto mb-4">
             <span className="text-drapera-dark font-display font-extrabold text-lg">D</span>
           </div>
-          <h1 className="font-display font-bold text-2xl text-white mb-2">Benvenuto su Draphera Hub</h1>
-          <p className="text-sm text-drapera-steel-light">Scegli il tuo ufficio per personalizzare l&apos;esperienza.</p>
+          <h1 className="font-display font-bold text-2xl text-white mb-2">{t('onboarding.title')}</h1>
+          <p className="text-sm text-drapera-steel-light">{t('onboarding.subtitle')}</p>
         </div>
 
         <div className="grid sm:grid-cols-2 gap-3 mb-8">
@@ -64,7 +66,7 @@ export default function OnboardingOfficePage() {
         <div className="text-center">
           <button onClick={handleContinue} disabled={!selected || saving}
             className="btn-gold text-sm px-8 py-2.5 disabled:opacity-40">
-            {saving ? '...' : 'Continua → Dashboard'}
+            {saving ? '...' : t('onboarding.continue')}
           </button>
         </div>
       </div>

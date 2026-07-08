@@ -63,7 +63,7 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
           <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">
-                {ml.source === 'ml_rule_agreement' ? 'ML + Regole' : ml.source === 'rule_based_fallback' ? 'Regole (ML basso)' : 'ML'}
+                {ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') : ml.source === 'rule_based_fallback' ? t('info.ml_fallback') : t('info.ml_only')}
               </span>
               <span className={`text-xs font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
                 {((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%
@@ -82,7 +82,7 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
             )}
             {onCorrectCad && (
               <div className="mt-2 pt-2 border-t border-cyan-500/10">
-                <p className="text-[9px] text-gray-600 mb-1">CAD errato?</p>
+                <p className="text-[9px] text-gray-600 mb-1">{t('info.cad_error')}</p>
                 <div className="flex gap-1">
                   {['lectra', 'gerber', 'investronica', 'optitex', 'tukatech', 'assyst', 'audaces', 'richpeace'].map(c => (
                     <button key={c} onClick={() => onCorrectCad(c)} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors">{c}</button>
@@ -98,12 +98,12 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
             { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]' },
             { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? meta.dimensions.width.toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? meta.dimensions.height.toFixed(1) : '0'}` : '\u2014' },
             { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014' },
-            { label: 'Polylines', value: meta?.polylines ?? '\u2014' },
+            { label: t('info.lines'), value: meta?.polylines ?? '\u2014' },
             { label: t('info.arcs'), value: meta?.arcs ?? '\u2014' },
             { label: t('info.circles'), value: meta?.circles ?? '\u2014' },
-            { label: 'Rettangoli', value: meta?.rectangles ?? '\u2014' },
-            { label: 'Etichette', value: meta?.labels ?? '\u2014' },
-            { label: 'Penne', value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '\u2014' },
+            { label: t('info.rectangles'), value: meta?.rectangles ?? '\u2014' },
+            { label: t('info.labels'), value: meta?.labels ?? '\u2014' },
+            { label: t('info.pens'), value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '\u2014' },
           ].map(f => (
             <div key={f.label} className="flex justify-between py-1.5 border-b border-drapera-border/40">
               <span className="tech-label">{f.label}</span>

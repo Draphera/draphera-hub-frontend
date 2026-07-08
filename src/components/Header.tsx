@@ -117,7 +117,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
 
       <nav className="hidden lg:flex items-center gap-0.5 mx-4 flex-1 justify-center">
         <Link href="/" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
-          Home
+          {t('nav.home')}
         </Link>
         <Link href="/dashboard" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
           {t('nav.dashboard')}
@@ -125,7 +125,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         <span className="text-drapera-border mx-1">|</span>
         <div className="relative" ref={ufficiRef}>
           <button onClick={() => setUfficiOpen(!ufficiOpen)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ufficiOpen ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
-            Uffici
+            {t('nav.uffici')}
             <svg className={`w-3 h-3 transition-transform ${ufficiOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </button>
           {ufficiOpen && (
@@ -140,7 +140,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         </div>
         <div className="relative group">
           <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-white">
-            Strumenti
+            {t('nav.strumenti')}
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
           </button>
           <div className="absolute top-full left-0 mt-1 w-56 py-2 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
@@ -241,10 +241,10 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
                 <p className="text-[11px] text-gray-500">{session.user?.email}</p>
               </div>
             )}
-            <Link href="/" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">Home</Link>
+            <Link href="/" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.home')}</Link>
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.dashboard')}</Link>
             <div className="h-px bg-drapera-border/50 my-2" />
-            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">Uffici</p>
+            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">{t('nav.uffici')}</p>
             {uffici.map(u => (
               <Link key={u.href} href={u.href} onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{u.label}</Link>
             ))}
