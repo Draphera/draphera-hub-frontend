@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
+import CardTool from '@/components/CardTool';
 import { useTranslation } from '@/lib/i18n';
-import { profileApi, adminApi } from '@/lib/api';
+import { profileApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 export default function DashboardPage() {
@@ -15,9 +16,6 @@ export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -27,128 +25,85 @@ export default function DashboardPage() {
         const p = await profileApi.get();
         setProfile(p);
       } catch { /* ignore */ }
-      try {
-        const a = await adminApi.check();
-        setIsAdmin(a.is_admin);
-      } catch { /* ignore */ }
       setLoading(false);
     });
   }, [router]);
 
-  const handleSave = async () => {
-    setSaving(true); setMsg('');
-    try {
-      const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number']) {
-        if (profile[key]) updates[key] = profile[key];
-      }
-      await profileApi.update(updates);
-      setMsg(t('profile.saved'));
-    } catch { setMsg(t('profile.error')); }
-    setSaving(false);
-  };
+  const tools = [
+    { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
+    { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
+    { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    { title: 'TechSheet Light', description: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
+    { title: 'Material Normalizer', description: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
+    { title: 'Accessory Normalizer', description: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
+    { title: 'BOM Generator', description: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
+    { title: 'Checklist Qualità', description: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
+    { title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
+  ];
 
-  const set = (k: string, v: string) => setProfile(p => ({ ...p, [k]: v }));
+  const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
   if (!session) return null;
 
-  const fields = [
-    { key: 'full_name', label: t('profile.full_name') },
-    { key: 'company_name', label: t('profile.company_name') },
-    { key: 'phone', label: t('profile.phone') },
-    { key: 'address', label: t('profile.address') },
-    { key: 'website', label: t('profile.website') },
-    { key: 'vat_number', label: t('profile.vat_number') },
-  ];
-
   return (
     <div className="min-h-screen">
       <Header />
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-24">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
-          <div>
-            <h1 className="section-title text-white">{t('dashboard.title')}</h1>
-            <p className="text-drapera-steel-light mt-1">{t('dashboard.subtitle')}</p>
+      <div className="pt-14">
+        <section className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-hero-glow opacity-30" />
+          <div className="absolute inset-0 grid-bg opacity-20" />
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-drapera-gold/20 bg-drapera-gold/5 text-drapera-gold text-xs font-medium mb-5">
+                <span className="w-1.5 h-1.5 rounded-full bg-drapera-gold animate-pulse-gold" />
+                {t('dashboard.subtitle')}
+              </div>
+              <h1 className="section-title text-white mb-4 leading-tight">
+                {t('dashboard.hero_greeting').replace('{name}', name)}
+              </h1>
+              <p className="section-subtitle max-w-xl">{t('dashboard.hero_desc')}</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
+              <div className="premium-card p-4 text-center">
+                <p className="text-2xl font-bold text-drapera-gold">1</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.active_tools_count')}</p>
+              </div>
+              <div className="premium-card p-4 text-center">
+                <p className="text-2xl font-bold text-white">8</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.dev_count')}</p>
+              </div>
+              <div className="premium-card p-4 text-center">
+                <p className="text-2xl font-bold text-white">
+                  <svg className="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">HPGL</p>
+              </div>
+              <div className="premium-card p-4 text-center sm:hidden lg:block">
+                <Link href="/tools/hpgl" className="btn-gold text-xs px-4 py-2 w-full">{t('dashboard.open_hpgl')}</Link>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-2">
-            {isAdmin && (
-              <Link href="/admin" className="btn-ghost text-xs px-3 py-1.5">
-                {t('admin.title')}
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-drapera-gold/20 to-transparent" />
+        </section>
+
+        <section className="py-12 lg:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="section-title text-white text-2xl">{t('dashboard.all_tools')}</h2>
+                <p className="text-sm text-drapera-steel-light mt-1">{t('dashboard.quick_start')}</p>
+              </div>
+              <Link href="/tools/hpgl" className="btn-gold text-xs px-4 py-2 hidden sm:inline-flex">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                {t('dashboard.open_hpgl')}
               </Link>
-            )}
-            <Link href="/tools/hpgl" className="btn-gold text-xs px-3 py-1.5">
-              {t('dashboard.open_hpgl')}
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3">
-            <h2 className="font-display font-bold text-xl text-white mb-5">{t('profile.title')}</h2>
-            <div className="premium-card space-y-4">
-              {fields.map(f => (
-                <div key={f.key}>
-                  <label className="text-xs text-gray-400 mb-1 block">{f.label}</label>
-                  <input
-                    className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 transition-colors"
-                    value={profile[f.key] ?? ''}
-                    onChange={e => set(f.key, e.target.value)}
-                    placeholder={f.label}
-                  />
-                </div>
-              ))}
-              <div className="pt-2">
-                <button onClick={handleSave} disabled={saving} className="btn-gold text-sm px-5 py-2">
-                  {saving ? '...' : t('profile.save')}
-                </button>
-                {msg && <span className="ml-3 text-xs text-drapera-gold">{msg}</span>}
-              </div>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {tools.map(tool => <CardTool key={tool.href} {...tool} />)}
             </div>
           </div>
-
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <h2 className="font-display font-bold text-xl text-white mb-5">{t('dashboard.tools')}</h2>
-              <div className="grid gap-3">
-                {[
-                  { title: 'HPGL Viewer', href: '/tools/hpgl', active: true },
-                  { title: 'ISO Viewer', href: '/tools/iso' },
-                  { title: 'DXF Viewer', href: '/tools/dxf' },
-                  { title: 'TechSheet Light', href: '/tools/techsheet-light' },
-                ].map(tool => (
-                  <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={e => { if (!tool.active) e.preventDefault(); }}>
-                    <div className={`premium-card flex items-center justify-between ${tool.active ? 'border-drapera-gold/20' : 'opacity-40'}`}>
-                      <span className="font-display font-semibold text-sm text-white">{tool.title}</span>
-                      {tool.active ? (
-                        <span className="text-[10px] text-drapera-gold font-medium">{t('dashboard.active')}</span>
-                      ) : (
-                        <span className="text-[10px] text-gray-600">{t('dashboard.soon')}</span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h2 className="font-display font-bold text-xl text-white mb-5">{t('dashboard.info')}</h2>
-              <div className="premium-card space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-drapera-border/50">
-                  <span className="text-xs text-gray-400">{t('dashboard.active_count')}</span>
-                  <span className="text-sm text-drapera-gold font-bold">1</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-drapera-border/50">
-                  <span className="text-xs text-gray-400">{t('dashboard.dev_count')}</span>
-                  <span className="text-sm text-white font-bold">8</span>
-                </div>
-                <div className="pt-2">
-                  <Link href="/tools/hpgl" className="btn-gold w-full text-center text-xs">{t('dashboard.go_hpgl')}</Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
     </div>
   );

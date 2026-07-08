@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/i18n';
+import { adminApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HeaderProps {
@@ -17,20 +18,44 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
   const { t, lang, setLang } = useTranslation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [userMenu, setUserMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
   const isHpgl = pathname === '/tools/hpgl';
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: listener } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (data.session) {
+        adminApi.check().then(a => setIsAdmin(a.is_admin)).catch(() => {});
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+      if (s) adminApi.check().then(a => setIsAdmin(a.is_admin)).catch(() => {});
+      else setIsAdmin(false);
+    });
     return () => listener?.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setUserMenu(false);
+    };
+    if (userMenu) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [userMenu]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setUserMenu(false);
     router.push('/');
   };
+
+  const initials = session?.user?.email?.[0]?.toUpperCase() || '?';
+  const userName = session?.user?.user_metadata?.full_name || session?.user?.email || '';
 
   const navTools = [
     { label: t('nav.hpgl_viewer'), href: '/tools/hpgl', active: true },
@@ -96,7 +121,39 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         )}
 
         {session ? (
-          <button onClick={handleSignOut} className="btn-ghost text-xs px-3 py-1.5">{t('nav.signout')}</button>
+          <div className="relative" ref={menuRef}>
+            <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xs font-bold text-drapera-dark">
+                {initials}
+              </div>
+              <span className="hidden sm:block text-xs text-gray-400 max-w-[100px] truncate">{userName}</span>
+              <svg className={`w-3 h-3 text-gray-500 transition-transform ${userMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {userMenu && (
+              <div className="absolute right-0 top-full mt-1 w-48 py-1.5 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl animate-fade-in">
+                <div className="px-3 py-2 border-b border-drapera-border/50">
+                  <p className="text-xs text-white font-medium truncate">{userName}</p>
+                  <p className="text-[10px] text-gray-500 truncate">{session.user?.email}</p>
+                </div>
+                <Link href="/dashboard/settings" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {t('profile.title')}
+                </Link>
+                {isAdmin && (
+                  <Link href="/admin" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    {t('admin.title')}
+                  </Link>
+                )}
+                <div className="border-t border-drapera-border/50 mt-1 pt-1">
+                  <button onClick={handleSignOut} className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-white/5 transition-colors">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    {t('nav.signout')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <Link href="/auth/signin" className="btn-gold text-xs px-3 py-1.5">{t('nav.signin')}</Link>
         )}
@@ -111,6 +168,12 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
       {mobileOpen && (
         <div className="absolute top-14 left-0 right-0 lg:hidden border-t border-drapera-border bg-drapera-dark/95 backdrop-blur-2xl animate-fade-in">
           <div className="px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
+            {session && (
+              <div className="px-3 py-2 border-b border-drapera-border/50 mb-2">
+                <p className="text-sm text-white font-medium">{userName}</p>
+                <p className="text-[11px] text-gray-500">{session.user?.email}</p>
+              </div>
+            )}
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.dashboard')}</Link>
             <div className="h-px bg-drapera-border/50 my-2" />
             {navTools.map(tool => (
@@ -121,6 +184,13 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
               </Link>
             ))}
             <div className="h-px bg-drapera-border/50 my-2" />
+            {session && (
+              <>
+                <Link href="/dashboard/settings" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('profile.title')}</Link>
+                {isAdmin && <Link href="/admin" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('admin.title')}</Link>}
+                <button onClick={handleSignOut} className="block w-full text-left px-3 py-2 text-sm text-red-400 hover:text-red-300 rounded-lg hover:bg-white/5">{t('nav.signout')}</button>
+              </>
+            )}
             <div className="flex items-center gap-2 px-3 pt-1">
               <button onClick={() => setLang('it')} className={`text-xs px-2 py-1 rounded ${lang === 'it' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500'}`}>{t('lang.it')}</button>
               <button onClick={() => setLang('en')} className={`text-xs px-2 py-1 rounded ${lang === 'en' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500'}`}>{t('lang.en')}</button>
