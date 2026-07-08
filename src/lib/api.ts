@@ -64,11 +64,19 @@ export const adminApi = {
       return res.ok ? res.json() : { is_admin: false };
     } catch { return { is_admin: false }; }
   },
-  async listUploads() {
+  async listUploads(type?: string) {
     const headers = await getHeaders();
-    const res = await fetch(`${API_BASE}/api/admin/uploads`, { headers });
+    const url = type ? `${API_BASE}/api/admin/uploads?type=${type}` : `${API_BASE}/api/admin/uploads`;
+    const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
+  },
+  async exportZip(type?: string) {
+    const headers = await getHeaders();
+    const url = type ? `${API_BASE}/api/admin/uploads/export-zip?type=${type}` : `${API_BASE}/api/admin/uploads/export-zip`;
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.blob();
   },
   async downloadUpload(id: string) {
     const headers = await getHeaders();
@@ -82,9 +90,12 @@ export const adminApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async cleanAll() {
+  async cleanAll(type?: string) {
     const headers = await getHeaders();
-    const res = await fetch(`${API_BASE}/api/admin/uploads?confirm=DELETE_ALL`, { method: 'DELETE', headers });
+    const url = type
+      ? `${API_BASE}/api/admin/uploads?confirm=DELETE_ALL&type=${type}`
+      : `${API_BASE}/api/admin/uploads?confirm=DELETE_ALL`;
+    const res = await fetch(url, { method: 'DELETE', headers });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
