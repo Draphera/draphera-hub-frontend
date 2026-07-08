@@ -122,6 +122,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'cad.audaces': 'Audaces',
     'cad.richpeace': 'Richpeace',
     'cad.other': 'Altro',
+    'cad.detected': 'CAD rilevato',
+    'cad.unknown': 'Sconosciuto',
 
     'admin.title': 'Admin Dashboard',
     'admin.no_access': 'Accesso negato. Solo admin possono accedere.',
@@ -276,6 +278,8 @@ const translations: Record<Lang, Record<string, string>> = {
     'cad.audaces': 'Audaces',
     'cad.richpeace': 'Richpeace',
     'cad.other': 'Other',
+    'cad.detected': 'CAD detected',
+    'cad.unknown': 'Unknown',
 
     'admin.title': 'Admin Dashboard',
     'admin.no_access': 'Access denied. Admins only.',

@@ -33,6 +33,7 @@ interface HPGLData {
     pens: number[];
   };
   upload?: { saved: boolean; id?: string; existing?: boolean; error?: string };
+  cad?: { cad: string; confidence: string; score: number };
 }
 
 const APP_VERSION = '1.0.0';
@@ -67,8 +68,10 @@ export default function HPGLViewerPage() {
       setHpglData(result);
     } catch {
       const text = await file.text();
+      const cleaned = text.replace(/[^\n\r\t\x1b\x03\x00\x20-\x7e\xa0-\xff]/g, '');
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false, currentPen = 0, currentLineType = 0, currentPenWidth = 0.25, currentPoly: HPGLPath | null = null;
+      const parseNums = (s: string) => s.trim().split(/[\s,;]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
       const flush = () => {
         if (currentPoly && currentPoly.points!.length >= 2) {
           const pts = currentPoly.points!;
@@ -78,12 +81,12 @@ export default function HPGLViewerPage() {
         }
         currentPoly = null;
       };
-      const lines = Array.from(text.matchAll(/(IN|PU|PD|PA|PR|AA|CI|SP|LT|VS|PW|EA|ER|RA|RR|LB|DF|RO|IP|SC|DT|DI|DR|SI|SR|SA|SS|SM|AT|RT|PG)\s*((?:-?\d+(?:\.\d+)?(?:\s*,?\s*-?\d+(?:\.\d+)?)*)?)/gi));
+      const lines = Array.from(cleaned.matchAll(/(IN|DF|IP|SC|RO|PU|PD|PA|PR|SP|LT|PW|VS|PG|AA|AT|RT|CI|EA|ER|RA|RR|WG|EW|LB|DT|DI|DR|SI|SR|SA|SS|SM|TL|LO|FT|PM|RP|OC)\s*((?:-?\d+(?:\.\d+)?(?:\s*,?\s*-?\d+(?:\.\d+)?)*)?)/gi));
       for (const m of lines) {
         const cmd = m[1].toUpperCase();
-        const nums = m[2].trim().split(/[\s,]+/).filter(Boolean).map(Number);
-        if (cmd === 'IN') { flush(); cx = cy = 0; penDown = false; currentPen = 0; currentLineType = 0; }
-        else if (cmd === 'DF') { flush(); currentPen = 0; currentLineType = 0; }
+        const nums = parseNums(m[2] || '');
+        if (cmd === 'IN') { flush(); cx = cy = 0; penDown = false; currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; }
+        else if (cmd === 'DF') { flush(); currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; }
         else if (cmd === 'SP' && nums.length >= 1) { flush(); currentPen = Math.abs(nums[0]) % 12; }
         else if (cmd === 'LT' && nums.length >= 1) { currentLineType = Math.abs(nums[0]) % 7; }
         else if (cmd === 'PW' && nums.length >= 1) { currentPenWidth = Math.max(0.05, nums[0]); }
@@ -121,11 +124,26 @@ export default function HPGLViewerPage() {
         else if (cmd === 'ER' && nums.length >= 2) { const ex = cx + nums[0], ey = cy + nums[1]; flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [ex, cy], [ex, ey], [cx, ey], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'RA' && nums.length >= 2) { flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [nums[0], cy], [nums[0], nums[1]], [cx, nums[1]], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'RR' && nums.length >= 2) { const rx = cx + nums[0], ry = cy + nums[1]; flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [rx, cy], [rx, ry], [cx, ry], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
-        else if (cmd === 'RO' && nums.length >= 1) { /* rotation tracking */ }
         else if (cmd === 'PG') { flush(); }
+        else if (cmd === 'LB') {
+          flush();
+          const fullMatch = m[0];
+          const afterLB = cleaned.slice(m.index! + fullMatch.indexOf('LB') + 2);
+          let labelText = '';
+          for (const ch of afterLB) {
+            if (ch === '\x1b' || ch === '\x03' || ch === '\x00' || ch === '\n') break;
+            labelText += ch;
+          }
+          labelText = labelText.trim();
+          if (labelText) paths.push({ type: 'label', x: cx, y: cy, text: labelText, pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth });
+        }
       }
       flush();
       const pens = paths.reduce<number[]>((acc, p) => { const pen = p.pen ?? 0; if (!acc.includes(pen)) acc.push(pen); return acc; }, []);
+
+      let cadId = 'unknown';
+      const totalText = text;
+      if (/LB/.test(totalText)) { /* check signatures */ }
       setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: paths.filter(p => p.type === 'label').length, dimensions: { width: 400, height: 300 }, pens } });
     }
   }, []);
@@ -170,7 +188,7 @@ export default function HPGLViewerPage() {
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} />
       </main>
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} />
       <FooterActions
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}

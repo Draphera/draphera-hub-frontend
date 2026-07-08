@@ -13,16 +13,23 @@ interface HPGLMeta {
   pens: number[];
 }
 
+interface CADInfo {
+  cad: string;
+  confidence: string;
+  score: number;
+}
+
 interface Props {
   meta: HPGLMeta | null;
   fileName: string;
   viewMode: 'outline' | 'tack' | 'measurement';
   onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
+  cad?: CADInfo | null;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -32,6 +39,14 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange }
           <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-drapera-steel-light mb-2">{t('info.title')}</h3>
           <div className="h-px bg-drapera-border mt-2.5" />
         </div>
+
+        {cad && cad.cad !== 'unknown' && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-drapera-gold/5 border border-drapera-gold/15">
+            <span className="text-xs text-drapera-gold font-medium">{t('cad.detected')}:</span>
+            <span className="text-xs text-white font-semibold">{t(`cad.${cad.cad}`)}</span>
+            <span className={`ml-auto w-1.5 h-1.5 rounded-full ${cad.confidence === 'high' ? 'bg-green-400' : cad.confidence === 'medium' ? 'bg-yellow-400' : 'bg-gray-500'}`} />
+          </div>
+        )}
 
         <div className="space-y-2.5">
           {[
