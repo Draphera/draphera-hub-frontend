@@ -4,8 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 
 type Lang = 'it' | 'en';
 
-const translations: Record<Lang, Record<string, string>> = {
-  it: {
+const it = {
     'nav.dashboard': 'Dashboard',
     'nav.hpgl_viewer': 'HPGL Viewer',
     'nav.tools': 'Strumenti',
@@ -203,8 +202,9 @@ const translations: Record<Lang, Record<string, string>> = {
     'coming_soon.title': 'In arrivo',
     'coming_soon.desc': 'Questo strumento è in fase di sviluppo e sarà disponibile a breve.',
     'coming_soon.back': 'Vai a HPGL Viewer (attivo)',
-  },
-  en: {
+} as const;
+
+const en = {
     'nav.dashboard': 'Dashboard',
     'nav.hpgl_viewer': 'HPGL Viewer',
     'nav.tools': 'Tools',
@@ -402,13 +402,16 @@ const translations: Record<Lang, Record<string, string>> = {
     'coming_soon.title': 'Coming Soon',
     'coming_soon.desc': 'This tool is under development and will be available shortly.',
     'coming_soon.back': 'Go to HPGL Viewer (active)',
-  },
-};
+} as const;
+
+export type TranslationKey = keyof typeof it;
+
+const translations: Record<Lang, Record<string, string>> = { it, en };
 
 interface I18nCtx {
   lang: Lang;
   setLang: (l: Lang) => void;
-  t: (key: string) => string;
+  t: (key: TranslationKey | string) => string;
 }
 
 const I18nContext = createContext<I18nCtx>({ lang: 'it', setLang: () => {}, t: (k) => k });
