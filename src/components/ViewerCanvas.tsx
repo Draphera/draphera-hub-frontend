@@ -91,6 +91,10 @@ function screenToViewbox(svg: SVGSVGElement, clientX: number, clientY: number) {
   };
 }
 
+function clampFontSize(size: number, min: number = 6, max: number = 18): number {
+  return Math.max(min, Math.min(max, size));
+}
+
 export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -177,7 +181,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       }
 
       if (path.type === 'label' && path.text) {
-        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={6 / effectiveZoom} fontFamily="monospace">{path.text}</text>;
+        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={clampFontSize(6 / effectiveZoom, 5, 14)} fontFamily="monospace">{path.text}</text>;
       }
 
       return null;
@@ -189,7 +193,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return data.paths.flatMap((path, idx) =>
       (path.type === 'polyline' || path.type === 'rectangle') && path.points
         ? path.points.filter((_, pi) => pi % 8 === 0).map((pt, pi) => (
-            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={1.5 / effectiveZoom} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.4} />
+            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={clampFontSize(1.5 / effectiveZoom, 1, 8)} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.4} />
           ))
         : []
     );
@@ -200,16 +204,22 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     const { cx, cy, w, h } = bounds;
     return (
       <g>
-        <line x1={cx - w / 2 - 10} y1={cy} x2={cx + w / 2 + 10} y2={cy} stroke="#ff6b6b" strokeWidth={0.5 / effectiveZoom} strokeDasharray="4 3" />
-        <line x1={cx} y1={cy - h / 2 - 10} x2={cx} y2={cy + h / 2 + 10} stroke="#ff6b6b" strokeWidth={0.5 / effectiveZoom} strokeDasharray="4 3" />
-        <text x={cx} y={cy - h / 2 - 15} textAnchor="middle" fill="#ff6b6b" fontSize={8 / effectiveZoom} fontFamily="Inter">{w.toFixed(1)}</text>
-        <text x={cx + w / 2 + 15} y={cy} textAnchor="start" dominantBaseline="central" fill="#ff6b6b" fontSize={8 / effectiveZoom} fontFamily="Inter">{h.toFixed(1)}</text>
+        <line x1={cx - w / 2 - 10} y1={cy} x2={cx + w / 2 + 10} y2={cy} stroke="#ff6b6b" strokeWidth={clampFontSize(0.5 / effectiveZoom, 0.3, 3)} strokeDasharray="4 3" />
+        <line x1={cx} y1={cy - h / 2 - 10} x2={cx} y2={cy + h / 2 + 10} stroke="#ff6b6b" strokeWidth={clampFontSize(0.5 / effectiveZoom, 0.3, 3)} strokeDasharray="4 3" />
+        <text x={cx} y={cy - h / 2 - 15} textAnchor="middle" fill="#ff6b6b" fontSize={clampFontSize(8 / effectiveZoom, 6, 18)} fontFamily="Inter">{w.toFixed(1)}</text>
+        <text x={cx + w / 2 + 15} y={cy} textAnchor="start" dominantBaseline="central" fill="#ff6b6b" fontSize={clampFontSize(8 / effectiveZoom, 6, 18)} fontFamily="Inter">{h.toFixed(1)}</text>
       </g>
     );
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button === 0) { setIsPanning(true); setPanStart({ x: e.clientX, y: e.clientY }); }
+    if (e.button === 0) {
+      const svg = svgRef.current;
+      if (!svg) return;
+      const vb = screenToViewbox(svg, e.clientX, e.clientY);
+      setIsPanning(true);
+      setPanStart({ x: vb.x, y: vb.y });
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -222,19 +232,33 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
     if (isPanning) {
       setPan(prev => ({ x: prev.x + (vb.x - panStart.x), y: prev.y + (vb.y - panStart.y) }));
-      setPanStart({ x: e.clientX, y: e.clientY });
+      setPanStart({ x: vb.x, y: vb.y });
     }
   };
 
   const handleMouseUp = () => setIsPanning(false);
 
+  const svgStyle: React.CSSProperties = {
+    minHeight: 460,
+    outline: '1px solid rgba(242, 201, 76, 0.08)',
+    outlineOffset: -1,
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden rounded-xl border border-drapera-border bg-drapera-dark">
+      {data && (
+        <div
+          className="absolute inset-0 rounded-xl pointer-events-none z-0"
+          style={{
+            boxShadow: 'inset 0 0 30px rgba(242, 201, 76, 0.06), 0 0 20px rgba(242, 201, 76, 0.03)',
+          }}
+        />
+      )}
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="w-full h-full cursor-grab active:cursor-grabbing select-none"
-        style={{ minHeight: 460 }}
+        className="w-full h-full cursor-grab active:cursor-grabbing select-none relative z-[1]"
+        style={svgStyle}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -258,10 +282,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           </>
         )}
       </svg>
-      <div className="absolute bottom-3 left-3 glass-panel px-2.5 py-1 flex items-center gap-3 z-10">
-        <span className="text-[11px] text-drapera-steel-light font-mono">X: {mousePos.x.toFixed(1)}</span>
-        <span className="text-[11px] text-drapera-steel-light font-mono">Y: {mousePos.y.toFixed(1)}</span>
-        <span className="text-[11px] text-drapera-steel-light font-mono">Scale: {Math.round(effectiveZoom * 100)}%</span>
+      <div className="absolute bottom-3 left-3 flex items-center gap-3 z-10 rounded-md px-3 py-1.5"
+        style={{ background: 'rgba(18, 10, 32, 0.85)', backdropFilter: 'blur(4px)', border: '1px solid rgba(242, 201, 76, 0.12)' }}>
+        <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">X: {mousePos.x.toFixed(1)}</span>
+        <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">Y: {mousePos.y.toFixed(1)}</span>
+        <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">S: {Math.round(effectiveZoom * 100)}%</span>
       </div>
     </div>
   );

@@ -116,6 +116,61 @@ export const userApi = {
   },
 };
 
+export const adminCadApi = {
+  async list() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/cad`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async create(data: { id: string; name: string; description?: string; color?: string }) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/cad`, {
+      method: 'POST', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async update(cadId: string, data: Record<string, string>) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/cad/${cadId}`, {
+      method: 'PUT', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async delete(cadId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/cad/${cadId}`, {
+      method: 'DELETE', headers,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async train(file: File, cadId: string) {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('cad_id', cadId);
+    const headers = await getHeaders();
+    const { Authorization, ...rest } = headers;
+    const res = await fetch(`${API_BASE}/api/admin/cad/train`, {
+      method: 'POST',
+      headers: { ...rest, Authorization: Authorization || '' },
+      body: form,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async setUploadCad(uploadId: string, cadId: string) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/admin/uploads/${uploadId}/cad`, {
+      method: 'PUT', headers, body: JSON.stringify({ cad_id: cadId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
 export const hpglApi = {
   async parse(file: File) {
     const form = new FormData(); form.append('file', file);
