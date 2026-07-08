@@ -36,8 +36,10 @@ export default function AdminPage() {
         if (a.error) setAuthError(`${a.error}: ${a.detail || ''}`);
         setIsAdmin(a.is_admin);
         if (a.is_admin) {
-          const u = await adminApi.listUploads();
-          setUploads(u.uploads ?? []);
+          try {
+            const u = await adminApi.listUploads();
+            setUploads(u.uploads ?? []);
+          } catch (e: any) { setMsg(`Errore uploads: ${e.message}`); }
         }
       } catch { setIsAdmin(false); }
       setLoading(false);
