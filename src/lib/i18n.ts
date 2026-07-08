@@ -101,6 +101,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.github': 'GitHub',
 
     'profile.title': 'Profilo Azienda',
+    'profile.social_title': 'Social Network',
     'profile.full_name': 'Nome e Cognome',
     'profile.company_name': 'Nome Azienda',
     'profile.phone': 'Telefono',
@@ -277,6 +278,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.github': 'GitHub',
 
     'profile.title': 'Company Profile',
+    'profile.social_title': 'Social Networks',
     'profile.full_name': 'Full Name',
     'profile.company_name': 'Company Name',
     'profile.phone': 'Phone',
