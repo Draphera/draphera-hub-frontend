@@ -171,6 +171,18 @@ export const adminCadApi = {
   },
 };
 
+export const correctionApi = {
+  async submitCorrection(cadId: string, features: Record<string, unknown>, fileId = '') {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/correct`, {
+      method: 'POST', headers, body: JSON.stringify({ cad_id: cadId, features, file_id: fileId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
 export const trainingApi = {
   async trainModel() {
     const headers = await getHeaders();

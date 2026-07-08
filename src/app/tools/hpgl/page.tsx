@@ -8,7 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import ViewerCanvas from '@/components/ViewerCanvas';
 import InfoPanel from '@/components/InfoPanel';
 import FooterActions from '@/components/FooterActions';
-import { hpglApi } from '@/lib/api';
+import { hpglApi, correctionApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HPGLPath {
@@ -34,7 +34,8 @@ interface HPGLData {
   };
   upload?: { saved: boolean; id?: string; existing?: boolean; error?: string };
   cad?: { cad: string; confidence: string; score: number };
-  ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number> };
+  ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number>; final_cad?: string; final_confidence?: number; source?: string };
+  features?: Record<string, unknown>;
 }
 
 const APP_VERSION = '1.0.0';
@@ -54,6 +55,9 @@ export default function HPGLViewerPage() {
   const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement'>('outline');
   const [gridOn, setGridOn] = useState(true);
   const [fitKey, setFitKey] = useState(0);
+  const [features, setFeatures] = useState<Record<string, unknown> | null>(null);
+  const [uploadId, setUploadId] = useState('');
+  const [msg, setMsg] = useState('');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -63,6 +67,14 @@ export default function HPGLViewerPage() {
     });
   }, [router]);
 
+  const handleCorrectCad = useCallback(async (correctedCadId: string) => {
+    if (!features) return;
+    try {
+      await correctionApi.submitCorrection(correctedCadId, features, uploadId);
+      setMsg('Correzione salvata. Grazie!');
+    } catch { setMsg('Errore salvataggio correzione'); }
+  }, [features, uploadId]);
+
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
     setRawFile(file);
@@ -70,6 +82,8 @@ export default function HPGLViewerPage() {
     try {
       const result = await hpglApi.parse(file);
       setHpglData(result);
+      setFeatures(result.features ?? null);
+      setUploadId(result.upload?.id ?? '');
       setParsing(false);
     } catch {
       try {
@@ -209,7 +223,8 @@ export default function HPGLViewerPage() {
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
       </main>
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} />
+      {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} />
       <FooterActions
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}

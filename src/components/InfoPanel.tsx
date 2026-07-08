@@ -23,6 +23,9 @@ interface MLInfo {
   ml_cad: string;
   ml_confidence: number;
   ml_scores: Record<string, number>;
+  final_cad?: string;
+  final_confidence?: number;
+  source?: string;
 }
 
 interface Props {
@@ -32,11 +35,13 @@ interface Props {
   onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
   cad?: CADInfo | null;
   ml?: MLInfo | null;
+  features?: Record<string, unknown>;
+  onCorrectCad?: (correctedCadId: string) => void;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -57,12 +62,14 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
         {ml && (
           <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">ML</span>
-              <span className={`text-xs font-bold ${ml.ml_confidence > 0.8 ? 'text-green-400' : ml.ml_confidence > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
-                {(ml.ml_confidence * 100).toFixed(0)}%
+              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">
+                {ml.source === 'ml_rule_agreement' ? 'ML + Regole' : ml.source === 'rule_based_fallback' ? 'Regole (ML basso)' : 'ML'}
+              </span>
+              <span className={`text-xs font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                {((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%
               </span>
             </div>
-            <p className="text-xs text-white font-medium">{ml.ml_cad}</p>
+            <p className="text-xs text-white font-medium">{ml.final_cad ?? ml.ml_cad}</p>
             {ml.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
               <div className="mt-1.5 space-y-0.5">
                 {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad, score]) => (
@@ -71,6 +78,16 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
                     <span className="text-gray-400 font-mono">{(score * 100).toFixed(0)}%</span>
                   </div>
                 ))}
+              </div>
+            )}
+            {onCorrectCad && (
+              <div className="mt-2 pt-2 border-t border-cyan-500/10">
+                <p className="text-[9px] text-gray-600 mb-1">CAD errato?</p>
+                <div className="flex gap-1">
+                  {['lectra', 'gerber', 'investronica', 'optitex', 'tukatech', 'assyst', 'audaces', 'richpeace'].map(c => (
+                    <button key={c} onClick={() => onCorrectCad(c)} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors">{c}</button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
