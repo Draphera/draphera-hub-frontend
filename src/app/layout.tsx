@@ -3,8 +3,29 @@ import '@/styles/globals.css';
 import { I18nProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
-  title: 'Draphera Hub — Portale Tecnico Moda',
-  description: 'Piattaforma tecnica per uffici stile, modellistica, prodotto e produzione. Strumenti HPGL e molto altro.',
+  title: 'HPGL Viewer Online Gratuito — Draphera Hub | Visualizzatore CAD per Moda',
+  description: 'Visualizzatore HPGL online gratuito per file CAD di moda (.hpgl, .plt, .hpg). Supporta Lectra, Gerber, Investronica e altri. Anteprima, export PNG/SVG/ZIP, misurazioni e griglia snap. Portale tecnico per uffici stile, modellistica e produzione.',
+  keywords: ['HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub'],
+  openGraph: {
+    title: 'HPGL Viewer Online — Draphera Hub',
+    description: 'Visualizzatore HPGL professionale per file CAD moda. Gratuito, veloce, senza installazione.',
+    url: 'https://draphera.com',
+    siteName: 'Draphera Hub',
+    type: 'website',
+    locale: 'it_IT',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'HPGL Viewer Online — Draphera Hub',
+    description: 'Visualizzatore HPGL professionale per file CAD moda.',
+  },
+  alternates: {
+    canonical: 'https://draphera.com',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

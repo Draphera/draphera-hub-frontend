@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
 import { profileApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -17,6 +19,8 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -46,6 +50,31 @@ export default function SettingsPage() {
     setSaving(false);
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const headers: Record<string, string> = {};
+      const { data: sess } = await supabase.auth.getSession();
+      if (sess?.session?.access_token) {
+        headers['Authorization'] = `Bearer ${sess.session.access_token}`;
+      }
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`${API_BASE}/api/profile/avatar`, {
+        method: 'POST', headers: { Authorization: headers['Authorization'] || '' }, body: form,
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      setProfile(p => ({ ...p, avatar_url: data.avatar_url }));
+      setMsg(t('profile.saved'));
+    } catch {
+      setMsg(t('profile.error'));
+    }
+    setAvatarUploading(false);
+  };
+
   const set = (k: string, v: string) => setProfile(p => ({ ...p, [k]: v }));
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
@@ -60,7 +89,8 @@ export default function SettingsPage() {
     { key: 'vat_number', label: t('profile.vat_number') },
   ];
 
-  const initials = session.user?.email?.[0]?.toUpperCase() || '?';
+  const initials = profile.full_name?.[0]?.toUpperCase() || session.user?.email?.[0]?.toUpperCase() || '?';
+  const avatarUrl = profile.avatar_url;
 
   return (
     <div className="min-h-screen">
@@ -72,12 +102,22 @@ export default function SettingsPage() {
         </Link>
 
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xl font-bold text-drapera-dark">
-            {initials}
+          <div className="relative group">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xl font-bold text-drapera-dark overflow-hidden">
+              {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+            </div>
+            <button onClick={() => fileRef.current?.click()} disabled={avatarUploading}
+              className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer border-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="section-title text-white text-2xl">{t('profile.title')}</h1>
-            <p className="text-sm text-drapera-steel-light mt-0.5">{session.user?.email}</p>
+            <p className="text-sm text-drapera-steel-light mt-0.5 truncate">{session.user?.email}</p>
+            {profile.full_name && (
+              <p className="text-xs text-drapera-gold mt-0.5">{profile.full_name}</p>
+            )}
           </div>
         </div>
 
