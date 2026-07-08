@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [msg, setMsg] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string }>>([]);
+  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,10 @@ export default function SettingsPage() {
     fetch(`${API_BASE}/api/profile/cad-systems`)
       .then(r => r.json())
       .then(data => setCadSystems(data.cad_systems ?? []))
+      .catch(() => {});
+    fetch(`${API_BASE}/api/profile/founder-status`)
+      .then(r => r.json())
+      .then(setFounder)
       .catch(() => {});
   }, [router]);
 
@@ -130,6 +135,20 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+
+        {founder?.is_founder && (
+          <div className="premium-card p-4 border border-drapera-gold/20" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.08), rgba(242,201,76,0.02))' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+                F
+              </div>
+              <div>
+                <p className="text-sm text-white font-semibold">Founder #{founder.position ?? '?'}</p>
+                <p className="text-[11px] text-drapera-gold">Early Access 2026 — Primi 100 utenti</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="premium-card p-6 space-y-5">
           {fields.map(f => (

@@ -21,6 +21,7 @@ export default function Footer() {
         <a href="https://draphera.com" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-600 hover:text-drapera-gold transition-colors block">
           &copy; 2026 Draphera.com &mdash; Portale Tecnico Moda
         </a>
+        <p className="text-[10px] text-gray-700">Early Access v1.0 — July 2026</p>
       </div>
     </footer>
   );

@@ -203,6 +203,31 @@ export default function HomePage() {
             </div>
           </div>
 
+          <div className="max-w-3xl mx-auto mb-20">
+            <div className="premium-card text-center">
+              <h2 className="text-2xl font-bold text-white font-display mb-4">Perché Early Access?</h2>
+              <p className="text-sm text-gray-400 mb-6 max-w-xl mx-auto">
+                Draphera Hub è il primo sistema intelligente per il riconoscimento e l&apos;analisi di file CAD nel settore moda.
+                Stiamo costruendo questa piattaforma con i feedback dei professionisti del settore.
+              </p>
+              <div className="grid sm:grid-cols-3 gap-4 text-left">
+                {[
+                  { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'Qualità garantita', desc: 'Limitiamo l\'accesso per garantire stabilità e supporto ai primi utenti.' },
+                  { icon: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z', label: 'Feedback diretto', desc: 'Ogni utente Early Access contribuisce a migliorare il riconoscimento CAD e le feature della piattaforma.' },
+                  { icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Vantaggio competitivo', desc: 'I primi 100 ricevono il badge Founder e accesso prioritario alle nuove funzionalità.' },
+                ].map(item => (
+                  <div key={item.label} className="text-center">
+                    <div className="w-10 h-10 rounded-lg bg-drapera-gold/10 flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-drapera-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} /></svg>
+                    </div>
+                    <h3 className="text-sm text-white font-semibold mb-1">{item.label}</h3>
+                    <p className="text-[11px] text-gray-500">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           <div className="text-center mb-16">
             <h2 className="section-title text-white mb-4">{t('home.section_title')}</h2>
             <p className="section-subtitle mx-auto">{t('home.section_sub')}</p>
