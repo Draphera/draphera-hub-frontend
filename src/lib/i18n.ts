@@ -167,6 +167,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'admin.deleted': 'Upload eliminato',
     'admin.cleaned': 'Database pulito',
 
+    'stats.total': 'File elaborati',
     'dashboard.files_uploaded': 'File caricati',
     'dashboard.level': 'Livello',
     'dashboard.next_level': 'Prossimo livello',
@@ -196,6 +197,9 @@ const translations: Record<Lang, Record<string, string>> = {
     'dashboard.legal_data_deletion': 'Richiesta Cancellazione Dati',
     'dashboard.account_delete_error': 'Errore durante l\'eliminazione dell\'account',
 
+    'changelog.title': 'Changelog',
+    'changelog.subtitle': 'Tutte le novità e gli aggiornamenti di Draphera Hub.',
+    'changelog.back': 'Torna alla home',
     'coming_soon.title': 'In arrivo',
     'coming_soon.desc': 'Questo strumento è in fase di sviluppo e sarà disponibile a breve.',
     'coming_soon.back': 'Vai a HPGL Viewer (attivo)',
@@ -362,6 +366,7 @@ const translations: Record<Lang, Record<string, string>> = {
     'admin.deleted': 'Upload deleted',
     'admin.cleaned': 'Database cleaned',
 
+    'stats.total': 'Files processed',
     'dashboard.files_uploaded': 'Files uploaded',
     'dashboard.level': 'Level',
     'dashboard.next_level': 'Next level',
@@ -391,6 +396,9 @@ const translations: Record<Lang, Record<string, string>> = {
     'dashboard.legal_data_deletion': 'Data Deletion Request',
     'dashboard.account_delete_error': 'Error deleting account',
 
+    'changelog.title': 'Changelog',
+    'changelog.subtitle': 'All the news and updates of Draphera Hub.',
+    'changelog.back': 'Back to home',
     'coming_soon.title': 'Coming Soon',
     'coming_soon.desc': 'This tool is under development and will be available shortly.',
     'coming_soon.back': 'Go to HPGL Viewer (active)',

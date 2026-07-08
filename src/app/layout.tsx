@@ -38,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <footer className="border-t border-drapera-border/30 py-4">
             <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
               <div className="flex items-center justify-center gap-4 text-[11px]">
+                <Link href="/changelog" className="text-gray-600 hover:text-drapera-gold transition-colors">Changelog</Link>
                 <Link href="/termini" className="text-gray-600 hover:text-drapera-gold transition-colors">Condizioni d&rsquo;Uso</Link>
                 <Link href="/privacy" className="text-gray-600 hover:text-drapera-gold transition-colors">Privacy Policy</Link>
                 <Link href="/cancellazione-dati" className="text-gray-600 hover:text-drapera-gold transition-colors">Cancellazione Dati</Link>

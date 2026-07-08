@@ -20,6 +20,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -32,9 +33,11 @@ export default function SettingsPage() {
       } catch { /* ignore */ }
       setLoading(false);
     });
+    fetch(`${API_BASE}/api/profile/cad-systems`)
+      .then(r => r.json())
+      .then(data => setCadSystems(data.cad_systems ?? []))
+      .catch(() => {});
   }, [router]);
-
-  const CAD_SYSTEMS = ['', 'lectra', 'gerber', 'investronica', 'optitex', 'tukatech', 'assyst', 'audaces', 'richpeace', 'other'];
 
   const handleSave = async () => {
     setSaving(true); setMsg('');
@@ -146,8 +149,9 @@ export default function SettingsPage() {
               value={profile.cad_system ?? ''}
               onChange={e => set('cad_system', e.target.value)}
             >
-              {CAD_SYSTEMS.map(s => (
-                <option key={s} value={s}>{s ? t(`cad.${s}`) : t('cad.none')}</option>
+              <option value="">{t('cad.none')}</option>
+              {cadSystems.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
           </div>

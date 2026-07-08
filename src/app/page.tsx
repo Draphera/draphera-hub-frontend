@@ -33,7 +33,7 @@ function AnimatedCounter({ value, label, color }: { value: number; label: string
 
 export default function HomePage() {
   const { t } = useTranslation();
-  const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number } | null>(null);
+  const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number; by_vendor: Record<string, number> } | null>(null);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/profile/stats/public`)
@@ -82,11 +82,26 @@ export default function HomePage() {
             </div>
           </div>
           {stats && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-12 max-w-2xl">
-              <AnimatedCounter value={stats.total} label="File elaborati" color="text-drapera-gold" />
-              <AnimatedCounter value={stats.hpgl} label="File HPGL" color="text-cyan-400" />
-              <AnimatedCounter value={stats.iso} label="File ISO" color="text-green-400" />
-              <AnimatedCounter value={stats.dxf} label="File DXF" color="text-purple-400" />
+            <div className="mt-12 space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl">
+                <AnimatedCounter value={stats.total} label={t('stats.total')} color="text-drapera-gold" />
+                <AnimatedCounter value={stats.hpgl} label="HPGL" color="text-cyan-400" />
+                <AnimatedCounter value={stats.iso} label="ISO" color="text-green-400" />
+                <AnimatedCounter value={stats.dxf} label="DXF" color="text-purple-400" />
+              </div>
+              {Object.keys(stats.by_vendor).length > 0 && (
+                <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
+                  {Object.entries(stats.by_vendor).map(([vendor, count], i) => {
+                    const colors = ['text-drapera-gold', 'text-cyan-400', 'text-green-400', 'text-purple-400', 'text-pink-400', 'text-orange-400', 'text-blue-400', 'text-teal-400'];
+                    return (
+                      <div key={vendor} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">{vendor}:</span>
+                        <span className={`text-sm font-bold ${colors[i % colors.length]}`}>{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

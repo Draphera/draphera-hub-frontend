@@ -161,7 +161,9 @@ export default function AdminPage() {
         await adminCadApi.create({ id: cadForm.id, name: cadForm.name, description: cadForm.description, color: cadForm.color });
       }
       setShowCadForm(false);
-      await loadCadSystems();
+      try {
+        await loadCadSystems();
+      } catch {}
       setMsg(editingCadId ? 'CAD aggiornato' : 'CAD creato');
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
