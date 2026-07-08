@@ -110,18 +110,17 @@ export default function AdminPage() {
       const blob = filterType ? await adminApi.exportZip(filterType) : await adminApi.exportZip();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `uploads-${filterType || 'all'}.zip`; a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch { setMsg(t('admin.error')); }
     setExporting(false);
   };
 
   const handleDownload = async (id: string) => {
     try {
-      const content = await adminApi.downloadUpload(id);
-      const blob = new Blob([content], { type: 'text/plain' });
+      const blob = await adminApi.downloadUpload(id);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'download.hpgl'; a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch { setMsg(t('admin.error')); }
   };
 
@@ -168,7 +167,7 @@ export default function AdminPage() {
   };
 
   const handleCadDelete = async (cadId: string) => {
-    if (!confirm('Eliminare questo sistema CAD?')) return;
+    if (!window.confirm('Eliminare questo sistema CAD?')) return;
     try {
       await adminCadApi.delete(cadId);
       await loadCadSystems();
@@ -307,8 +306,8 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs">{u.user_id?.slice(0, 8)}...</td>
-                        <td className="px-4 py-3 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
-                        <td className="px-4 py-3 text-xs">{(u.file_size / 1024).toFixed(1)} KB</td>
+                        <td className="px-4 py-3 text-xs">{u.created_at ? new Date(u.created_at).toLocaleDateString() : '-'}</td>
+                        <td className="px-4 py-3 text-xs">{u.file_size ? `${(u.file_size / 1024).toFixed(1)} KB` : '-'}</td>
                         <td className="px-4 py-3 text-right">
                           <button onClick={() => handleDownload(u.id)} className="text-drapera-gold hover:text-amber-400 text-xs">{t('admin.download')}</button>
                         </td>
@@ -475,7 +474,18 @@ export default function AdminPage() {
                     <label className="block text-xs text-gray-500 mb-2">{t('admin.cad_upload_file')}</label>
                     <div className="border-2 border-dashed border-drapera-border rounded-lg p-6 text-center hover:border-drapera-gold/30 transition-colors cursor-pointer"
                       onDragOver={e => e.preventDefault()}
-                      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) setTrainFile(f); }}
+                      onDrop={e => {
+                        e.preventDefault();
+                        const f = e.dataTransfer.files[0];
+                        if (f) {
+                          const ext = '.' + (f.name.split('.').pop()?.toLowerCase() || '');
+                          if (['.hpgl', '.plt', '.hpg', '.iso', '.dxf'].includes(ext)) {
+                            setTrainFile(f);
+                          } else {
+                            setMsg('Formato non supportato. Usa .hpgl .plt .hpg .iso .dxf');
+                          }
+                        }
+                      }}
                     >
                       <input
                         type="file"

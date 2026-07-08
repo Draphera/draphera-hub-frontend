@@ -51,14 +51,14 @@ export default function DashboardPage() {
       setSession(data.session);
       if (!data.session) { router.push('/auth/signin?redirect=/dashboard'); return; }
       try {
-        const [p, s, u] = await Promise.all([
+        const results = await Promise.allSettled([
           profileApi.get(),
           userApi.stats(),
           userApi.uploads(showAll ? 999 : 5),
         ]);
-        setProfile(p);
-        setUploadCount(s.total_uploads);
-        setUploads(u.uploads);
+        if (results[0].status === 'fulfilled') setProfile(results[0].value);
+        if (results[1].status === 'fulfilled') setUploadCount(results[1].value.total_uploads);
+        if (results[2].status === 'fulfilled') setUploads(results[2].value.uploads);
       } catch { /* ignore */ }
       setLoading(false);
     });
@@ -79,7 +79,9 @@ export default function DashboardPage() {
   const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
   const level = getLevel(uploadCount);
   const nextLevel = getNextLevel(uploadCount);
-  const progress = nextLevel ? ((uploadCount - level.min) / (nextLevel.min - level.min)) * 100 : 100;
+  const progress = nextLevel && (nextLevel.min - level.min) > 0
+    ? ((uploadCount - level.min) / (nextLevel.min - level.min)) * 100
+    : 100;
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
   if (!session) return null;
@@ -172,7 +174,7 @@ export default function DashboardPage() {
                   <div key={u.id} className="flex items-center justify-between px-4 py-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-white truncate">{u.filename}</p>
-                      <p className="text-[11px] text-gray-500">{u.file_size ? `${(u.file_size / 1024).toFixed(1)} KB` : ''} · {u.created_at ? new Date(u.created_at).toLocaleDateString() : ''}</p>
+                      <p className="text-[11px] text-gray-500">{u.file_size ? `${(u.file_size / 1024).toFixed(1)} KB` : ''}{u.created_at ? ` · ${new Date(u.created_at).toLocaleDateString()}` : ''}</p>
                     </div>
                     <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-drapera-gold/10 text-drapera-gold font-medium">{u.file_type}</span>
                   </div>
