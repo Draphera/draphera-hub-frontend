@@ -77,16 +77,16 @@ export default function DashboardPage() {
   ];
 
   const officeToolIds: Record<string, string[]> = {
-    stile: ['techsheet', 'labels', 'material'],
     modellistica: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
     produzione: ['bom', 'quality', 'accessory'],
-    prototipia: ['techsheet', 'material'],
   };
 
+  const coreIds = ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'];
   const userOffice = profile.office || '';
-  const tools = userOffice && officeToolIds[userOffice]
-    ? allTools.filter(t => officeToolIds[userOffice].includes(t.id))
-    : allTools;
+  const officeIds = userOffice ? (officeToolIds[userOffice] || null) : null;
+  const tools = officeIds ? allTools.filter(t => officeIds.includes(t.id)) : allTools;
+  const coreTools = allTools.filter(t => coreIds.includes(t.id));
+  const labTools = allTools.filter(t => !coreIds.includes(t.id));
 
   const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
   const level = getLevel(uploadCount);
@@ -201,10 +201,10 @@ export default function DashboardPage() {
 
         <section className="py-12 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="section-title text-white text-2xl">{t('dashboard.all_tools')}</h2>
-                <p className="text-sm text-drapera-steel-light mt-1">{t('dashboard.quick_start')}</p>
+                <h2 className="section-title text-white text-xl">Modellistica &amp; CAD</h2>
+                <p className="text-sm text-drapera-steel-light mt-1">Visualizzatori e riconoscimento intelligente.</p>
               </div>
               <Link href="/tools/hpgl" className="btn-gold text-xs px-4 py-2 hidden sm:inline-flex">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -212,8 +212,31 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {tools.map(tool => <CardTool key={tool.href} {...tool} />)}
+              {coreTools.map(tool => <CardTool key={tool.href} {...tool} />)}
             </div>
+
+            {labTools.filter(t => tools.includes(t)).length > 0 && (
+              <div className="mt-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <h2 className="section-title text-white text-base">Laboratorio Draphera</h2>
+                  <span className="px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Beta</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-4">
+                  Strumenti in fase di sviluppo. Partecipa ai sondaggi per aiutarci a prioritizzare.
+                </p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {labTools.filter(t => tools.includes(t)).map(tool => <CardTool key={tool.href} {...tool} />)}
+                </div>
+                <div className="mt-6 premium-card p-5 text-center">
+                  <p className="text-sm text-white font-medium mb-2">Cosa vorresti vedere in Draphera Hub?</p>
+                  <p className="text-xs text-gray-500 mb-4">I primi 100 utenti guideranno la roadmap del prodotto.</p>
+                  <a href="mailto:feedback@draphera.com?subject=Roadmap%20Draphera%20Hub&body=Ciao,%20vorrei%20suggerire%3A" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                    Suggerisci un tool
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 

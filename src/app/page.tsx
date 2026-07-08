@@ -67,10 +67,13 @@ export default function HomePage() {
   };
 
   const officeTools: Record<string, { title: string; desc: string; href: string; premium?: boolean; active?: boolean; comingSoon?: boolean }[]> = {
-    'Ufficio Stile': [
+    'Laboratorio': [
       { title: 'TechSheet Light', desc: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
       { title: 'Generatore Etichette', desc: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
       { title: 'Material Normalizer', desc: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
+      { title: 'Accessory Normalizer', desc: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
+      { title: 'BOM Generator', desc: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
+      { title: 'Checklist Qualità', desc: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
     ],
     Modellistica: [
       { title: 'HPGL Viewer', desc: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
@@ -81,10 +84,6 @@ export default function HomePage() {
       { title: 'BOM Generator', desc: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
       { title: 'Checklist Qualità', desc: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
       { title: 'Accessory Normalizer', desc: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
-    ],
-    Prototipia: [
-      { title: 'TechSheet Light', desc: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
-      { title: 'Material Normalizer', desc: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
     ],
   };
 
@@ -253,7 +252,7 @@ export default function HomePage() {
           </div>
           {Object.entries(officeTools).filter(([office]) => {
             if (!userOffice) return true;
-            const officeMap: Record<string, string> = { stile: 'Ufficio Stile', modellistica: 'Modellistica', prototipia: 'Prototipia', produzione: 'Produzione' };
+            const officeMap: Record<string, string> = { stile: 'Modellistica', modellistica: 'Modellistica', produzione: 'Produzione' };
             const mapped = officeMap[userOffice];
             return !mapped || mapped === office;
           }).map(([office, ts]) => (

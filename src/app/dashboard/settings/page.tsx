@@ -97,10 +97,7 @@ export default function SettingsPage() {
 
   const OFFICE_OPTIONS = [
     { value: '', label: 'Seleziona ufficio' },
-    { value: 'stile', label: 'Ufficio Stile' },
     { value: 'modellistica', label: 'Modellista' },
-
-    { value: 'prototipia', label: 'Prototipia' },
     { value: 'produzione', label: 'Produzione' },
     { value: 'fornitore', label: 'Fornitore' },
     { value: 'freelance', label: 'Freelance' },
