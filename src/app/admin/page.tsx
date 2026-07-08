@@ -30,6 +30,7 @@ interface TrainingDetail {
   filename_analysis?: { filename_cad?: string; patterns_checked?: string[] };
   content_analysis?: { content_cad?: string; markers_checked?: string[] };
   hpgl_scores?: Record<string, number>;
+  format_family?: { family?: string; variant?: string; details?: Record<string, unknown> };
 }
 
 const TYPE_COLORS: Record<string, string> = {
@@ -552,6 +553,17 @@ export default function AdminPage() {
                               {trainDetail.match ? 'OK' : 'NO'}
                             </span>
                           </div>
+                          {trainDetail.format_family && (
+                            <div className="col-span-2">
+                              <span className="text-gray-500">Famiglia formato:</span>
+                              <span className="text-white ml-1 font-mono">
+                                {trainDetail.format_family.family}
+                                {trainDetail.format_family.variant !== 'standard' && (
+                                  <span className="text-gray-500 ml-1">({trainDetail.format_family.variant})</span>
+                                )}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         {trainDetail.filename_analysis?.filename_cad && (
