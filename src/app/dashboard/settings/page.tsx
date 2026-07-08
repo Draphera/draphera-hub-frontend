@@ -39,10 +39,13 @@ export default function SettingsPage() {
       .then(r => r.json())
       .then(data => setCadSystems(data.cad_systems ?? []))
       .catch(() => {});
-    fetch(`${API_BASE}/api/profile/founder-status`)
-      .then(r => r.json())
-      .then(setFounder)
-      .catch(() => {});
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.access_token) {
+        fetch(`${API_BASE}/api/profile/founder-status`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        }).then(r => r.json()).then(setFounder).catch(() => {});
+      }
+    });
   }, [router]);
 
   const handleSave = async () => {
