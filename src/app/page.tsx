@@ -5,6 +5,7 @@ import Link from 'next/link';
 import CardTool from '@/components/CardTool';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -35,12 +36,20 @@ export default function HomePage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number; by_vendor: Record<string, number> } | null>(null);
   const [regState, setRegState] = useState<{ open: boolean; remaining: number; current_users: number; max_users: number } | null>(null);
+  const [userOffice, setUserOffice] = useState('');
   const [wlEmail, setWlEmail] = useState('');
   const [wlMsg, setWlMsg] = useState('');
 
   useEffect(() => {
     fetch(`${API_BASE}/api/profile/stats/public`).then(r => r.json()).then(setStats).catch(() => {});
     fetch(`${API_BASE}/api/profile/registration-state`).then(r => r.json()).then(setRegState).catch(() => {});
+    supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.access_token) {
+        fetch(`${API_BASE}/api/profile`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        }).then(r => r.json()).then(p => { if (p.office) setUserOffice(p.office); }).catch(() => {});
+      }
+    });
   }, []);
 
   const handleWaitlist = async (e: React.FormEvent) => {
@@ -247,7 +256,12 @@ export default function HomePage() {
             <h2 className="section-title text-white mb-4">{t('home.section_title')}</h2>
             <p className="section-subtitle mx-auto">{t('home.section_sub')}</p>
           </div>
-          {Object.entries(officeTools).map(([office, ts]) => (
+          {Object.entries(officeTools).filter(([office]) => {
+            if (!userOffice) return true;
+            const officeMap: Record<string, string> = { stile: 'Ufficio Stile', modellistica: 'Modellistica', cad: 'CAD', prototipia: 'Prototipia', produzione: 'Produzione' };
+            const mapped = officeMap[userOffice];
+            return !mapped || mapped === office;
+          }).map(([office, ts]) => (
             <div key={office} className="mb-10">
               <h3 className="text-sm font-semibold text-drapera-gold uppercase tracking-wider mb-4 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />

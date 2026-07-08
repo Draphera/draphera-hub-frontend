@@ -64,17 +64,30 @@ export default function DashboardPage() {
     });
   }, [router, showAll]);
 
-  const tools = [
-    { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
-    { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
-    { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
-    { title: 'TechSheet Light', description: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
-    { title: 'Material Normalizer', description: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
-    { title: 'Accessory Normalizer', description: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
-    { title: 'BOM Generator', description: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
-    { title: 'Checklist Qualità', description: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
-    { title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
+  const allTools = [
+    { id: 'hpgl-viewer', title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
+    { id: 'iso-viewer', title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
+    { id: 'dxf-viewer', title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    { id: 'techsheet', title: 'TechSheet Light', description: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
+    { id: 'material', title: 'Material Normalizer', description: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
+    { id: 'accessory', title: 'Accessory Normalizer', description: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
+    { id: 'bom', title: 'BOM Generator', description: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
+    { id: 'quality', title: 'Checklist Qualità', description: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
+    { id: 'labels', title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
   ];
+
+  const officeToolIds: Record<string, string[]> = {
+    stile: ['techsheet', 'labels', 'material'],
+    modellistica: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
+    cad: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
+    produzione: ['bom', 'quality', 'accessory'],
+    prototipia: ['techsheet', 'material'],
+  };
+
+  const userOffice = profile.office || '';
+  const tools = userOffice && officeToolIds[userOffice]
+    ? allTools.filter(t => officeToolIds[userOffice].includes(t.id))
+    : allTools;
 
   const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
   const level = getLevel(uploadCount);
