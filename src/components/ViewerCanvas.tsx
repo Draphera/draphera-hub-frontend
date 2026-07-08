@@ -44,6 +44,16 @@ const PEN_COLORS = [
   '#FFFFFF', '#69F0AE', '#FFD740', '#40C4FF',
 ];
 
+const LT_PATTERNS: Record<number, string> = {
+  0: '',
+  1: '0.05 0.1',
+  2: '0.2 0.15',
+  3: '0.3 0.15 0.05 0.15',
+  4: '0.4 0.15 0.05 0.15 0.05 0.15',
+  5: '0.5 0.2',
+  6: '0.08 0.1',
+};
+
 type BBox = { minX: number; minY: number; maxX: number; maxY: number; cx: number; cy: number; w: number; h: number };
 
 function calcBounds(paths: HPGLPath[]): BBox {
@@ -140,14 +150,16 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return data.paths.map((path, idx) => {
       const pen = path.pen ?? 0;
       const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
-      const sw = 0.5 / effectiveZoom;
+      const sw = (path.penWidth ?? 0.25) / effectiveZoom;
+      const dash = LT_PATTERNS[path.lineType ?? 0] || '';
+      const dashProps = dash ? { strokeDasharray: dash } : {};
 
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" />;
+          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} />;
         }
-        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" />;
+        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} />;
       }
 
       if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
@@ -157,11 +169,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
         const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
         const large = (ea - sa) > Math.PI ? 1 : 0;
-        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} />;
+        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} {...dashProps} />;
       }
 
       if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
-        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} />;
+        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} {...dashProps} />;
       }
 
       if (path.type === 'label' && path.text) {

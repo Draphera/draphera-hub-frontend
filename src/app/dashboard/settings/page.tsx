@@ -30,12 +30,15 @@ export default function SettingsPage() {
     });
   }, [router]);
 
+  const CAD_SYSTEMS = ['', 'lectra', 'gerber', 'investronica', 'optitex', 'tukatech', 'assyst', 'audaces', 'richpeace', 'other'];
+
   const handleSave = async () => {
     setSaving(true); setMsg('');
     try {
       const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number']) {
-        if (profile[key]) updates[key] = profile[key];
+      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system']) {
+        const v = profile[key];
+        if (v !== undefined && v !== null) updates[key] = v;
       }
       await profileApi.update(updates);
       setMsg(t('profile.saved'));
@@ -90,6 +93,18 @@ export default function SettingsPage() {
               />
             </div>
           ))}
+          <div>
+            <label className="text-xs text-gray-400 mb-1.5 block">{t('profile.cad_system')}</label>
+            <select
+              className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-drapera-gold/50 transition-colors appearance-none cursor-pointer"
+              value={profile.cad_system ?? ''}
+              onChange={e => set('cad_system', e.target.value)}
+            >
+              {CAD_SYSTEMS.map(s => (
+                <option key={s} value={s}>{s ? t(`cad.${s}`) : t('cad.none')}</option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-3 pt-2">
             <button onClick={handleSave} disabled={saving} className="btn-gold text-sm px-6 py-2.5">
               {saving ? (
