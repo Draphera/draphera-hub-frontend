@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Inter, Manrope } from 'next/font/google';
 import '@/styles/globals.css';
 import { I18nProvider } from '@/lib/i18n';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap', preload: true });
+const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap', preload: true });
 
 export const metadata: Metadata = {
   title: 'HPGL Viewer Online Gratuito — Draphera Hub | Visualizzatore CAD per Moda',
@@ -31,7 +35,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it" className="scroll-smooth">
+    <html lang="it" className={`scroll-smooth ${inter.variable} ${manrope.variable}`}>
       <body className="min-h-screen bg-drapera-dark flex flex-col">
         <I18nProvider>
           <main className="flex-1">{children}</main>
