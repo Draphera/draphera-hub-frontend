@@ -230,10 +230,10 @@ export default function DashboardPage() {
                 <div className="mt-6 premium-card p-5 text-center">
                   <p className="text-sm text-white font-medium mb-2">Cosa vorresti vedere in Draphera Hub?</p>
                   <p className="text-xs text-gray-500 mb-4">I primi 100 utenti guideranno la roadmap del prodotto.</p>
-                  <a href="mailto:feedback@draphera.com?subject=Roadmap%20Draphera%20Hub&body=Ciao,%20vorrei%20suggerire%3A" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                    Suggerisci un tool
-                  </a>
+                  <Link href="/sondaggio" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                    Partecipa al sondaggio
+                  </Link>
                 </div>
               </div>
             )}

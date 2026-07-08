@@ -112,12 +112,13 @@ export default function HomePage() {
             </div>
 
             <h1 className="section-title text-white mb-6 leading-tight">
-              {t('home.title1')}{' '}
-              <span className="gradient-text">{t('home.title2')}</span>
-              <br />
-              {t('home.title3')}
+              Il viewer intelligente<br />
+              <span className="gradient-text">per la modellistica e il CAD</span>
             </h1>
-            <p className="section-subtitle mb-6">{t('home.subtitle')}</p>
+            <p className="section-subtitle mb-6">
+              HPGL Viewer, ISO Viewer, DXF Viewer e ML CAD Recognition.
+              Il primo sistema che riconosce automaticamente il CAD di origine dei tuoi file.
+            </p>
 
             <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/5 border border-drapera-border mb-8">
               <span className="text-xs text-gray-500">Utenti attivi:</span>
