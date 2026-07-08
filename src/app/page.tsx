@@ -34,13 +34,28 @@ function AnimatedCounter({ value, label, color }: { value: number; label: string
 export default function HomePage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number; by_vendor: Record<string, number> } | null>(null);
+  const [regState, setRegState] = useState<{ open: boolean; remaining: number; current_users: number; max_users: number } | null>(null);
+  const [wlEmail, setWlEmail] = useState('');
+  const [wlMsg, setWlMsg] = useState('');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/profile/stats/public`)
-      .then(r => r.json())
-      .then(setStats)
-      .catch(() => {});
+    fetch(`${API_BASE}/api/profile/stats/public`).then(r => r.json()).then(setStats).catch(() => {});
+    fetch(`${API_BASE}/api/profile/registration-state`).then(r => r.json()).then(setRegState).catch(() => {});
   }, []);
+
+  const handleWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setWlMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/api/profile/waitlist`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: wlEmail }),
+      });
+      const data = await res.json();
+      if (data.status === 'can_register') setWlMsg('Puoi registrarti ora!');
+      else setWlMsg(`Sei in coda! Posizione: #${data.position || 0}`);
+    } catch { setWlMsg('Errore. Riprova.'); }
+  };
 
   const tools = [
     { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
@@ -54,43 +69,81 @@ export default function HomePage() {
     { title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
   ];
 
+  const isOpen = regState?.open ?? true;
+  const remaining = regState?.remaining ?? 0;
+  const current = regState?.current_users ?? 0;
+  const maxUsers = regState?.max_users ?? 100;
+  const totalVendors = stats ? Object.keys(stats.by_vendor).length : 0;
+
   return (
     <div className="relative">
       <Header />
-      <section className="relative min-h-[85vh] flex items-center overflow-hidden pt-14">
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden pt-14">
         <div className="absolute inset-0 bg-hero-glow" />
         <div className="absolute inset-0 grid-bg opacity-30" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="max-w-4xl">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-drapera-gold/20 bg-drapera-gold/5 text-drapera-gold text-sm font-medium mb-6">
-              <span className="w-2 h-2 rounded-full bg-drapera-gold animate-pulse-gold" />
-              {t('home.hero_badge')}
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-drapera-gold/20 bg-drapera-gold/5 text-drapera-gold text-sm font-medium">
+                <span className="w-2 h-2 rounded-full bg-drapera-gold animate-pulse-gold" />
+                Early Access — {isOpen ? `${remaining} posti disponibili` : 'Completato'}
+              </span>
+              <span className="px-3 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium">
+                ML CAD Recognition v1.0
+              </span>
             </div>
+
             <h1 className="section-title text-white mb-6 leading-tight">
               {t('home.title1')}{' '}
               <span className="gradient-text">{t('home.title2')}</span>
               <br />
               {t('home.title3')}
             </h1>
-            <p className="section-subtitle mb-10">{t('home.subtitle')}</p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/tools/hpgl" className="btn-gold text-lg px-8 py-4">
-                {t('home.cta_hpgl')}
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </Link>
-              <Link href="/dashboard" className="btn-ghost text-lg px-8 py-4">{t('home.cta_discover')}</Link>
+            <p className="section-subtitle mb-6">{t('home.subtitle')}</p>
+
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/5 border border-drapera-border mb-8">
+              <span className="text-xs text-gray-500">Utenti attivi:</span>
+              <span className="text-sm font-bold text-drapera-gold">{current}</span>
+              <span className="text-xs text-gray-600">/</span>
+              <span className="text-sm text-gray-400">{maxUsers}</span>
+              <div className="w-32 h-1.5 rounded-full bg-drapera-border overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-drapera-gold to-amber-400 transition-all duration-500" style={{ width: `${Math.min(100, (current / maxUsers) * 100)}%` }} />
+              </div>
             </div>
+
+            <div className="flex flex-wrap gap-4">
+              {isOpen ? (
+                <Link href="/auth/signup" className="btn-gold text-lg px-8 py-4">
+                  Registrati ora — {remaining} posti
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </Link>
+              ) : (
+                <form onSubmit={handleWaitlist} className="flex flex-wrap items-end gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Registrazione chiusa — entra in waitlist</p>
+                    <input type="email" value={wlEmail} onChange={e => setWlEmail(e.target.value)} placeholder="La tua email"
+                      className="w-64 bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50" required />
+                  </div>
+                  <button type="submit" className="btn-gold text-sm px-6 py-2.5">Entra in waitlist</button>
+                </form>
+              )}
+              <Link href="/tools/hpgl" className="btn-ghost text-lg px-8 py-4">
+                {t('home.cta_hpgl')}
+              </Link>
+            </div>
+            {wlMsg && <p className="text-xs text-drapera-gold mt-3">{wlMsg}</p>}
           </div>
+
           {stats && (
-            <div className="mt-12 space-y-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl">
+            <div className="mt-12 space-y-4 max-w-2xl">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <AnimatedCounter value={stats.total} label={t('stats.total')} color="text-drapera-gold" />
                 <AnimatedCounter value={stats.hpgl} label="HPGL" color="text-cyan-400" />
                 <AnimatedCounter value={stats.iso} label="ISO" color="text-green-400" />
                 <AnimatedCounter value={stats.dxf} label="DXF" color="text-purple-400" />
               </div>
-              {Object.keys(stats.by_vendor).length > 0 && (
-                <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4">
+              {totalVendors > 0 && (
+                <div className="flex flex-wrap gap-x-6 gap-y-2">
                   {Object.entries(stats.by_vendor).map(([vendor, count], i) => {
                     const colors = ['text-drapera-gold', 'text-cyan-400', 'text-green-400', 'text-purple-400', 'text-pink-400', 'text-orange-400', 'text-blue-400', 'text-teal-400'];
                     return (
@@ -111,6 +164,45 @@ export default function HomePage() {
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-drapera-violet/5 to-transparent" />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-8 items-center mb-20">
+            <div>
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-drapera-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+              </div>
+              <h2 className="text-3xl font-bold text-white font-display mb-4">Founder Badge</h2>
+              <p className="text-gray-400 mb-4">
+                I primi <span className="text-drapera-gold font-bold">100 utenti</span> riceveranno il badge <span className="text-white font-semibold">Founder</span> permanente.
+              </p>
+              <p className="text-sm text-gray-500">
+                Un riconoscimento esclusivo per chi ha contribuito alla fase iniziale di Draphera Hub.
+                Il badge sarà visibile sul profilo e nelle comunicazioni della piattaforma.
+              </p>
+              <div className="mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-drapera-gold/5 border border-drapera-gold/15">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xs font-bold text-drapera-dark shrink-0">
+                  F
+                </div>
+                <div>
+                  <p className="text-xs text-white font-semibold">Founder #{current > 0 ? current : '?'}</p>
+                  <p className="text-[10px] text-gray-500">Early Access 2026</p>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { value: stats?.total ?? 0, label: 'File elaborati', color: 'text-drapera-gold' },
+                { value: totalVendors, label: 'CAD supportati', color: 'text-cyan-400' },
+                { value: '20', label: 'Feature ML', color: 'text-green-400' },
+                { value: 'RandomForest', label: 'Modello', color: 'text-purple-400', small: true },
+              ].map(s => (
+                <div key={s.label} className="premium-card text-center py-6">
+                  <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
+                  <p className="text-[10px] text-gray-500 mt-1">{s.label}</p>
+                  {s.small && <p className="text-[9px] text-gray-600 mt-0.5">+ Rule-based Voting</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="text-center mb-16">
             <h2 className="section-title text-white mb-4">{t('home.section_title')}</h2>
             <p className="section-subtitle mx-auto">{t('home.section_sub')}</p>
