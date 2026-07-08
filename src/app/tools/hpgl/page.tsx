@@ -34,6 +34,7 @@ interface HPGLData {
   };
   upload?: { saved: boolean; id?: string; existing?: boolean; error?: string };
   cad?: { cad: string; confidence: string; score: number };
+  ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number> };
 }
 
 const APP_VERSION = '1.0.0';
@@ -208,7 +209,7 @@ export default function HPGLViewerPage() {
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
       </main>
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} />
       <FooterActions
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}

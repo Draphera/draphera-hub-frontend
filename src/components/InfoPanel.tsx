@@ -19,17 +19,24 @@ interface CADInfo {
   score: number;
 }
 
+interface MLInfo {
+  ml_cad: string;
+  ml_confidence: number;
+  ml_scores: Record<string, number>;
+}
+
 interface Props {
   meta: HPGLMeta | null;
   fileName: string;
   viewMode: 'outline' | 'tack' | 'measurement';
   onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
   cad?: CADInfo | null;
+  ml?: MLInfo | null;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -45,6 +52,27 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
             <span className="text-xs text-drapera-gold font-medium">{t('cad.detected')}:</span>
             <span className="text-xs text-white font-semibold">{t(`cad.${cad.cad}`)}</span>
             <span className={`ml-auto w-1.5 h-1.5 rounded-full ${cad.confidence === 'high' ? 'bg-green-400' : cad.confidence === 'medium' ? 'bg-yellow-400' : 'bg-gray-500'}`} />
+          </div>
+        )}
+        {ml && (
+          <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">ML</span>
+              <span className={`text-xs font-bold ${ml.ml_confidence > 0.8 ? 'text-green-400' : ml.ml_confidence > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
+                {(ml.ml_confidence * 100).toFixed(0)}%
+              </span>
+            </div>
+            <p className="text-xs text-white font-medium">{ml.ml_cad}</p>
+            {ml.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
+              <div className="mt-1.5 space-y-0.5">
+                {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad, score]) => (
+                  <div key={cad} className="flex justify-between text-[10px]">
+                    <span className="text-gray-500">{cad}</span>
+                    <span className="text-gray-400 font-mono">{(score * 100).toFixed(0)}%</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

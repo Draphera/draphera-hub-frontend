@@ -171,6 +171,30 @@ export const adminCadApi = {
   },
 };
 
+export const trainingApi = {
+  async trainModel() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/train-model`, {
+      method: 'POST', headers,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async getTrainingData(cadId?: string) {
+    const headers = await getHeaders();
+    const url = cadId ? `${API_BASE}/api/admin/cad/training-data?cad_id=${cadId}` : `${API_BASE}/api/admin/cad/training-data`;
+    const res = await fetchWithTimeout(url, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async getFeatureKeys() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/feature-keys`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
 export const hpglApi = {
   async parse(file: File) {
     const form = new FormData(); form.append('file', file);

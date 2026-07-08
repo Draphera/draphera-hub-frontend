@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
-import { adminApi, adminCadApi } from '@/lib/api';
+import { adminApi, adminCadApi, trainingApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface Upload {
@@ -66,6 +66,27 @@ export default function AdminPage() {
   const [trainResults, setTrainResults] = useState<TrainResult | null>(null);
   const [trainDetail, setTrainDetail] = useState<TrainingDetail | null>(null);
   const [training, setTraining] = useState(false);
+
+  const [mlTraining, setMlTraining] = useState(false);
+  const [mlResult, setMlResult] = useState<{ accuracy?: number; samples?: number; test_samples?: number; classes?: string[]; error?: string } | null>(null);
+  const [trainingCount, setTrainingCount] = useState(0);
+
+  const handleTrainModel = async () => {
+    setMlTraining(true); setMlResult(null);
+    try {
+      const r = await trainingApi.trainModel();
+      setMlResult(r.result || r);
+      setMsg('Modello addestrato con successo!');
+    } catch (e: any) { setMlResult({ error: e.message }); setMsg(`Errore: ${e.message}`); }
+    setMlTraining(false);
+  };
+
+  const loadTrainingCount = async () => {
+    try {
+      const data = await trainingApi.getTrainingData();
+      setTrainingCount(data.total ?? 0);
+    } catch {}
+  };
 
   const load = async (ft: string) => {
     try {
@@ -195,6 +216,9 @@ export default function AdminPage() {
     setActiveTab(tab);
     if (tab === 'cad' || tab === 'trainer') {
       await loadCadSystems();
+    }
+    if (tab === 'cad') {
+      await loadTrainingCount();
     }
   };
 
@@ -463,6 +487,37 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            <div className="premium-card mt-6">
+              <h3 className="font-display font-bold text-base text-white mb-3">ML Model — Riconoscimento CAD</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                Addestra un classificatore RandomForest sui {trainingCount} campioni raccolti dal trainer.
+                Serve almeno 10 campioni e 2 classi CAD diverse.
+              </p>
+              <div className="flex items-center gap-3">
+                <button onClick={handleTrainModel} disabled={mlTraining || trainingCount < 10}
+                  className="btn-gold text-xs px-4 py-2 disabled:opacity-40">
+                  {mlTraining ? 'Training...' : 'Addestra Modello'}
+                </button>
+                <span className="text-xs text-gray-500">{trainingCount} campioni</span>
+              </div>
+              {mlResult && (
+                <div className="mt-4 p-3 rounded-lg bg-drapera-dark/50 border border-drapera-border">
+                  {mlResult.error ? (
+                    <p className="text-xs text-red-400">{mlResult.error}</p>
+                  ) : (
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-400 font-bold">{(mlResult.accuracy! * 100).toFixed(1)}%</span>
+                        <span className="text-gray-500">accuracy su {mlResult.test_samples ?? '?'} test</span>
+                      </div>
+                      <p className="text-gray-500">Classi: {mlResult.classes?.join(', ')}</p>
+                      <p className="text-gray-500">{mlResult.samples} campioni totali</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
