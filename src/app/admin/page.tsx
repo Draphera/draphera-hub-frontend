@@ -20,6 +20,9 @@ interface CadSystem {
 
 interface TrainResult {
   detected?: string; assigned?: string; stats?: Record<string, number>;
+  total?: number; processed?: number; errors?: number; features_saved?: number;
+  results?: Array<{ file: string; detected_cad: string; detected_confidence: string; match: boolean; file_type: string }>;
+  error_details?: Array<{ file: string; error: string }>;
 }
 interface TrainingDetail {
   detected_cad?: string;
@@ -254,9 +257,8 @@ export default function AdminPage() {
     setTrainDetail(null);
     try {
       const result = await adminCadApi.train(trainFiles, trainCadId);
-      setTrainResults({ detected: '', assigned: result.processed + '/' + result.total });
-      setTrainDetail(null);
-      setMsg(`Training: ${result.processed} processati, ${result.errors} errori, ${result.features_saved} feature salvate`);
+      setTrainResults(result);
+      setMsg(`Training: ${result.processed ?? 0} processati, ${result.errors ?? 0} errori, ${result.features_saved ?? 0} feature salvate`);
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
     setTraining(false);
   };
@@ -665,87 +667,63 @@ export default function AdminPage() {
                 <h3 className="font-display font-bold text-base text-white mb-4">{t('admin.cad_results')}</h3>
                 {trainResults ? (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.cad_detected')}</p>
-                        <p className="text-lg font-bold text-drapera-gold">{trainResults.detected || '-'}</p>
-                      </div>
-                      <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.cad_assigned')}</p>
-                        <p className="text-lg font-bold text-white">{trainResults.assigned || '-'}</p>
-                      </div>
-                    </div>
-
-                    {trainDetail && (
-                      <div className="space-y-3 pt-2 border-t border-drapera-border/50">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div>
-                            <span className="text-gray-500">{t('admin.file_type')}:</span>
-                            <span className="text-white ml-1 font-mono">{trainDetail.file_type?.toUpperCase() || '-'}</span>
+                    {trainResults.total !== undefined ? (
+                      <>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
+                            <p className="text-lg font-bold text-drapera-gold">{trainResults.processed}/{trainResults.total}</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Processati</p>
                           </div>
-                          <div>
-                            <span className="text-gray-500">Confidenza:</span>
-                            <span className={`ml-1 font-mono ${trainDetail.detected_confidence === 'high' ? 'text-green-400' : trainDetail.detected_confidence === 'medium' ? 'text-yellow-400' : 'text-gray-500'}`}>
-                              {trainDetail.detected_confidence || '-'}
-                            </span>
+                          <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
+                            <p className={`text-lg font-bold ${trainResults.errors ? 'text-red-400' : 'text-green-400'}`}>{trainResults.errors || 0}</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Errori</p>
                           </div>
-                          <div>
-                            <span className="text-gray-500">Match:</span>
-                            <span className={`ml-1 font-mono ${trainDetail.match ? 'text-green-400' : 'text-red-400'}`}>
-                              {trainDetail.match ? 'OK' : 'NO'}
-                            </span>
+                          <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
+                            <p className="text-lg font-bold text-white">{trainResults.features_saved || 0}</p>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider">Features</p>
                           </div>
-                          {trainDetail.format_family && (
-                            <div className="col-span-2">
-                              <span className="text-gray-500">Famiglia formato:</span>
-                              <span className="text-white ml-1 font-mono">
-                                {trainDetail.format_family.family}
-                                {trainDetail.format_family.variant !== 'standard' && (
-                                  <span className="text-gray-500 ml-1">({trainDetail.format_family.variant})</span>
-                                )}
-                              </span>
-                            </div>
-                          )}
                         </div>
 
-                        {trainDetail.filename_analysis?.filename_cad && (
-                          <div>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.filename_analysis')}</p>
-                            <div className="text-xs">
-                              <span className="text-gray-400">{t('admin.filename_cad')}:</span>
-                              <span className="text-white ml-1">{trainDetail.filename_analysis.filename_cad}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {trainDetail.content_analysis?.content_cad && (
-                          <div>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.content_analysis')}</p>
-                            <div className="text-xs">
-                              <span className="text-gray-400">{t('admin.content_cad')}:</span>
-                              <span className="text-white ml-1">{trainDetail.content_analysis.content_cad}</span>
-                            </div>
-                          </div>
-                        )}
-
-                        {trainDetail.hpgl_scores && Object.keys(trainDetail.hpgl_scores).length > 0 && (
-                          <div>
-                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.hpgl_scores')}</p>
-                            <div className="space-y-0.5">
-                              {Object.entries(trainDetail.hpgl_scores).sort(([,a], [,b]) => (b as number) - (a as number)).map(([key, val]) => (
-                                <div key={key} className="flex justify-between text-[11px]">
-                                  <span className="text-gray-400">{key}</span>
-                                  <span className="text-white font-mono">{val as number}</span>
+                        {trainResults.results && trainResults.results.length > 0 && (
+                          <div className="max-h-48 overflow-y-auto space-y-1">
+                            {trainResults.results.map((r, i) => (
+                              <div key={i} className="flex items-center justify-between text-[11px] px-2 py-1 rounded hover:bg-white/5">
+                                <span className="text-gray-400 truncate max-w-[180px]">{r.file}</span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className={`font-mono ${r.match ? 'text-green-400' : 'text-yellow-400'}`}>{r.detected_cad}</span>
+                                  <span className={`text-[9px] px-1 py-0.5 rounded ${
+                                    r.detected_confidence === 'high' ? 'bg-green-500/10 text-green-400' : r.detected_confidence === 'medium' ? 'bg-yellow-500/10 text-yellow-400' : 'bg-gray-500/10 text-gray-400'
+                                  }`}>{r.detected_confidence}</span>
                                 </div>
-                              ))}
-                            </div>
+                              </div>
+                            ))}
                           </div>
                         )}
+
+                        {trainResults.error_details && trainResults.error_details.length > 0 && (
+                          <div className="space-y-1 pt-2 border-t border-red-500/20">
+                            <p className="text-[10px] text-red-400 uppercase tracking-wider">Errori</p>
+                            {trainResults.error_details.map((e, i) => (
+                              <p key={i} className="text-[11px] text-red-400/80">{e.file}: {e.error}</p>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.cad_detected')}</p>
+                          <p className="text-lg font-bold text-drapera-gold">{trainResults.detected || '-'}</p>
+                        </div>
+                        <div className="bg-drapera-dark/50 rounded-lg p-3 text-center">
+                          <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.cad_assigned')}</p>
+                          <p className="text-lg font-bold text-white">{trainResults.assigned || '-'}</p>
+                        </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-xs">Carica un file e seleziona un CAD per avviare il training.</p>
+                  <p className="text-gray-600 text-xs">Carica file e seleziona un CAD per avviare il training batch.</p>
                 )}
               </div>
             </div>
