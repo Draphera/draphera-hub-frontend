@@ -148,9 +148,9 @@ export const adminCadApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async train(file: File, cadId: string) {
+  async train(files: File[], cadId: string) {
     const form = new FormData();
-    form.append('file', file);
+    for (const f of files) form.append('files', f);
     form.append('cad_id', cadId);
     const headers = await getHeaders();
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/train`, {

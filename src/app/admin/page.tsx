@@ -64,7 +64,7 @@ export default function AdminPage() {
   const [editingCadId, setEditingCadId] = useState<string | null>(null);
   const [cadForm, setCadForm] = useState({ id: '', name: '', description: '', color: '' });
 
-  const [trainFile, setTrainFile] = useState<File | null>(null);
+  const [trainFiles, setTrainFiles] = useState<File[]>([]);
   const [trainCadId, setTrainCadId] = useState('');
   const [trainResults, setTrainResults] = useState<TrainResult | null>(null);
   const [trainDetail, setTrainDetail] = useState<TrainingDetail | null>(null);
@@ -248,15 +248,15 @@ export default function AdminPage() {
   };
 
     const handleTrain = async () => {
-    if (!trainFile || !trainCadId) return;
+    if (trainFiles.length === 0 || !trainCadId) return;
     setTraining(true);
     setTrainResults(null);
     setTrainDetail(null);
     try {
-      const result = await adminCadApi.train(trainFile, trainCadId);
-      setTrainResults({ detected: result.training?.detected_cad, assigned: result.training?.provided_cad });
-      setTrainDetail(result.training);
-      setMsg('Training completato');
+      const result = await adminCadApi.train(trainFiles, trainCadId);
+      setTrainResults({ detected: '', assigned: result.processed + '/' + result.total });
+      setTrainDetail(null);
+      setMsg(`Training: ${result.processed} processati, ${result.errors} errori, ${result.features_saved} feature salvate`);
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
     setTraining(false);
   };
@@ -595,34 +595,47 @@ export default function AdminPage() {
                       onDragOver={e => e.preventDefault()}
                       onDrop={e => {
                         e.preventDefault();
-                        const f = e.dataTransfer.files[0];
-                        if (f) {
+                        const files = Array.from(e.dataTransfer.files).filter(f => {
                           const ext = '.' + (f.name.split('.').pop()?.toLowerCase() || '');
-                          if (['.hpgl', '.plt', '.hpg', '.iso', '.dxf'].includes(ext)) {
-                            setTrainFile(f);
-                          } else {
-                            setMsg('Formato non supportato. Usa .hpgl .plt .hpg .iso .dxf');
-                          }
-                        }
+                          return ['.hpgl', '.plt', '.hpg', '.iso', '.dxf'].includes(ext);
+                        });
+                        if (files.length) setTrainFiles(prev => [...prev, ...files]);
+                        else setMsg('Formato non supportato. Usa .hpgl .plt .hpg .iso .dxf');
                       }}
                     >
                       <input
                         type="file"
+                        multiple
                         accept=".hpgl,.plt,.hpg,.iso,.dxf"
                         className="hidden"
                         id="train-file-input"
-                        onChange={e => setTrainFile(e.target.files?.[0] || null)}
+                        onChange={e => {
+                          const files = e.target.files ? Array.from(e.target.files) : [];
+                          setTrainFiles(prev => [...prev, ...files]);
+                        }}
                       />
                       <label htmlFor="train-file-input" className="cursor-pointer">
-                        {trainFile ? (
-                          <p className="text-drapera-gold text-sm">{trainFile.name} ({(trainFile.size / 1024).toFixed(1)} KB)</p>
+                        {trainFiles.length > 0 ? (
+                          <div className="text-left">
+                            <p className="text-drapera-gold text-sm mb-1">{trainFiles.length} file selezionati</p>
+                            <div className="max-h-24 overflow-y-auto space-y-0.5">
+                              {trainFiles.map((f, i) => (
+                                <p key={i} className="text-[10px] text-gray-500 truncate">{f.name}</p>
+                              ))}
+                            </div>
+                          </div>
                         ) : (
                           <>
                             <p className="text-gray-500 text-sm mb-1">{t('sidebar.upload_hint')}</p>
-                            <p className="text-gray-600 text-[10px]">HPGL / PLT / HPG / ISO / DXF</p>
+                            <p className="text-gray-600 text-[10px]">Seleziona o trascina più file HPGL / PLT / HPG / ISO / DXF</p>
                           </>
                         )}
                       </label>
+                      {trainFiles.length > 0 && (
+                        <button onClick={() => setTrainFiles([])} className="mt-2 text-[10px] text-red-400 hover:text-red-300 transition-colors">
+                          Rimuovi tutti
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div>
@@ -640,10 +653,10 @@ export default function AdminPage() {
                   </div>
                   <button
                     onClick={handleTrain}
-                    disabled={!trainFile || !trainCadId || training}
+                    disabled={trainFiles.length === 0 || !trainCadId || training}
                     className="btn-gold text-xs px-4 py-2 w-full disabled:opacity-40"
                   >
-                    {training ? '...' : t('admin.cad_train_btn')}
+                    {training ? `Processando ${trainFiles.length} file...` : `${t('admin.cad_train_btn')} (${trainFiles.length} file)`}
                   </button>
                 </div>
               </div>
