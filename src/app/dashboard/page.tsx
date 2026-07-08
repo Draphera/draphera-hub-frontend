@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import CardTool from '@/components/CardTool';
 import { useTranslation } from '@/lib/i18n';
 import { profileApi, userApi } from '@/lib/api';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 import type { Session } from '@supabase/supabase-js';
 
 const LEVELS = [
@@ -44,6 +46,7 @@ export default function DashboardPage() {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploads, setUploads] = useState<Array<Record<string, unknown>>>([]);
   const [showAll, setShowAll] = useState(false);
+  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number } | null>(null);
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
@@ -60,6 +63,13 @@ export default function DashboardPage() {
         if (results[1].status === 'fulfilled') setUploadCount(results[1].value.total_uploads);
         if (results[2].status === 'fulfilled') setUploads(results[2].value.uploads);
       } catch { /* ignore */ }
+      try {
+        const tok = (await supabase.auth.getSession()).data?.session?.access_token;
+        if (tok) {
+          const fr = await fetch(`${API_BASE}/api/profile/founder-status`, { headers: { Authorization: `Bearer ${tok}` } });
+          if (fr.ok) setFounder(await fr.json());
+        }
+      } catch {}
       setLoading(false);
     });
   }, [router, showAll]);
@@ -111,9 +121,17 @@ export default function DashboardPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-drapera-gold animate-pulse-gold" />
                 {t('dashboard.subtitle')}
               </div>
-              <h1 className="section-title text-white mb-4 leading-tight">
-                {t('dashboard.hero_greeting').replace('{name}', name)}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="section-title text-white leading-tight">
+                  {t('dashboard.hero_greeting').replace('{name}', name)}
+                </h1>
+                {founder?.is_founder && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">F</div>
+                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position}</span>
+                  </div>
+                )}
+              </div>
               <p className="section-subtitle max-w-xl">{t('dashboard.hero_desc')}</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">

@@ -148,14 +148,18 @@ export default function SettingsPage() {
         </div>
 
         {founder?.is_founder && (
-          <div className="premium-card p-4 border border-drapera-gold/20" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.08), rgba(242,201,76,0.02))' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+          <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
                 F
               </div>
               <div>
-                <p className="text-sm text-white font-semibold">Founder #{founder.position ?? '?'}</p>
-                <p className="text-[11px] text-drapera-gold">Early Access 2026 — Primi 100 utenti</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-base text-white font-bold">Founder</p>
+                  <span className="text-sm font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
+                </div>
+                <p className="text-[11px] text-gray-500">Early Access 2026 — Primi 100 utenti</p>
               </div>
             </div>
           </div>
