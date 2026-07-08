@@ -96,8 +96,6 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.signout_success': 'Sessione terminata',
     'auth.or_continue': 'oppure continua con',
     'auth.google': 'Google',
-    'auth.facebook': 'Facebook',
-    'auth.linkedin': 'LinkedIn',
     'auth.github': 'GitHub',
 
     'profile.title': 'Profilo Azienda',
@@ -293,8 +291,6 @@ const translations: Record<Lang, Record<string, string>> = {
     'auth.signout_success': 'Session ended',
     'auth.or_continue': 'or continue with',
     'auth.google': 'Google',
-    'auth.facebook': 'Facebook',
-    'auth.linkedin': 'LinkedIn',
     'auth.github': 'GitHub',
 
     'profile.title': 'Company Profile',
