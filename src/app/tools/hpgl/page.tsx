@@ -52,6 +52,7 @@ export default function HPGLViewerPage() {
   const [snapGrid, setSnapGrid] = useState(true);
   const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement'>('outline');
   const [gridOn, setGridOn] = useState(true);
+  const [fitKey, setFitKey] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -205,13 +206,13 @@ export default function HPGLViewerPage() {
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
-        <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} />
+        <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
       </main>
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} />
       <FooterActions
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}
-        onFitToScreen={() => setZoom(1)}
+        onFitToScreen={() => { setZoom(1); setFitKey(k => k + 1); }}
         onToggleMeasure={() => setViewMode(v => v === 'measurement' ? 'outline' : 'measurement')}
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
         onExportPng={handleExportPng} onExportSvg={handleExportSvg} hasFile={!!hpglData}

@@ -61,12 +61,46 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
   const userName = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email || '';
   const avatarUrl = profile.avatar_url;
 
+  const [ufficiOpen, setUfficiOpen] = useState(false);
+  const ufficiRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ufficiRef.current && !ufficiRef.current.contains(e.target as Node)) setUfficiOpen(false);
+    };
+    if (ufficiOpen) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [ufficiOpen]);
+
   const navTools = [
-    { label: t('nav.hpgl_viewer'), href: '/tools/hpgl', active: true },
-    { label: 'ISO Viewer', href: '/tools/iso', comingSoon: true },
-    { label: 'DXF Viewer', href: '/tools/dxf', comingSoon: true },
-    { label: 'TechSheet Light', href: '/tools/techsheet-light', comingSoon: true },
+    { label: 'HPGL Viewer', href: '/tools/hpgl', active: true, group: 'viewers' },
+    { label: 'ISO Viewer', href: '/tools/iso', comingSoon: true, group: 'viewers' },
+    { label: 'DXF Viewer', href: '/tools/dxf', comingSoon: true, group: 'viewers' },
+    { label: 'TechSheet Light', href: '/tools/techsheet-light', comingSoon: true, group: 'generators' },
+    { label: 'BOM Generator', href: '/tools/bom-generator', comingSoon: true, group: 'generators' },
+    { label: 'Generatore Etichette', href: '/tools/generatore-etichette', comingSoon: true, group: 'generators' },
+    { label: 'Material Normalizer', href: '/tools/material-normalizer', comingSoon: true, group: 'normalizers' },
+    { label: 'Accessory Normalizer', href: '/tools/accessory-normalizer', comingSoon: true, group: 'normalizers' },
+    { label: 'Checklist Qualità', href: '/tools/checklist-qualita', comingSoon: true, group: 'quality' },
   ];
+
+  const uffici = [
+    { label: 'Ufficio Stile', href: '/uffici/stile' },
+    { label: 'Ufficio Modellistica', href: '/uffici/modellistica' },
+    { label: 'Ufficio Prodotto', href: '/uffici/prodotto' },
+    { label: 'Ufficio Produzione', href: '/uffici/produzione' },
+  ];
+
+  const toolGroups: Record<string, { label: string; tools: typeof navTools }> = {
+    viewers: { label: 'Visualizzatori', tools: navTools.filter(t => t.group === 'viewers') },
+    generators: { label: 'Generatori', tools: navTools.filter(t => t.group === 'generators') },
+    normalizers: { label: 'Normalizzatori', tools: navTools.filter(t => t.group === 'normalizers') },
+    quality: { label: 'Qualità', tools: navTools.filter(t => t.group === 'quality') },
+  };
+
+  useEffect(() => {
+    setUfficiOpen(false);
+  }, [pathname]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-drapera-dark border-b border-drapera-border flex items-center px-4">
@@ -82,23 +116,48 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
       </div>
 
       <nav className="hidden lg:flex items-center gap-0.5 mx-4 flex-1 justify-center">
+        <Link href="/" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
+          Home
+        </Link>
         <Link href="/dashboard" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
           {t('nav.dashboard')}
         </Link>
         <span className="text-drapera-border mx-1">|</span>
-        {navTools.map(tool => (
-          <Link
-            key={tool.href}
-            href={tool.active ? tool.href : '#'}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-              pathname === tool.href ? 'text-drapera-gold bg-drapera-gold/10' : tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-500 hover:text-white'
-            }`}
-            onClick={e => { if (tool.comingSoon) e.preventDefault(); }}
-          >
-            {tool.label}
-            {tool.comingSoon && <span className="text-[9px] uppercase tracking-wider text-gray-700 bg-drapera-border/50 px-1.5 py-0.5 rounded">{t('dashboard.soon')}</span>}
-          </Link>
-        ))}
+        <div className="relative" ref={ufficiRef}>
+          <button onClick={() => setUfficiOpen(!ufficiOpen)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ufficiOpen ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
+            Uffici
+            <svg className={`w-3 h-3 transition-transform ${ufficiOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          {ufficiOpen && (
+            <div className="absolute top-full left-0 mt-1 w-48 py-1.5 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl animate-fade-in">
+              {uffici.map(u => (
+                <Link key={u.href} href={u.href} onClick={() => setUfficiOpen(false)} className="block px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  {u.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="relative group">
+          <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-white">
+            Strumenti
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+          </button>
+          <div className="absolute top-full left-0 mt-1 w-56 py-2 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+            {Object.values(toolGroups).map(group => (
+              <div key={group.label}>
+                <p className="px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-gray-600">{group.label}</p>
+                {group.tools.map(tool => (
+                  <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={e => { if (tool.comingSoon) e.preventDefault(); }}
+                    className={`flex items-center justify-between px-3 py-1.5 text-xs transition-colors ${tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                    {tool.label}
+                    {tool.comingSoon && <span className="text-[8px] uppercase text-gray-700 bg-drapera-border/50 px-1 py-0.5 rounded">{t('dashboard.soon')}</span>}
+                  </Link>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </nav>
 
       <div className="flex items-center gap-2 ml-auto">
@@ -173,7 +232,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         </button>
       </div>
 
-      {mobileOpen && (
+          {mobileOpen && (
         <div className="absolute top-14 left-0 right-0 lg:hidden border-t border-drapera-border bg-drapera-dark/95 backdrop-blur-2xl animate-fade-in">
           <div className="px-4 py-3 space-y-1 max-h-[70vh] overflow-y-auto">
             {session && (
@@ -182,14 +241,25 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
                 <p className="text-[11px] text-gray-500">{session.user?.email}</p>
               </div>
             )}
+            <Link href="/" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">Home</Link>
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.dashboard')}</Link>
             <div className="h-px bg-drapera-border/50 my-2" />
-            {navTools.map(tool => (
-              <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={() => { if (tool.active) setMobileOpen(false); }}
-                className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg ${tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                {tool.label}
-                {tool.comingSoon && <span className="text-[9px] uppercase text-gray-700 bg-drapera-border/50 px-1.5 py-0.5 rounded">{t('dashboard.soon')}</span>}
-              </Link>
+            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">Uffici</p>
+            {uffici.map(u => (
+              <Link key={u.href} href={u.href} onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{u.label}</Link>
+            ))}
+            <div className="h-px bg-drapera-border/50 my-2" />
+            {Object.values(toolGroups).map(group => (
+              <div key={group.label}>
+                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">{group.label}</p>
+                {group.tools.map(tool => (
+                  <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={() => { if (tool.active) setMobileOpen(false); }}
+                    className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg ${tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                    {tool.label}
+                    {tool.comingSoon && <span className="text-[9px] uppercase text-gray-700 bg-drapera-border/50 px-1.5 py-0.5 rounded">{t('dashboard.soon')}</span>}
+                  </Link>
+                ))}
+              </div>
             ))}
             <div className="h-px bg-drapera-border/50 my-2" />
             {session && (

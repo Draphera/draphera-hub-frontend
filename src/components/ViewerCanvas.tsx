@@ -32,6 +32,7 @@ interface Props {
   invertColors: boolean;
   snapGrid: boolean;
   viewMode: 'outline' | 'tack' | 'measurement';
+  fitKey?: number;
 }
 
 const PAD = 40;
@@ -95,7 +96,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -117,6 +118,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       setWheelZoom(1);
     }
   }, [bounds]);
+
+  useEffect(() => {
+    if (bounds && fitKey) {
+      const s = calcFitScale(bounds);
+      setPan({ x: VIEW_W / 2 - bounds.cx * s, y: VIEW_H / 2 - bounds.cy * s });
+      setWheelZoom(1);
+    }
+  }, [fitKey]);
 
   const effectiveZoom = zoom * fitScale * wheelZoom;
 
