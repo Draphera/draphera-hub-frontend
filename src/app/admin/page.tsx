@@ -21,6 +21,16 @@ interface CadSystem {
 interface TrainResult {
   detected?: string; assigned?: string; stats?: Record<string, number>;
 }
+interface TrainingDetail {
+  detected_cad?: string;
+  detected_confidence?: string;
+  provided_cad?: string;
+  match?: boolean;
+  file_type?: string;
+  filename_analysis?: { filename_cad?: string; patterns_checked?: string[] };
+  content_analysis?: { content_cad?: string; markers_checked?: string[] };
+  hpgl_scores?: Record<string, number>;
+}
 
 const TYPE_COLORS: Record<string, string> = {
   hpgl: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
@@ -53,6 +63,7 @@ export default function AdminPage() {
   const [trainFile, setTrainFile] = useState<File | null>(null);
   const [trainCadId, setTrainCadId] = useState('');
   const [trainResults, setTrainResults] = useState<TrainResult | null>(null);
+  const [trainDetail, setTrainDetail] = useState<TrainingDetail | null>(null);
   const [training, setTraining] = useState(false);
 
   const load = async (ft: string) => {
@@ -164,13 +175,15 @@ export default function AdminPage() {
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
-  const handleTrain = async () => {
+    const handleTrain = async () => {
     if (!trainFile || !trainCadId) return;
     setTraining(true);
     setTrainResults(null);
+    setTrainDetail(null);
     try {
       const result = await adminCadApi.train(trainFile, trainCadId);
-      setTrainResults(result);
+      setTrainResults({ detected: result.training?.detected_cad, assigned: result.training?.provided_cad });
+      setTrainDetail(result.training);
       setMsg('Training completato');
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
     setTraining(false);
@@ -465,7 +478,7 @@ export default function AdminPage() {
                     >
                       <input
                         type="file"
-                        accept=".hpgl,.plt,.hpg"
+                        accept=".hpgl,.plt,.hpg,.iso,.dxf"
                         className="hidden"
                         id="train-file-input"
                         onChange={e => setTrainFile(e.target.files?.[0] || null)}
@@ -476,7 +489,7 @@ export default function AdminPage() {
                         ) : (
                           <>
                             <p className="text-gray-500 text-sm mb-1">{t('sidebar.upload_hint')}</p>
-                            <p className="text-gray-600 text-[10px]">HPGL / PLT / HPG</p>
+                            <p className="text-gray-600 text-[10px]">HPGL / PLT / HPG / ISO / DXF</p>
                           </>
                         )}
                       </label>
@@ -519,17 +532,61 @@ export default function AdminPage() {
                         <p className="text-lg font-bold text-white">{trainResults.assigned || '-'}</p>
                       </div>
                     </div>
-                    {trainResults.stats && Object.keys(trainResults.stats).length > 0 && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-2">{t('admin.cad_results')}</p>
-                        <div className="space-y-1">
-                          {Object.entries(trainResults.stats).map(([key, val]) => (
-                            <div key={key} className="flex justify-between text-xs">
-                              <span className="text-gray-400">{key}</span>
-                              <span className="text-white font-mono">{val}</span>
-                            </div>
-                          ))}
+
+                    {trainDetail && (
+                      <div className="space-y-3 pt-2 border-t border-drapera-border/50">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-gray-500">{t('admin.file_type')}:</span>
+                            <span className="text-white ml-1 font-mono">{trainDetail.file_type?.toUpperCase() || '-'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Confidenza:</span>
+                            <span className={`ml-1 font-mono ${trainDetail.detected_confidence === 'high' ? 'text-green-400' : trainDetail.detected_confidence === 'medium' ? 'text-yellow-400' : 'text-gray-500'}`}>
+                              {trainDetail.detected_confidence || '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">Match:</span>
+                            <span className={`ml-1 font-mono ${trainDetail.match ? 'text-green-400' : 'text-red-400'}`}>
+                              {trainDetail.match ? 'OK' : 'NO'}
+                            </span>
+                          </div>
                         </div>
+
+                        {trainDetail.filename_analysis?.filename_cad && (
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.filename_analysis')}</p>
+                            <div className="text-xs">
+                              <span className="text-gray-400">{t('admin.filename_cad')}:</span>
+                              <span className="text-white ml-1">{trainDetail.filename_analysis.filename_cad}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {trainDetail.content_analysis?.content_cad && (
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.content_analysis')}</p>
+                            <div className="text-xs">
+                              <span className="text-gray-400">{t('admin.content_cad')}:</span>
+                              <span className="text-white ml-1">{trainDetail.content_analysis.content_cad}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {trainDetail.hpgl_scores && Object.keys(trainDetail.hpgl_scores).length > 0 && (
+                          <div>
+                            <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{t('admin.hpgl_scores')}</p>
+                            <div className="space-y-0.5">
+                              {Object.entries(trainDetail.hpgl_scores).sort(([,a], [,b]) => (b as number) - (a as number)).map(([key, val]) => (
+                                <div key={key} className="flex justify-between text-[11px]">
+                                  <span className="text-gray-400">{key}</span>
+                                  <span className="text-white font-mono">{val as number}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
