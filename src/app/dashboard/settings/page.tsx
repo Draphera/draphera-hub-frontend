@@ -99,7 +99,7 @@ export default function SettingsPage() {
     { value: '', label: 'Seleziona ufficio' },
     { value: 'stile', label: 'Ufficio Stile' },
     { value: 'modellistica', label: 'Modellista' },
-    { value: 'cad', label: 'CAD' },
+
     { value: 'prototipia', label: 'Prototipia' },
     { value: 'produzione', label: 'Produzione' },
     { value: 'fornitore', label: 'Fornitore' },

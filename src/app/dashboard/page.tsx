@@ -79,7 +79,6 @@ export default function DashboardPage() {
   const officeToolIds: Record<string, string[]> = {
     stile: ['techsheet', 'labels', 'material'],
     modellistica: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
-    cad: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
     produzione: ['bom', 'quality', 'accessory'],
     prototipia: ['techsheet', 'material'],
   };

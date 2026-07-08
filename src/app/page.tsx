@@ -77,11 +77,6 @@ export default function HomePage() {
       { title: 'ISO Viewer', desc: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
       { title: 'DXF Viewer', desc: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
     ],
-    CAD: [
-      { title: 'HPGL Viewer', desc: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
-      { title: 'ISO Viewer', desc: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
-      { title: 'DXF Viewer', desc: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
-    ],
     Produzione: [
       { title: 'BOM Generator', desc: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
       { title: 'Checklist Qualità', desc: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
@@ -258,7 +253,7 @@ export default function HomePage() {
           </div>
           {Object.entries(officeTools).filter(([office]) => {
             if (!userOffice) return true;
-            const officeMap: Record<string, string> = { stile: 'Ufficio Stile', modellistica: 'Modellistica', cad: 'CAD', prototipia: 'Prototipia', produzione: 'Produzione' };
+            const officeMap: Record<string, string> = { stile: 'Ufficio Stile', modellistica: 'Modellistica', prototipia: 'Prototipia', produzione: 'Produzione' };
             const mapped = officeMap[userOffice];
             return !mapped || mapped === office;
           }).map(([office, ts]) => (
