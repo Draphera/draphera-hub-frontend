@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -127,7 +128,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
           <div className="relative" ref={menuRef}>
             <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
               <div className="w-7 h-7 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xs font-bold text-drapera-dark overflow-hidden">
-                {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+                {avatarUrl ? <Image src={avatarUrl} alt="" width={28} height={28} className="w-full h-full object-cover" /> : initials}
               </div>
               <span className="hidden sm:block text-xs text-gray-400 max-w-[100px] truncate">{userName}</span>
               <svg className={`w-3 h-3 text-gray-500 transition-transform ${userMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>

@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy — Draphera Hub',
+  description: 'Informativa privacy di Draphera Hub. Scopri come trattiamo i tuoi dati personali e i file CAD caricati sulla piattaforma.',
+};
 
 export default function PrivacyPage() {
   return (

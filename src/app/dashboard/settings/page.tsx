@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
@@ -113,7 +114,7 @@ export default function SettingsPage() {
         <div className="flex items-center gap-4 mb-8">
           <div className="relative group">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xl font-bold text-drapera-dark overflow-hidden">
-              {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+              {avatarUrl ? <Image src={avatarUrl} alt="" width={80} height={80} className="w-full h-full object-cover" /> : initials}
             </div>
             <button onClick={() => fileRef.current?.click()} disabled={avatarUploading}
               className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer border-0">

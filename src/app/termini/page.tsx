@@ -1,4 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: 'Condizioni d\'Uso — Draphera Hub',
+  description: 'Termini e condizioni di utilizzo della piattaforma Draphera Hub per il technical design e la gestione di file CAD nel settore moda.',
+};
 
 export default function TermsPage() {
   return (

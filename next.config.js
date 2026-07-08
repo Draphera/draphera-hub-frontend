@@ -4,7 +4,14 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  images: { domains: [] },
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: '**.supabase.in' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
+    ],
+  },
   async headers() {
     return [
       {
