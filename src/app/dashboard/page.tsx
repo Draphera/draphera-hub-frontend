@@ -7,8 +7,33 @@ import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import CardTool from '@/components/CardTool';
 import { useTranslation } from '@/lib/i18n';
-import { profileApi } from '@/lib/api';
+import { profileApi, userApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
+
+const LEVELS = [
+  { label: 'novizio', min: 0, icon: '🥚' },
+  { label: 'apprendista', min: 10, icon: '🐣' },
+  { label: 'professionista', min: 50, icon: '⚙️' },
+  { label: 'esperto', min: 100, icon: '🔧' },
+  { label: 'maestro', min: 250, icon: '🏆' },
+  { label: 'veterano', min: 500, icon: '⭐' },
+  { label: 'guru', min: 1000, icon: '👑' },
+];
+
+function getLevel(count: number) {
+  let lvl = LEVELS[0];
+  for (const l of LEVELS) {
+    if (count >= l.min) lvl = l;
+  }
+  return lvl;
+}
+
+function getNextLevel(count: number) {
+  for (const l of LEVELS) {
+    if (count < l.min) return l;
+  }
+  return null;
+}
 
 export default function DashboardPage() {
   const { t } = useTranslation();
@@ -16,18 +41,27 @@ export default function DashboardPage() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Record<string, string>>({});
+  const [uploadCount, setUploadCount] = useState(0);
+  const [uploads, setUploads] = useState<Array<Record<string, unknown>>>([]);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
       if (!data.session) { router.push('/auth/signin?redirect=/dashboard'); return; }
       try {
-        const p = await profileApi.get();
+        const [p, s, u] = await Promise.all([
+          profileApi.get(),
+          userApi.stats(),
+          userApi.uploads(showAll ? 999 : 5),
+        ]);
         setProfile(p);
+        setUploadCount(s.total_uploads);
+        setUploads(u.uploads);
       } catch { /* ignore */ }
       setLoading(false);
     });
-  }, [router]);
+  }, [router, showAll]);
 
   const tools = [
     { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
@@ -42,6 +76,9 @@ export default function DashboardPage() {
   ];
 
   const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
+  const level = getLevel(uploadCount);
+  const nextLevel = getNextLevel(uploadCount);
+  const progress = nextLevel ? ((uploadCount - level.min) / (nextLevel.min - level.min)) * 100 : 100;
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
   if (!session) return null;
@@ -74,18 +111,70 @@ export default function DashboardPage() {
                 <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.dev_count')}</p>
               </div>
               <div className="premium-card p-4 text-center">
-                <p className="text-2xl font-bold text-white">
-                  <svg className="w-5 h-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-                </p>
-                <p className="text-[11px] text-gray-500 mt-0.5">HPGL</p>
+                <p className="text-2xl font-bold text-drapera-gold">{uploadCount}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.files_uploaded')}</p>
               </div>
-              <div className="premium-card p-4 text-center sm:hidden lg:block">
-                <Link href="/tools/hpgl" className="btn-gold text-xs px-4 py-2 w-full">{t('dashboard.open_hpgl')}</Link>
+              <div className="premium-card p-4 text-center">
+                <Link href="/tools/hpgl" className="btn-gold text-xs px-3 py-2 w-full inline-flex items-center justify-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                  {t('dashboard.open_hpgl')}
+                </Link>
+              </div>
+            </div>
+
+            <div className="premium-card p-5 mt-6 flex items-center gap-5">
+              <div className="text-3xl">{level.icon}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <p className="text-sm text-white font-semibold">{t('dashboard.level')}: {t(`level.${level.label}`)}</p>
+                  <span className="text-xs text-drapera-gold font-medium">{uploadCount} {t('dashboard.files_uploaded')}</span>
+                </div>
+                {nextLevel && (
+                  <div className="mt-2">
+                    <div className="flex justify-between text-[11px] text-gray-500 mb-1">
+                      <span>{t(`level.${level.label}`)}</span>
+                      <span>{nextLevel.min - uploadCount} {t('dashboard.uploads_needed')} → {t(`level.${nextLevel.label}`)}</span>
+                    </div>
+                    <div className="h-1.5 bg-drapera-border/30 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-drapera-gold to-amber-500 rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
+                    </div>
+                  </div>
+                )}
+                {!nextLevel && (
+                  <p className="text-xs text-drapera-gold mt-1">Massimo livello raggiunto!</p>
+                )}
               </div>
             </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-drapera-gold/20 to-transparent" />
         </section>
+
+        {uploads.length > 0 && (
+          <section className="py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="section-title text-white text-lg">{t('dashboard.history')}</h2>
+                {uploads.length >= 5 && !showAll && (
+                  <button onClick={() => setShowAll(true)} className="text-xs text-drapera-gold hover:underline">{t('dashboard.load_more')}</button>
+                )}
+              </div>
+              <div className="premium-card divide-y divide-drapera-border/30">
+                {uploads.slice(0, showAll ? undefined : 5).map((u: any) => (
+                  <div key={u.id} className="flex items-center justify-between px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-white truncate">{u.filename}</p>
+                      <p className="text-[11px] text-gray-500">{u.file_size ? `${(u.file_size / 1024).toFixed(1)} KB` : ''} · {u.created_at ? new Date(u.created_at).toLocaleDateString() : ''}</p>
+                    </div>
+                    <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-drapera-gold/10 text-drapera-gold font-medium">{u.file_type}</span>
+                  </div>
+                ))}
+                {uploads.length === 0 && (
+                  <div className="px-4 py-8 text-center text-sm text-gray-500">{t('dashboard.no_uploads')}</div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="py-12 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

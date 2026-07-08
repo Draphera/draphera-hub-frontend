@@ -101,6 +101,21 @@ export const adminApi = {
   },
 };
 
+export const userApi = {
+  async uploads(limit = 50, offset = 0) {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/profile/uploads?limit=${limit}&offset=${offset}`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ uploads: Array<Record<string, unknown>>; total: number }>;
+  },
+  async stats() {
+    const headers = await getHeaders();
+    const res = await fetch(`${API_BASE}/api/profile/stats`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ total_uploads: number }>;
+  },
+};
+
 export const hpglApi = {
   async parse(file: File) {
     const form = new FormData(); form.append('file', file);

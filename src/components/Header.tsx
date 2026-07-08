@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from '@/lib/i18n';
-import { adminApi } from '@/lib/api';
+import { adminApi, profileApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HeaderProps {
@@ -20,6 +20,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
   const [session, setSession] = useState<Session | null>(null);
   const [userMenu, setUserMenu] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profile, setProfile] = useState<Record<string, string>>({});
   const menuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
       setSession(data.session);
       if (data.session) {
         adminApi.check().then(a => setIsAdmin(a.is_admin)).catch(() => {});
+        profileApi.get().then(p => setProfile(p)).catch(() => {});
       }
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -55,7 +57,8 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
   };
 
   const initials = session?.user?.email?.[0]?.toUpperCase() || '?';
-  const userName = session?.user?.user_metadata?.full_name || session?.user?.email || '';
+  const userName = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email || '';
+  const avatarUrl = profile.avatar_url;
 
   const navTools = [
     { label: t('nav.hpgl_viewer'), href: '/tools/hpgl', active: true },
@@ -123,8 +126,8 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         {session ? (
           <div className="relative" ref={menuRef}>
             <button onClick={() => setUserMenu(!userMenu)} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xs font-bold text-drapera-dark">
-                {initials}
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-xs font-bold text-drapera-dark overflow-hidden">
+                {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
               </div>
               <span className="hidden sm:block text-xs text-gray-400 max-w-[100px] truncate">{userName}</span>
               <svg className={`w-3 h-3 text-gray-500 transition-transform ${userMenu ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -135,6 +138,10 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
                   <p className="text-xs text-white font-medium truncate">{userName}</p>
                   <p className="text-[10px] text-gray-500 truncate">{session.user?.email}</p>
                 </div>
+                <Link href="/dashboard" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7m-9 2v6m4-6v6" /></svg>
+                  {t('nav.dashboard')}
+                </Link>
                 <Link href="/dashboard/settings" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   {t('profile.title')}
