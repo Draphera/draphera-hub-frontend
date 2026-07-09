@@ -36,6 +36,8 @@ interface Props {
   penVisibility?: Record<number, boolean>;
   penColors?: Record<number, string>;
   flattened?: boolean;
+  onPathSelect?: (path: HPGLPath | null, index: number) => void;
+  selectedPathIndex?: number;
 }
 
 const PAD = 40;
@@ -99,13 +101,14 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [wheelZoom, setWheelZoom] = useState(1);
+  const [hoveredPath, setHoveredPath] = useState<{ idx: number; x: number; y: number } | null>(null);
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
@@ -166,40 +169,62 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return data.paths.map((path, idx) => {
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
+      const isSelected = selectedPathIndex === idx;
       const color = flattened
         ? (invertColors ? '#00e5ff' : '#F2C94C')
         : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
       const sw = (path.penWidth ?? 0.25) / effectiveZoom;
+      const highlightSw = sw * 3;
       const dash = LT_PATTERNS[path.lineType ?? 0] || '';
       const dashProps = dash ? { strokeDasharray: dash } : {};
 
+      const commonProps = {
+        style: { cursor: 'pointer' },
+        onClick: () => onPathSelect?.(path, idx),
+        onMouseEnter: () => {
+          const firstPt = (path.type === 'polyline' || path.type === 'rectangle') ? path.points?.[0] : null;
+          setHoveredPath(firstPt ? { idx, x: firstPt[0], y: firstPt[1] } : { idx, x: path.cx ?? 0, y: path.cy ?? 0 });
+        },
+        onMouseLeave: () => setHoveredPath(null),
+      };
+
+      const elements: JSX.Element[] = [];
+
+      // Highlight for selected path
+      if (isSelected) {
+        if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
+          const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
+          if (path.closed) {
+            elements.push(<polygon key={`sel-${idx}`} points={pts} fill="rgba(242,201,76,0.08)" stroke="#F2C94C" strokeWidth={highlightSw} strokeLinejoin="round" opacity={0.6} />);
+          } else {
+            elements.push(<polyline key={`sel-${idx}`} points={pts} fill="none" stroke="#F2C94C" strokeWidth={highlightSw} strokeLinejoin="round" strokeLinecap="round" opacity={0.6} />);
+          }
+        }
+      }
+
+      // Actual path
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          return <polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} />;
+          elements.push(<polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
+        } else {
+          elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
         }
-        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} />;
-      }
-
-      if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
+      } else if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
         const cx = path.cx, cy = path.cy, r = path.radius;
         const sa = (path.startAngle || 0) * Math.PI / 180;
         const ea = (path.endAngle || 360) * Math.PI / 180;
         const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
         const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
         const large = (ea - sa) > Math.PI ? 1 : 0;
-        return <path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} {...dashProps} />;
+        elements.push(<path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} {...dashProps} {...commonProps} />);
+      } else if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
+        elements.push(<circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} {...dashProps} {...commonProps} />);
+      } else if (path.type === 'label' && path.text) {
+        elements.push(<text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={clampFontSize(6 / effectiveZoom, 5, 14)} fontFamily="monospace" {...commonProps}>{path.text}</text>);
       }
 
-      if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
-        return <circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} {...dashProps} />;
-      }
-
-      if (path.type === 'label' && path.text) {
-        return <text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={clampFontSize(6 / effectiveZoom, 5, 14)} fontFamily="monospace">{path.text}</text>;
-      }
-
-      return null;
+      return elements;
     });
   };
 
@@ -354,6 +379,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               />
             </g>
           </svg>
+        </div>
+      )}
+
+      {/* Hover tooltip */}
+      {hoveredPath && data?.paths[hoveredPath.idx] && (
+        <div className="absolute top-3 left-3 z-20 rounded-md px-3 py-1.5 pointer-events-none"
+          style={{ background: 'rgba(18, 10, 32, 0.9)', backdropFilter: 'blur(4px)', border: '1px solid rgba(242, 201, 76, 0.15)' }}>
+          <p className="text-[10px] text-white font-mono">
+            #{hoveredPath.idx} · {data.paths[hoveredPath.idx].type}
+          </p>
+          <p className="text-[9px] text-gray-400 font-mono">
+            ({hoveredPath.x.toFixed(1)}, {hoveredPath.y.toFixed(1)})
+          </p>
         </div>
       )}
 

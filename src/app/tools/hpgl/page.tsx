@@ -60,6 +60,7 @@ export default function HPGLViewerPage() {
   const [penVisibility, setPenVisibility] = useState<Record<number, boolean>>({});
   const [penColors, setPenColors] = useState<Record<number, string>>({});
   const [flattened, setFlattened] = useState(false);
+  const [selectedPath, setSelectedPath] = useState<{ path: HPGLPath; index: number; info: { type: string; vertices: number; pen: number; lineType: number; closed?: boolean; length?: number; firstPoint?: [number, number] } } | null>(null);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -266,10 +267,32 @@ export default function HPGLViewerPage() {
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
-          penVisibility={penVisibility} penColors={penColors} flattened={flattened} />
+          penVisibility={penVisibility} penColors={penColors} flattened={flattened}
+          selectedPathIndex={selectedPath?.index ?? -1}
+          onPathSelect={(path, idx) => {
+            if (!path) { setSelectedPath(null); return; }
+            const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
+            let length = 0;
+            for (let i = 1; i < pts.length; i++) {
+              length += Math.sqrt((pts[i][0] - pts[i-1][0]) ** 2 + (pts[i][1] - pts[i-1][1]) ** 2);
+            }
+            setSelectedPath({
+              index: idx,
+              path,
+              info: {
+                type: path.type,
+                vertices: pts.length,
+                pen: path.pen ?? 0,
+                lineType: path.lineType ?? 0,
+                closed: path.closed,
+                length,
+                firstPoint: pts.length > 0 ? [pts[0][0], pts[0][1]] : undefined,
+              },
+            });
+          }} />
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

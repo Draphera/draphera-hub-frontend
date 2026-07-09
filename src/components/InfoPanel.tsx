@@ -29,6 +29,16 @@ interface MLInfo {
   note?: string;
 }
 
+interface SelectedPathInfo {
+  type: string;
+  vertices: number;
+  pen: number;
+  lineType: number;
+  closed?: boolean;
+  length?: number;
+  firstPoint?: [number, number];
+}
+
 interface Props {
   meta: HPGLMeta | null;
   fileName: string;
@@ -39,11 +49,12 @@ interface Props {
   features?: Record<string, unknown>;
   onCorrectCad?: (correctedCadId: string) => void;
   userSelectedCad?: string | null;
+  selectedPath?: SelectedPathInfo | null;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -106,6 +117,39 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
             </div>
           )}
           </div>
+
+        {selectedPath && (
+          <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">Path selezionato</span>
+              <button onClick={() => {
+                const text = `Path #? Type: ${selectedPath.type}, Vertices: ${selectedPath.vertices}, Pen: SP${selectedPath.pen}, Length: ${selectedPath.length?.toFixed(1) ?? '?'}`;
+                navigator.clipboard.writeText(text);
+              }} className="text-[9px] text-gray-500 hover:text-cyan-400 transition-colors" title="Copia info">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              </button>
+            </div>
+            <div className="space-y-1 text-[10px]">
+              <div className="flex justify-between"><span className="text-gray-500">Tipo</span><span className="text-white font-mono">{selectedPath.type}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Vertici</span><span className="text-white font-mono">{selectedPath.vertices}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">Penna</span><span className="text-white font-mono">SP{selectedPath.pen}</span></div>
+              {selectedPath.lineType > 0 && <div className="flex justify-between"><span className="text-gray-500">Line type</span><span className="text-white font-mono">LT{selectedPath.lineType}</span></div>}
+              {selectedPath.closed !== undefined && <div className="flex justify-between"><span className="text-gray-500">Chiuso</span><span className="text-white font-mono">{selectedPath.closed ? 'Sì' : 'No'}</span></div>}
+              {selectedPath.length !== undefined && <div className="flex justify-between"><span className="text-gray-500">Lunghezza</span><span className="text-white font-mono">{selectedPath.length.toFixed(1)}</span></div>}
+              {selectedPath.firstPoint && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Coordinate</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-white font-mono text-[9px]">({selectedPath.firstPoint[0].toFixed(1)}, {selectedPath.firstPoint[1].toFixed(1)})</span>
+                    <button onClick={() => navigator.clipboard.writeText(`${selectedPath.firstPoint![0].toFixed(1)},${selectedPath.firstPoint![1].toFixed(1)}`)} className="text-gray-600 hover:text-cyan-400 transition-colors" title="Copia coordinate">
+                      <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2.5">
           {[
