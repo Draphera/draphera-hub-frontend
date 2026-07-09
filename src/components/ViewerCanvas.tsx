@@ -97,8 +97,6 @@ interface MeasureResult {
 
 interface Props {
   data: HPGLData | null;
-  overlayData?: HPGLData | null;
-  overlayOpacity?: number;
   showNotches?: boolean;
   zoom: number;
   onZoomChange?: (z: number) => void;
@@ -178,7 +176,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, overlayData, overlayOpacity }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -484,27 +482,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {gridLines}
             {renderPaths()}
-            {overlayData && (
-              <g opacity={overlayOpacity ?? 0.5}>
-                {overlayData.paths.map((path, idx) => {
-                  const pen = path.pen ?? 0;
-                  if (penVisibility && !penVisibility[pen]) return null;
-                  const col = penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]);
-                  const sw = (path.penWidth ?? 0.25) / effectiveZoom;
-                  const dash = LT_PATTERNS[path.lineType ?? 0] || '';
-                  const dp = dash ? { strokeDasharray: dash } : {};
-                  if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
-                    const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
-                    return path.closed
-                      ? <polygon key={`ov-${idx}`} points={pts} fill="none" stroke={col} strokeWidth={sw} strokeLinejoin="round" {...dp} />
-                      : <polyline key={`ov-${idx}`} points={pts} fill="none" stroke={col} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dp} />;
-                  }
-                  if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined)
-                    return <circle key={`ov-${idx}`} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={col} strokeWidth={sw} {...dp} />;
-                  return null;
-                })}
-              </g>
-            )}
             {renderTackMarks()}
             {renderMeasurement()}
           </g>

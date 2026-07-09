@@ -55,9 +55,8 @@ export default function HPGLViewerPage() {
   // Multi-file tabs
   const [fileTabs, setFileTabs] = useState<Array<{ id: number; name: string; data: HPGLData; raw: File; feats?: Record<string, unknown>; upId?: string }>>([]);
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
-  const [compareMode, setCompareMode] = useState<'single' | 'side' | 'overlay'>('single');
+  const [compareMode, setCompareMode] = useState<'single' | 'side' | 'cascade'>('single');
   const [secondTabId, setSecondTabId] = useState<number | null>(null);
-  const [overlayOpacity, setOverlayOpacity] = useState(0.5);
   const [zoom, setZoom] = useState(1);
   const [invertColors, setInvertColors] = useState(false);
   const [unit, setUnit] = useState<'cm' | 'inch'>('cm');
@@ -363,8 +362,8 @@ export default function HPGLViewerPage() {
                   className={`px-2 py-1 rounded ${compareMode === 'single' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Singolo</button>
                 <button onClick={() => setCompareMode('side')}
                   className={`px-2 py-1 rounded ${compareMode === 'side' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Affianca</button>
-                <button onClick={() => setCompareMode('overlay')}
-                  className={`px-2 py-1 rounded ${compareMode === 'overlay' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Sovrapponi</button>
+                <button onClick={() => setCompareMode('cascade')}
+                  className={`px-2 py-1 rounded ${compareMode === 'cascade' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Accoda</button>
                 {compareMode !== 'single' && (
                   <select className="bg-drapera-dark border border-drapera-border rounded px-1.5 py-1 text-[10px] text-white ml-1"
                     value={secondTabId ?? ''}
@@ -374,14 +373,6 @@ export default function HPGLViewerPage() {
                       <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
                   </select>
-                )}
-                {compareMode === 'overlay' && (
-                  <div className="flex items-center gap-1 ml-1">
-                    <span className="text-gray-500">Op.</span>
-                    <input type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
-                      onChange={e => setOverlayOpacity(parseFloat(e.target.value))}
-                      className="w-16 h-1 bg-drapera-border rounded-full accent-drapera-gold" />
-                  </div>
                 )}
               </div>
             )}
@@ -407,13 +398,43 @@ export default function HPGLViewerPage() {
               })()}
             </div>
           </div>
-        ) : compareMode === 'overlay' && secondTabId ? (
+        ) : compareMode === 'cascade' && secondTabId ? (
           <div style={{ height: 'calc(100vh - 12rem)' }}>
             {(() => {
               const t = fileTabs.find(t => t.id === secondTabId);
-              return <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+              if (!t || !hpglData) return null;
+              // Merge paths, offset second file's Y by first file's height + margin
+              const firstH = hpglData.meta.dimensions.height || 0;
+              const margin = firstH * 0.1 || 100;
+              const offsetY = firstH + margin;
+              const mergedPaths = [
+                ...hpglData.paths,
+                ...t.data.paths.map(p => {
+                  if ((p.type === 'polyline' || p.type === 'rectangle') && p.points) {
+                    return { ...p, points: p.points.map(pt => [pt[0], pt[1] + offsetY] as [number, number]) };
+                  }
+                  if ((p.type === 'circle' || p.type === 'arc') && p.cx !== undefined && p.cy !== undefined) {
+                    return { ...p, cy: p.cy + offsetY };
+                  }
+                  if (p.type === 'label' && p.y !== undefined) {
+                    return { ...p, y: p.y + offsetY };
+                  }
+                  return p;
+                }),
+              ];
+              const mergedData: HPGLData = {
+                paths: mergedPaths,
+                meta: {
+                  ...hpglData.meta,
+                  total_paths: mergedPaths.length,
+                  dimensions: {
+                    width: Math.max(hpglData.meta.dimensions.width, t.data.meta.dimensions.width),
+                    height: offsetY + t.data.meta.dimensions.height,
+                  },
+                },
+              };
+              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
-                overlayData={t?.data ?? null} overlayOpacity={overlayOpacity}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
                   if (!path) { setSelectedPath(null); return; }
