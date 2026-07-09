@@ -48,6 +48,16 @@ export default function HPGLViewerPage() {
   const [parsing, setParsing] = useState(false);
   const [fileName, setFileName] = useState('');
   const [rawFile, setRawFile] = useState<File | null>(null);
+  const [features, setFeatures] = useState<Record<string, unknown> | null>(null);
+  const [uploadId, setUploadId] = useState('');
+  const [showCadModal, setShowCadModal] = useState(false);
+  const [userSelectedCad, setUserSelectedCad] = useState<string | null>(null);
+  // Multi-file tabs
+  const [fileTabs, setFileTabs] = useState<Array<{ id: number; name: string; data: HPGLData; raw: File; feats?: Record<string, unknown>; upId?: string }>>([]);
+  const [activeTabId, setActiveTabId] = useState<number | null>(null);
+  const [compareMode, setCompareMode] = useState<'single' | 'side' | 'overlay'>('single');
+  const [secondTabId, setSecondTabId] = useState<number | null>(null);
+  const [overlayOpacity, setOverlayOpacity] = useState(0.5);
   const [zoom, setZoom] = useState(1);
   const [invertColors, setInvertColors] = useState(false);
   const [unit, setUnit] = useState<'cm' | 'inch'>('cm');
@@ -55,8 +65,6 @@ export default function HPGLViewerPage() {
   const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement'>('outline');
   const [gridOn, setGridOn] = useState(true);
   const [fitKey, setFitKey] = useState(0);
-  const [features, setFeatures] = useState<Record<string, unknown> | null>(null);
-  const [uploadId, setUploadId] = useState('');
   const [penVisibility, setPenVisibility] = useState<Record<number, boolean>>({});
   const [penColors, setPenColors] = useState<Record<number, string>>({});
   const [flattened, setFlattened] = useState(false);
@@ -82,8 +90,6 @@ export default function HPGLViewerPage() {
   }, [hpglData]);
   const [msg, setMsg] = useState('');
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
-  const [showCadModal, setShowCadModal] = useState(false);
-  const [userSelectedCad, setUserSelectedCad] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/profile/cad-systems`)
@@ -99,6 +105,37 @@ export default function HPGLViewerPage() {
       setLoading(false);
     });
   }, [router]);
+
+  const switchTab = (tabId: number) => {
+    const tab = fileTabs.find(t => t.id === tabId);
+    if (!tab) return;
+    setActiveTabId(tabId);
+    setFileName(tab.name);
+    setRawFile(tab.raw);
+    setHpglData(tab.data);
+    setFeatures(tab.feats ?? null);
+    setUploadId(tab.upId ?? '');
+    setSelectedPath(null);
+    setMeasurePoints([]);
+    setPenVisibility({});
+  };
+
+  const closeTab = (tabId: number) => {
+    setFileTabs(prev => prev.filter(t => t.id !== tabId));
+    if (activeTabId === tabId) {
+      const remaining = fileTabs.filter(t => t.id !== tabId);
+      if (remaining.length > 0) {
+        switchTab(remaining[remaining.length - 1].id);
+      } else {
+        setActiveTabId(null);
+        setHpglData(null);
+        setFileName('');
+        setRawFile(null);
+        setFeatures(null);
+        setUploadId('');
+      }
+    }
+  };
 
   const handleCorrectCad = useCallback(async (correctedCadId: string) => {
     if (!features) return;
@@ -151,6 +188,9 @@ export default function HPGLViewerPage() {
     setParsing(true);
     try {
       const result = await hpglApi.parse(file);
+      const tabId = Date.now();
+      setFileTabs(prev => [...prev, { id: tabId, name: file.name, data: result, raw: file, feats: result.features ?? undefined, upId: result.upload?.id ?? '' }]);
+      setActiveTabId(tabId);
       setHpglData(result);
       setFeatures(result.features ?? null);
       setUploadId(result.upload?.id ?? '');
@@ -300,6 +340,53 @@ export default function HPGLViewerPage() {
         onToggleNotches={() => setShowNotches(v => !v)}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
+        {/* File tabs */}
+        {fileTabs.length > 0 && (
+          <div className="flex items-center gap-1 mb-2 overflow-x-auto">
+            {fileTabs.map(tab => (
+              <div key={tab.id}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-t-lg text-[11px] font-medium cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTabId === tab.id ? 'bg-drapera-midnight text-white border-b border-drapera-gold' : 'text-gray-500 hover:text-white hover:bg-white/5'
+                }`}
+                onClick={() => switchTab(tab.id)}
+              >
+                <span className="truncate max-w-[120px]">{tab.name}</span>
+                <button onClick={e => { e.stopPropagation(); closeTab(tab.id); }} className="text-gray-600 hover:text-red-400 ml-0.5">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            ))}
+            {/* Compare mode toggle */}
+            {fileTabs.length >= 2 && (
+              <div className="flex items-center gap-1 ml-3 text-[10px]">
+                <button onClick={() => setCompareMode('single')}
+                  className={`px-2 py-1 rounded ${compareMode === 'single' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Singolo</button>
+                <button onClick={() => setCompareMode('side')}
+                  className={`px-2 py-1 rounded ${compareMode === 'side' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Affianca</button>
+                <button onClick={() => setCompareMode('overlay')}
+                  className={`px-2 py-1 rounded ${compareMode === 'overlay' ? 'bg-drapera-gold/10 text-drapera-gold' : 'text-gray-500 hover:text-white'}`}>Sovrapponi</button>
+                {compareMode !== 'single' && (
+                  <select className="bg-drapera-dark border border-drapera-border rounded px-1.5 py-1 text-[10px] text-white ml-1"
+                    value={secondTabId ?? ''}
+                    onChange={e => setSecondTabId(Number(e.target.value) || null)}>
+                    <option value="">Seleziona secondo file...</option>
+                    {fileTabs.filter(t => t.id !== activeTabId).map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                )}
+                {compareMode === 'overlay' && (
+                  <div className="flex items-center gap-1 ml-1">
+                    <span className="text-gray-500">Op.</span>
+                    <input type="range" min={0.1} max={1} step={0.05} value={overlayOpacity}
+                      onChange={e => setOverlayOpacity(parseFloat(e.target.value))}
+                      className="w-16 h-1 bg-drapera-border rounded-full accent-drapera-gold" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
           penVisibility={penVisibility} penColors={penColors} flattened={flattened}
           selectedPathIndex={selectedPath?.index ?? -1}
