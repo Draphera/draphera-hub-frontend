@@ -112,6 +112,8 @@ export const adminApi = {
       total_uploads: number;
       uploads_by_type: Record<string, number>;
       uploads_by_vendor: Record<string, number>;
+      uploads_by_month: Record<string, number>;
+      top_uploaders: Record<string, number>;
       training_samples: number;
       registration: { max_users: number; current_users: number; registration_open: boolean };
     }>;

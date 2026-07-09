@@ -42,7 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders';
+type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -71,6 +71,8 @@ export default function AdminPage() {
     total_profiles: number; total_founders: number; waitlist_count: number;
     total_uploads: number; uploads_by_type: Record<string, number>;
     uploads_by_vendor: Record<string, number>;
+    uploads_by_month: Record<string, number>;
+    top_uploaders: Record<string, number>;
     training_samples: number;
     registration: { max_users: number; current_users: number; registration_open: boolean };
   } | null>(null);
@@ -389,6 +391,7 @@ export default function AdminPage() {
     { key: 'waitlist', label: 'Waitlist' },
     { key: 'profiles', label: 'Utenti' },
     { key: 'founders', label: 'Founder' },
+    { key: 'analytics', label: 'Analytics' },
   ];
 
   return (
@@ -1007,6 +1010,103 @@ export default function AdminPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            {stats && (
+              <>
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="premium-card p-5">
+                    <h3 className="font-display font-bold text-base text-white mb-4">Upload per Tipo</h3>
+                    {(["hpgl", "iso", "dxf"] as const).map(type => {
+                      const max = Math.max(...Object.values(stats.uploads_by_type), 1);
+                      const count = stats.uploads_by_type[type] || 0;
+                      return (
+                        <div key={type} className="flex items-center gap-3 mb-2">
+                          <span className="text-[11px] font-medium text-gray-400 w-12 uppercase">{type}</span>
+                          <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden">
+                            <div className="h-full rounded transition-all duration-500"
+                              style={{ width: `${(count / max) * 100}%`, backgroundColor: type === 'hpgl' ? '#f2c94c' : type === 'iso' ? '#3b82f6' : '#22c55e' }}
+                            />
+                          </div>
+                          <span className="text-xs text-white font-mono w-10 text-right">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="premium-card p-5">
+                    <h3 className="font-display font-bold text-base text-white mb-4">Upload per Vendor CAD</h3>
+                    {Object.keys(stats.uploads_by_vendor).length > 0 ? (() => {
+                      const entries = Object.entries(stats.uploads_by_vendor);
+                      const maxV = Math.max(...entries.map(([, v]) => v), 1);
+                      return entries.map(([vendor, count]) => (
+                        <div key={vendor} className="flex items-center gap-3 mb-2">
+                          <span className="text-[11px] text-gray-400 w-24 truncate">{vendor}</span>
+                          <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden">
+                            <div className="h-full rounded bg-drapera-gold transition-all duration-500"
+                              style={{ width: `${(count / maxV) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-white font-mono w-10 text-right">{count}</span>
+                        </div>
+                      ));
+                    })() : (
+                      <p className="text-xs text-gray-600">Nessun dato vendor</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="premium-card p-5">
+                    <h3 className="font-display font-bold text-base text-white mb-4">Trend Mensile</h3>
+                    {Object.keys(stats.uploads_by_month).length > 0 ? (() => {
+                      const entries = Object.entries(stats.uploads_by_month);
+                      const maxM = Math.max(...entries.map(([, v]) => v), 1);
+                      return (
+                        <div className="flex items-end gap-1.5 h-28">
+                          {entries.slice(-12).map(([month, count]) => (
+                            <div key={month} className="flex-1 flex flex-col items-center gap-1">
+                              <span className="text-[9px] text-gray-500">{count}</span>
+                              <div className="w-full rounded-t bg-drapera-gold/70 transition-all duration-500"
+                                style={{ height: `${(count / maxM) * 100}%`, minHeight: count > 0 ? '4px' : '0' }}
+                              />
+                              <span className="text-[7px] text-gray-600 -rotate-45 origin-left whitespace-nowrap">{month.slice(5)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })() : (
+                      <p className="text-xs text-gray-600">Nessun dato mensile</p>
+                    )}
+                  </div>
+
+                  <div className="premium-card p-5">
+                    <h3 className="font-display font-bold text-base text-white mb-4">Top Uploader</h3>
+                    {Object.keys(stats.top_uploaders).length > 0 ? (() => {
+                      const entries = Object.entries(stats.top_uploaders);
+                      const maxT = Math.max(...entries.map(([, v]) => v), 1);
+                      return entries.map(([email, count]) => (
+                        <div key={email} className="flex items-center gap-3 mb-2">
+                          <span className="text-[11px] text-gray-400 flex-1 truncate">{email}</span>
+                          <div className="w-20 h-5 rounded bg-drapera-dark/50 overflow-hidden">
+                            <div className="h-full rounded bg-amber-500 transition-all duration-500"
+                              style={{ width: `${(count / maxT) * 100}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-white font-mono w-8 text-right">{count}</span>
+                        </div>
+                      ));
+                    })() : (
+                      <p className="text-xs text-gray-600">Nessun uploader</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+            {!stats && <p className="text-xs text-gray-600">Caricamento statistiche...</p>}
           </div>
         )}
 
