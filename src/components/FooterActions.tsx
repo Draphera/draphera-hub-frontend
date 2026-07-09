@@ -7,6 +7,8 @@ interface Props {
   onZoomOut: () => void;
   onFitToScreen: () => void;
   onToggleMeasure: () => void;
+  measureMode?: 'off' | 'distance' | 'angle';
+  onMeasureModeChange?: (m: 'off' | 'distance' | 'angle') => void;
   gridOn: boolean;
   onToggleGrid: () => void;
   onExportPng: () => void;
@@ -15,7 +17,8 @@ interface Props {
 }
 
 export default function FooterActions({
-  onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, gridOn, onToggleGrid, onExportPng, onExportSvg, hasFile,
+  onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, measureMode, onMeasureModeChange,
+  gridOn, onToggleGrid, onExportPng, onExportSvg, hasFile,
 }: Props) {
   const { t } = useTranslation();
 
@@ -29,27 +32,59 @@ export default function FooterActions({
     { key: 'svg', label: t('footer.export_svg'), icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
   ];
 
-  const handlers: Record<string, () => void> = {
-    zoomin: onZoomIn, zoomout: onZoomOut, fit: onFitToScreen,
-    measure: onToggleMeasure, grid: onToggleGrid, png: onExportPng, svg: onExportSvg,
-  };
+  const isMeasuring = measureMode && measureMode !== 'off';
 
   return (
     <footer className="fixed bottom-0 left-[260px] right-[260px] h-12 bg-drapera-dark border-t border-drapera-border flex items-center justify-center gap-0.5 px-3 z-40">
-      {actions.map(a => (
-        <button key={a.key} onClick={handlers[a.key]}
-          disabled={(a.key === 'png' || a.key === 'svg') && !hasFile}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] transition-all ${
-            a.key === 'grid' && gridOn
-              ? 'bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20'
-              : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'
-          } disabled:opacity-30 disabled:cursor-not-allowed`} title={a.label}>
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={a.icon} />
-          </svg>
-          <span className="hidden lg:inline">{a.label}</span>
-        </button>
-      ))}
+      {actions.map(a => {
+        if (a.key === 'measure') {
+          return (
+            <div key="measure-group" className="flex items-center gap-0.5">
+              <button onClick={onToggleMeasure}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] transition-all ${
+                  isMeasuring
+                    ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                    : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'
+                }`} title={a.label}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={a.icon} />
+                </svg>
+                <span className="hidden lg:inline">{a.label}</span>
+              </button>
+              {isMeasuring && onMeasureModeChange && (
+                <div className="flex gap-0.5 ml-1">
+                  <button onClick={() => onMeasureModeChange('distance')}
+                    className={`px-2 py-1 rounded text-[9px] font-medium transition-colors ${
+                      measureMode === 'distance' ? 'bg-red-500/20 text-red-300' : 'text-gray-500 hover:text-white'
+                    }`}>Distanza</button>
+                  <button onClick={() => onMeasureModeChange('angle')}
+                    className={`px-2 py-1 rounded text-[9px] font-medium transition-colors ${
+                      measureMode === 'angle' ? 'bg-red-500/20 text-red-300' : 'text-gray-500 hover:text-white'
+                    }`}>Angolo</button>
+                </div>
+              )}
+            </div>
+          );
+        }
+        const handler = {
+          zoomin: onZoomIn, zoomout: onZoomOut, fit: onFitToScreen,
+          grid: onToggleGrid, png: onExportPng, svg: onExportSvg,
+        }[a.key];
+        return (
+          <button key={a.key} onClick={handler}
+            disabled={(a.key === 'png' || a.key === 'svg') && !hasFile}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] transition-all ${
+              a.key === 'grid' && gridOn
+                ? 'bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20'
+                : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'
+            } disabled:opacity-30 disabled:cursor-not-allowed`} title={a.label}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={a.icon} />
+            </svg>
+            <span className="hidden lg:inline">{a.label}</span>
+          </button>
+        );
+      })}
     </footer>
   );
 }

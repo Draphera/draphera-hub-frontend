@@ -25,6 +25,16 @@ interface HPGLData {
   };
 }
 
+interface MeasurePoint {
+  x: number; y: number;
+}
+
+interface MeasureResult {
+  type: 'distance' | 'angle';
+  points: MeasurePoint[];
+  value: number;
+}
+
 interface Props {
   data: HPGLData | null;
   zoom: number;
@@ -38,6 +48,10 @@ interface Props {
   flattened?: boolean;
   onPathSelect?: (path: HPGLPath | null, index: number) => void;
   selectedPathIndex?: number;
+  measureMode?: 'off' | 'distance' | 'angle';
+  measurePoints?: MeasurePoint[];
+  onCanvasClick?: (x: number, y: number) => void;
+  measureResults?: MeasureResult[];
 }
 
 const PAD = 40;
@@ -101,7 +115,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -242,14 +256,71 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   };
 
   const renderMeasurement = () => {
-    if (!data || viewMode !== 'measurement' || !bounds) return null;
-    const { cx, cy, w, h } = bounds;
+    if (viewMode !== 'measurement') return null;
+    const fs = clampFontSize(10 / effectiveZoom, 7, 16);
+    const sw = clampFontSize(1 / effectiveZoom, 0.5, 2);
+
     return (
       <g>
-        <line x1={cx - w / 2 - 10} y1={cy} x2={cx + w / 2 + 10} y2={cy} stroke="#ff6b6b" strokeWidth={clampFontSize(0.5 / effectiveZoom, 0.3, 3)} strokeDasharray="4 3" />
-        <line x1={cx} y1={cy - h / 2 - 10} x2={cx} y2={cy + h / 2 + 10} stroke="#ff6b6b" strokeWidth={clampFontSize(0.5 / effectiveZoom, 0.3, 3)} strokeDasharray="4 3" />
-        <text x={cx} y={cy - h / 2 - 15} textAnchor="middle" fill="#ff6b6b" fontSize={clampFontSize(8 / effectiveZoom, 6, 18)} fontFamily="Inter">{w.toFixed(1)}</text>
-        <text x={cx + w / 2 + 15} y={cy} textAnchor="start" dominantBaseline="central" fill="#ff6b6b" fontSize={clampFontSize(8 / effectiveZoom, 6, 18)} fontFamily="Inter">{h.toFixed(1)}</text>
+        {/* Guide lines through measure points */}
+        {measurePoints?.map((p, i) => (
+          <g key={`guide-${i}`}>
+            <line x1={-1e6} y1={p.y} x2={1e6} y2={p.y} stroke="rgba(255,107,107,0.15)" strokeWidth={sw} strokeDasharray="4 4" />
+            <line x1={p.x} y1={-1e6} x2={p.x} y2={1e6} stroke="rgba(255,107,107,0.15)" strokeWidth={sw} strokeDasharray="4 4" />
+            <circle cx={p.x} cy={p.y} r={clampFontSize(4 / effectiveZoom, 3, 8)} fill="#ff6b6b" stroke="#fff" strokeWidth={sw * 0.5} />
+          </g>
+        ))}
+
+        {/* Distance measurement: line between first 2 points */}
+        {measurePoints && measurePoints.length >= 2 && (
+          <g>
+            <line x1={measurePoints[0].x} y1={measurePoints[0].y} x2={measurePoints[1].x} y2={measurePoints[1].y}
+              stroke="#ff6b6b" strokeWidth={sw} strokeDasharray="5 3" />
+            <text x={(measurePoints[0].x + measurePoints[1].x) / 2} y={(measurePoints[0].y + measurePoints[1].y) / 2 - 8}
+              textAnchor="middle" fill="#ff6b6b" fontSize={fs} fontFamily="Inter" fontWeight="bold">
+              {Math.sqrt((measurePoints[1].x - measurePoints[0].x) ** 2 + (measurePoints[1].y - measurePoints[0].y) ** 2).toFixed(1)}
+            </text>
+          </g>
+        )}
+
+        {/* Angle measurement: arc between 3 points */}
+        {measurePoints && measurePoints.length >= 3 && measureMode === 'angle' && (
+          <g>
+            <line x1={measurePoints[1].x} y1={measurePoints[1].y} x2={measurePoints[0].x} y2={measurePoints[0].y}
+              stroke="#ff6b6b" strokeWidth={sw} strokeDasharray="5 3" />
+            <line x1={measurePoints[1].x} y1={measurePoints[1].y} x2={measurePoints[2].x} y2={measurePoints[2].y}
+              stroke="#ff6b6b" strokeWidth={sw} strokeDasharray="5 3" />
+            <circle cx={measurePoints[1].x} cy={measurePoints[1].y} r={clampFontSize(4 / effectiveZoom, 3, 8)} fill="#ff6b6b" />
+          </g>
+        )}
+
+        {/* Completed measurement results */}
+        {measureResults?.map((r, i) => {
+          const midX = r.points.reduce((s, p) => s + p.x, 0) / r.points.length;
+          const midY = r.points.reduce((s, p) => s + p.y, 0) / r.points.length;
+          return (
+            <g key={`result-${i}`}>
+              {r.points.map((p, j) => (
+                <circle key={j} cx={p.x} cy={p.y} r={clampFontSize(3 / effectiveZoom, 2, 6)} fill="#00e5ff" stroke="#fff" strokeWidth={sw * 0.5} opacity={0.7} />
+              ))}
+              {r.type === 'distance' && r.points.length === 2 && (
+                <line x1={r.points[0].x} y1={r.points[0].y} x2={r.points[1].x} y2={r.points[1].y}
+                  stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+              )}
+              {r.type === 'angle' && r.points.length === 3 && (
+                <>
+                  <line x1={r.points[1].x} y1={r.points[1].y} x2={r.points[0].x} y2={r.points[0].y}
+                    stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+                  <line x1={r.points[1].x} y1={r.points[1].y} x2={r.points[2].x} y2={r.points[2].y}
+                    stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+                </>
+              )}
+              <text x={midX} y={midY - 10} textAnchor="middle" fill="#00e5ff" fontSize={fs} fontFamily="Inter" fontWeight="bold">
+                {r.type === 'distance' ? `${r.value.toFixed(1)}` : `${r.value.toFixed(1)}°`}
+              </text>
+            </g>
+          );
+        })}
       </g>
     );
   };
@@ -259,6 +330,12 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const svg = svgRef.current;
       if (!svg) return;
       const vb = screenToViewbox(svg, e.clientX, e.clientY);
+      const worldX = (vb.x - pan.x) / effectiveZoom;
+      const worldY = (vb.y - pan.y) / effectiveZoom;
+      if (measureMode && measureMode !== 'off' && onCanvasClick) {
+        onCanvasClick(worldX, worldY);
+        return;
+      }
       setIsPanning(true);
       setPanStart({ x: vb.x - pan.x, y: vb.y - pan.y });
     }
@@ -330,7 +407,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className="w-full h-full cursor-grab active:cursor-grabbing select-none relative z-[1]"
+        className={`w-full h-full select-none relative z-[1] ${measureMode && measureMode !== 'off' ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
         style={svgStyle}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}

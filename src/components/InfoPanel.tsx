@@ -39,6 +39,11 @@ interface SelectedPathInfo {
   firstPoint?: [number, number];
 }
 
+interface MeasureResultInfo {
+  type: 'distance' | 'angle';
+  value: number;
+}
+
 interface Props {
   meta: HPGLMeta | null;
   fileName: string;
@@ -50,11 +55,12 @@ interface Props {
   onCorrectCad?: (correctedCadId: string) => void;
   userSelectedCad?: string | null;
   selectedPath?: SelectedPathInfo | null;
+  measureResults?: MeasureResultInfo[];
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -147,6 +153,25 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {measureResults && measureResults.length > 0 && (
+          <div className="px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/15">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-red-400 font-semibold uppercase tracking-wider">Misure</span>
+              <span className="text-[9px] text-gray-500">{measureResults.length}</span>
+            </div>
+            <div className="space-y-1">
+              {measureResults.map((r, i) => (
+                <div key={i} className="flex justify-between text-[10px]">
+                  <span className="text-gray-500">{r.type === 'distance' ? 'Distanza' : 'Angolo'}</span>
+                  <span className="text-white font-mono">
+                    {r.type === 'distance' ? `${r.value.toFixed(1)}` : `${r.value.toFixed(1)}°`}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}

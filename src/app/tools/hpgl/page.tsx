@@ -61,6 +61,9 @@ export default function HPGLViewerPage() {
   const [penColors, setPenColors] = useState<Record<number, string>>({});
   const [flattened, setFlattened] = useState(false);
   const [selectedPath, setSelectedPath] = useState<{ path: HPGLPath; index: number; info: { type: string; vertices: number; pen: number; lineType: number; closed?: boolean; length?: number; firstPoint?: [number, number] } } | null>(null);
+  const [measureMode, setMeasureMode] = useState<'off' | 'distance' | 'angle'>('off');
+  const [measurePoints, setMeasurePoints] = useState<Array<{ x: number; y: number }>>([]);
+  const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number }>>([]);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -112,6 +115,34 @@ export default function HPGLViewerPage() {
       setShowCadModal(true);
     }
   }, [hpglData, ml, userSelectedCad]);
+
+  const handleCanvasClick = useCallback((x: number, y: number) => {
+    if (measureMode === 'off') return;
+    const newPt = { x, y };
+    const pts = [...measurePoints, newPt];
+
+    if (measureMode === 'distance' && pts.length >= 2) {
+      const dx = pts[1].x - pts[0].x;
+      const dy = pts[1].y - pts[0].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      setMeasureResults(prev => [...prev, { type: 'distance', points: [pts[0], pts[1]], value: dist }]);
+      setMeasurePoints([]);
+    } else if (measureMode === 'angle' && pts.length >= 3) {
+      // Angle at pts[1] between pts[0] and pts[2]
+      const v1x = pts[0].x - pts[1].x, v1y = pts[0].y - pts[1].y;
+      const v2x = pts[2].x - pts[1].x, v2y = pts[2].y - pts[1].y;
+      const dot = v1x * v2x + v1y * v2y;
+      const n1 = Math.sqrt(v1x * v1x + v1y * v1y);
+      const n2 = Math.sqrt(v2x * v2x + v2y * v2y);
+      if (n1 > 0 && n2 > 0) {
+        const angle = Math.acos(Math.max(-1, Math.min(1, dot / (n1 * n2)))) * 180 / Math.PI;
+        setMeasureResults(prev => [...prev, { type: 'angle', points: [pts[0], pts[1], pts[2]], value: angle }]);
+      }
+      setMeasurePoints([]);
+    } else {
+      setMeasurePoints(pts);
+    }
+  }, [measureMode, measurePoints]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -269,6 +300,8 @@ export default function HPGLViewerPage() {
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
           penVisibility={penVisibility} penColors={penColors} flattened={flattened}
           selectedPathIndex={selectedPath?.index ?? -1}
+          measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}
+          onCanvasClick={handleCanvasClick}
           onPathSelect={(path, idx) => {
             if (!path) { setSelectedPath(null); return; }
             const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -292,7 +325,7 @@ export default function HPGLViewerPage() {
           }} />
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} measureResults={measureResults} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
@@ -334,7 +367,22 @@ export default function HPGLViewerPage() {
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}
         onFitToScreen={() => { setZoom(1); setFitKey(k => k + 1); }}
-        onToggleMeasure={() => setViewMode(v => v === 'measurement' ? 'outline' : 'measurement')}
+        onToggleMeasure={() => {
+          if (viewMode === 'measurement') {
+            setViewMode('outline');
+            setMeasureMode('off');
+            setMeasurePoints([]);
+          } else {
+            setViewMode('measurement');
+            setMeasureMode('distance');
+          }
+        }}
+        measureMode={measureMode}
+        onMeasureModeChange={m => {
+          setMeasureMode(m);
+          setMeasurePoints([]);
+          setViewMode(m !== 'off' ? 'measurement' : viewMode === 'measurement' ? 'outline' : viewMode);
+        }}
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
         onExportPng={handleExportPng} onExportSvg={handleExportSvg} hasFile={!!hpglData}
       />
