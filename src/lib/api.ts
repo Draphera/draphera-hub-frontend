@@ -241,16 +241,32 @@ export const correctionApi = {
 };
 
 export const waitlistApi = {
-  async list() {
+  async list(limit = 50, offset = 0, search = '') {
     const headers = await getHeaders();
-    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist`, { headers });
+    const params = `limit=${limit}&offset=${offset}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist?${params}`, { headers });
     if (!res.ok) throw new Error(await res.text());
-    return res.json();
+    return res.json() as Promise<{ records: Array<Record<string, unknown>>; total: number }>;
+  },
+  async stats() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist/stats`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ total: number; pending: number; approved: number; avg_wait_days: number }>;
   },
   async approve(email: string) {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist/approve`, {
+      method: 'POST', headers, body: JSON.stringify({ email }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async approveAndFounder(email: string) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/waitlist/approve-and-founder`, {
       method: 'POST', headers, body: JSON.stringify({ email }),
     });
     if (!res.ok) throw new Error(await res.text());

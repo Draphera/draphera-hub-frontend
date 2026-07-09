@@ -88,7 +88,11 @@ export default function AdminPage() {
   const [trainingCount, setTrainingCount] = useState(0);
   const [trainingStats, setTrainingStats] = useState<{ total_samples: number; unique_classes: number; by_class: Record<string, number> } | null>(null);
 
-  const [waitlist, setWaitlist] = useState<Array<{ id: string; email: string; name: string; position: number; created_at: string; approved: boolean }>>([]);
+  const [waitlist, setWaitlist] = useState<Array<Record<string, unknown>>>([]);
+  const [waitlistTotal, setWaitlistTotal] = useState(0);
+  const [waitlistOffset, setWaitlistOffset] = useState(0);
+  const [waitlistSearch, setWaitlistSearch] = useState('');
+  const [waitlistStats, setWaitlistStats] = useState<{ total: number; pending: number; approved: number; avg_wait_days: number } | null>(null);
   const [regConfig, setRegConfig] = useState<{ max_users: number; current_users: number; registration_open: boolean } | null>(null);
   const [regMaxInput, setRegMaxInput] = useState('100');
 
@@ -101,12 +105,23 @@ export default function AdminPage() {
   const [founders, setFounders] = useState<Array<Record<string, unknown>>>([]);
   const [founderAddUserId, setFounderAddUserId] = useState('');
 
-  const loadWaitlist = async () => {
+  const loadWaitlist = async (append = false) => {
     try {
-      const [w, r] = await Promise.all([waitlistApi.list(), waitlistApi.getRegState()]);
-      setWaitlist(w.records ?? []);
+      const [w, r, s] = await Promise.all([
+        waitlistApi.list(50, append ? waitlistOffset : 0, waitlistSearch),
+        waitlistApi.getRegState(),
+        waitlistApi.stats(),
+      ]);
+      if (append) {
+        setWaitlist(prev => [...prev, ...(w.records ?? [])]);
+      } else {
+        setWaitlist(w.records ?? []);
+      }
+      setWaitlistTotal(w.total ?? 0);
+      setWaitlistOffset(append ? waitlistOffset + 50 : 50);
       setRegConfig(r);
       setRegMaxInput(String(r.max_users ?? 100));
+      setWaitlistStats(s);
     } catch {}
   };
 
@@ -115,6 +130,16 @@ export default function AdminPage() {
       await waitlistApi.approve(email);
       setMsg(`Approvato: ${email}`);
       await loadWaitlist();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleApproveAndFounder = async (email: string) => {
+    if (!window.confirm(`Approvare ${email} e aggiungere come founder?`)) return;
+    try {
+      const res = await waitlistApi.approveAndFounder(email);
+      setMsg(email + ' approvato e aggiunto come founder!');
+      await loadWaitlist();
+      setStats(await adminApi.stats());
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
@@ -885,6 +910,27 @@ export default function AdminPage() {
 
         {activeTab === 'waitlist' && (
           <div>
+            {waitlistStats && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <div className="premium-card p-3 text-center">
+                  <p className="text-xl font-bold text-white">{waitlistStats.total}</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Totale</p>
+                </div>
+                <div className="premium-card p-3 text-center">
+                  <p className="text-xl font-bold text-yellow-400">{waitlistStats.pending}</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">In attesa</p>
+                </div>
+                <div className="premium-card p-3 text-center">
+                  <p className="text-xl font-bold text-green-400">{waitlistStats.approved}</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Approvati</p>
+                </div>
+                <div className="premium-card p-3 text-center">
+                  <p className="text-xl font-bold text-drapera-gold">{waitlistStats.avg_wait_days}g</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Attesa media</p>
+                </div>
+              </div>
+            )}
+
             <div className="premium-card mb-6">
               <h3 className="font-display font-bold text-base text-white mb-3">Configurazione Accesso</h3>
               <div className="flex flex-wrap items-center gap-4">
@@ -902,8 +948,21 @@ export default function AdminPage() {
               </div>
             </div>
 
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <input
+                className="flex-1 min-w-[200px] bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 transition-colors"
+                value={waitlistSearch}
+                onChange={e => { setWaitlistSearch(e.target.value); }}
+                onKeyDown={e => { if (e.key === 'Enter') { setWaitlistOffset(0); loadWaitlist(); } }}
+                placeholder="Cerca per email o nome..."
+              />
+              <button onClick={() => { setWaitlistOffset(0); loadWaitlist(); }} className="btn-gold text-xs px-3 py-2">
+                Cerca
+              </button>
+              <span className="text-xs text-gray-500">{waitlistTotal} richieste</span>
+            </div>
+
             <div className="premium-card overflow-hidden">
-              <h3 className="font-display font-bold text-base text-white mb-3">Waitlist ({waitlist.length})</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -917,30 +976,49 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {waitlist.map((w, i) => (
-                      <tr key={w.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
-                        <td className="px-4 py-3 text-xs text-gray-500">{i + 1}</td>
-                        <td className="px-4 py-3 text-xs text-white">{w.email}</td>
-                        <td className="px-4 py-3 text-xs">{w.name || '-'}</td>
-                        <td className="px-4 py-3 text-xs">{new Date(w.created_at).toLocaleDateString()}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${w.approved ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                            {w.approved ? 'Approvato' : 'In attesa'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {!w.approved && (
-                            <button onClick={() => handleApproveWaitlist(w.email)} className="text-drapera-gold hover:text-amber-400 text-xs">Approva</button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                    {waitlist.map((w, i) => {
+                      const wId = String(w.id || '');
+                      const wEmail = String(w.email || '');
+                      const wApproved = !!w.approved;
+                      return (
+                        <tr key={wId} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                          <td className="px-4 py-3 text-xs text-gray-500">{i + 1}</td>
+                          <td className="px-4 py-3 text-xs text-white font-mono">{wEmail}</td>
+                          <td className="px-4 py-3 text-xs">{String(w.name || '-')}</td>
+                          <td className="px-4 py-3 text-xs">{w.created_at ? new Date(String(w.created_at)).toLocaleDateString() : '-'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${wApproved ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
+                              {wApproved ? 'Approvato' : 'In attesa'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {!wApproved && (
+                                <>
+                                  <button onClick={() => handleApproveWaitlist(wEmail)} className="text-drapera-gold hover:text-amber-400 text-[10px] px-1.5 py-1 rounded hover:bg-drapera-gold/10">Approva</button>
+                                  <button onClick={() => handleApproveAndFounder(wEmail)} className="text-[10px] px-1.5 py-1 rounded text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">Founder+</button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {waitlist.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">Nessuno in waitlist</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">{waitlistSearch ? 'Nessun risultato' : 'Nessuno in waitlist'}</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
+              {waitlist.length > 0 && waitlist.length < waitlistTotal && (
+                <div className="px-4 py-3 border-t border-drapera-border/50 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{waitlist.length} / {waitlistTotal} richieste</span>
+                  <button onClick={() => loadWaitlist(true)}
+                    className="text-xs text-drapera-gold hover:underline">
+                    Carica altri
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
