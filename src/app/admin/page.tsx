@@ -42,7 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist';
+type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -89,6 +89,12 @@ export default function AdminPage() {
   const [regConfig, setRegConfig] = useState<{ max_users: number; current_users: number; registration_open: boolean } | null>(null);
   const [regMaxInput, setRegMaxInput] = useState('100');
 
+  const [profiles, setProfiles] = useState<Array<Record<string, unknown>>>([]);
+  const [profilesSearch, setProfilesSearch] = useState('');
+  const [profilesOffset, setProfilesOffset] = useState(0);
+  const [profilesTotal, setProfilesTotal] = useState(0);
+  const [profilesLoading, setProfilesLoading] = useState(false);
+
   const loadWaitlist = async () => {
     try {
       const [w, r] = await Promise.all([waitlistApi.list(), waitlistApi.getRegState()]);
@@ -119,6 +125,38 @@ export default function AdminPage() {
       await waitlistApi.updateRegState({ registration_open: !regConfig?.registration_open });
       setMsg(regConfig?.registration_open ? 'Registrazione chiusa' : 'Registrazione aperta');
       await loadWaitlist();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const loadProfiles = async (append = false) => {
+    setProfilesLoading(true);
+    try {
+      const data = await adminApi.listProfiles(50, append ? profilesOffset : 0, profilesSearch);
+      if (append) {
+        setProfiles(prev => [...prev, ...data.profiles]);
+      } else {
+        setProfiles(data.profiles);
+      }
+      setProfilesTotal(data.total);
+      setProfilesOffset(append ? profilesOffset + 50 : 50);
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+    setProfilesLoading(false);
+  };
+
+  const handlePromoteAdmin = async (profileId: string, currentRole: string) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    try {
+      await adminApi.updateProfile(profileId, { role: newRole });
+      setMsg(`Ruolo aggiornato a ${newRole}`);
+      await loadProfiles();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleSetOffice = async (profileId: string, office: string) => {
+    try {
+      await adminApi.updateProfile(profileId, { office });
+      setMsg(`Office aggiornato: ${office}`);
+      await loadProfiles();
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
@@ -283,6 +321,9 @@ export default function AdminPage() {
     if (tab === 'waitlist') {
       await loadWaitlist();
     }
+    if (tab === 'profiles') {
+      await loadProfiles();
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
@@ -312,6 +353,7 @@ export default function AdminPage() {
     { key: 'cad', label: t('admin.tab_cad') },
     { key: 'trainer', label: t('admin.tab_trainer') },
     { key: 'waitlist', label: 'Waitlist' },
+    { key: 'profiles', label: 'Utenti' },
   ];
 
   return (
@@ -826,6 +868,109 @@ export default function AdminPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'profiles' && (
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <input
+                className="flex-1 min-w-[200px] bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 transition-colors"
+                value={profilesSearch}
+                onChange={e => { setProfilesSearch(e.target.value); }}
+                onKeyDown={e => { if (e.key === 'Enter') { setProfilesOffset(0); loadProfiles(); } }}
+                placeholder="Cerca per email..."
+              />
+              <button onClick={() => { setProfilesOffset(0); loadProfiles(); }} className="btn-gold text-xs px-3 py-2">
+                Cerca
+              </button>
+              <span className="text-xs text-gray-500">{profilesTotal} utenti</span>
+            </div>
+
+            <div className="premium-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 font-medium">Email</th>
+                      <th className="px-4 py-3 font-medium">Nome</th>
+                      <th className="px-4 py-3 font-medium">Ruolo</th>
+                      <th className="px-4 py-3 font-medium">Office</th>
+                      <th className="px-4 py-3 font-medium">Upload</th>
+                      <th className="px-4 py-3 font-medium">Registrato</th>
+                      <th className="px-4 py-3 font-medium text-right">Azioni</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profiles.map(p => {
+                      const role = String(p.role || 'user');
+                      return (
+                        <tr key={String(p.id)} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                          <td className="px-4 py-3 text-xs text-white font-mono max-w-[180px] truncate">{String(p.email || '')}</td>
+                          <td className="px-4 py-3 text-xs">{String(p.full_name || '-')}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                              role === 'admin' ? 'bg-drapera-gold/10 text-drapera-gold' : 'bg-gray-500/10 text-gray-400'
+                            }`}>
+                              {role}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs">{String(p.office || '-')}</td>
+                          <td className="px-4 py-3 text-xs">{String(p.upload_count || '0')}</td>
+                          <td className="px-4 py-3 text-xs">{p.created_at ? new Date(String(p.created_at)).toLocaleDateString() : '-'}</td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => handlePromoteAdmin(String(p.id), role)}
+                                className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
+                                  role === 'admin'
+                                    ? 'text-red-400 hover:bg-red-500/10'
+                                    : 'text-drapera-gold hover:bg-drapera-gold/10'
+                                }`}
+                              >
+                                {role === 'admin' ? 'Revoca' : 'Admin'}
+                              </button>
+                              <div className="relative group">
+                                <button className="text-[10px] px-2 py-1 rounded text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+                                  Office
+                                </button>
+                                <div className="absolute right-0 top-full mt-1 z-20 hidden group-hover:block min-w-[160px]">
+                                  <div className="premium-card p-2 space-y-1">
+                                    {['maddalena', 'caselle', 'verona', 'arezzo', 'bergamo', 'napoli'].map(o => (
+                                      <button
+                                        key={o}
+                                        onClick={() => handleSetOffice(String(p.id), o)}
+                                        className={`block w-full text-left text-[10px] px-2 py-1 rounded transition-colors ${
+                                          String(p.office || '') === o ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                        }`}
+                                      >
+                                        {o}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {profiles.length === 0 && (
+                      <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-600 text-xs">Nessun utente trovato</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {profiles.length > 0 && profiles.length < profilesTotal && (
+                <div className="px-4 py-3 border-t border-drapera-border/50 flex items-center justify-between">
+                  <span className="text-xs text-gray-500">{profiles.length} / {profilesTotal} utenti</span>
+                  <button onClick={() => loadProfiles(true)} disabled={profilesLoading}
+                    className="text-xs text-drapera-gold hover:underline disabled:opacity-40">
+                    {profilesLoading ? 'Caricamento...' : 'Carica altri'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -62,6 +62,22 @@ export const adminApi = {
       return res.ok ? res.json() : { is_admin: false };
     } catch { return { is_admin: false }; }
   },
+  async listProfiles(limit = 50, offset = 0, search = '') {
+    const headers = await getHeaders();
+    const params = `limit=${limit}&offset=${offset}${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/profiles?${params}`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ profiles: Array<Record<string, unknown>>; total: number }>;
+  },
+  async updateProfile(profileId: string, data: Record<string, string>) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/profiles/${profileId}`, {
+      method: 'PUT', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
   async stats() {
     const headers = await getHeaders();
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/stats`, { headers });
