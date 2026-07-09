@@ -261,10 +261,12 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const sizeRatio = ptDiag / bbDiag;
       // Closed + large = contour (thick, solid), small/open = internals (thin)
       const isContour = path.closed && sizeRatio > 0.05;
-      const thick = isContour ? 1.8 : 1.0;
+      const isText = sizeRatio < 0.03;  // small paths = vector text / details
+      const thick = isContour ? 1.8 : isText ? 1.3 : 1.0;
       const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
       const highlightSw = sw * 3;
-      const dash = isContour ? '' : (LT_PATTERNS[path.lineType ?? 0] || '');
+      // Text and contour: solid line. Others: respect LT
+      const dash = (isContour || isText) ? '' : (LT_PATTERNS[path.lineType ?? 0] || '');
       const dashProps = dash ? { strokeDasharray: dash } : {};
 
       const commonProps = {
