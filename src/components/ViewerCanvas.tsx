@@ -227,7 +227,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if (!svg) return;
       const vb = screenToViewbox(svg, e.clientX, e.clientY);
       setIsPanning(true);
-      setPanStart({ x: vb.x, y: vb.y });
+      setPanStart({ x: vb.x - pan.x, y: vb.y - pan.y });
     }
   };
 
@@ -240,17 +240,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
 
     if (isPanning) {
-      const dx = vb.x - panStart.x, dy = vb.y - panStart.y;
-      setPan(prev => {
-        const newPanX = prev.x + dx, newPanY = prev.y + dy;
-        const cw = (bounds?.w ?? 400) * effectiveZoom;
-        const ch = (bounds?.h ?? 300) * effectiveZoom;
-        return {
-          x: Math.min(VIEW_W * 0.5, Math.max(-cw + VIEW_W * 0.5, newPanX)),
-          y: Math.min(VIEW_H * 0.5, Math.max(-ch + VIEW_H * 0.5, newPanY)),
-        };
-      });
-      setPanStart({ x: vb.x, y: vb.y });
+      setPan({ x: vb.x - panStart.x, y: vb.y - panStart.y });
     }
   };
 
@@ -260,6 +250,34 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     minHeight: 460,
     outline: '1px solid rgba(242, 201, 76, 0.08)',
     outlineOffset: -1,
+  };
+
+  // Mini-map
+  const MINI_SIZE = 120;
+  const miniScale = bounds ? Math.min(MINI_SIZE / bounds.w, MINI_SIZE / bounds.h, 0.5) : 1;
+  const miniOffsetX = bounds ? -bounds.minX * miniScale : 0;
+  const miniOffsetY = bounds ? -bounds.minY * miniScale : 0;
+  // Viewport rectangle in world coords
+  const viewLeft = -pan.x / effectiveZoom;
+  const viewTop = -pan.y / effectiveZoom;
+  const viewW = VIEW_W / effectiveZoom;
+  const viewH = VIEW_H / effectiveZoom;
+
+  const renderMiniPaths = () => {
+    if (!data) return null;
+    return data.paths.map((path, idx) => {
+      const pen = path.pen ?? 0;
+      const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
+      if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
+        const pts = path.points.map(p => `${miniOffsetX + p[0] * miniScale},${miniOffsetY + p[1] * miniScale}`).join(' ');
+        if (path.closed) return <polygon key={idx} points={pts} fill="none" stroke={color} strokeWidth={0.5} />;
+        return <polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={0.5} />;
+      }
+      if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
+        return <circle key={idx} cx={miniOffsetX + path.cx * miniScale} cy={miniOffsetY + path.cy * miniScale} r={path.radius * miniScale} fill="none" stroke={color} strokeWidth={0.5} />;
+      }
+      return null;
+    });
   };
 
   return (
@@ -300,6 +318,34 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           </>
         )}
       </svg>
+
+      {/* Mini-map */}
+      {bounds && (
+        <div className="absolute bottom-3 right-3 z-20 rounded-lg overflow-hidden border border-drapera-border/60"
+          style={{ width: MINI_SIZE + 16, height: MINI_SIZE + 16, background: 'rgba(18, 10, 32, 0.9)', backdropFilter: 'blur(4px)' }}>
+          <svg width={MINI_SIZE + 16} height={MINI_SIZE + 16} viewBox={`0 0 ${MINI_SIZE + 16} ${MINI_SIZE + 16}`}>
+            <g transform={`translate(8, 8)`}>
+              {/* Bounding box background */}
+              <rect x={0} y={0} width={MINI_SIZE} height={MINI_SIZE} fill="rgba(255,255,255,0.02)" rx={2} />
+              {/* Paths */}
+              {renderMiniPaths()}
+              {/* Viewport rectangle */}
+              <rect
+                x={Math.max(0, viewLeft * miniScale)}
+                y={Math.max(0, viewTop * miniScale)}
+                width={Math.min(MINI_SIZE - viewLeft * miniScale, viewW * miniScale)}
+                height={Math.min(MINI_SIZE - viewTop * miniScale, viewH * miniScale)}
+                fill="rgba(242,201,76,0.08)"
+                stroke="#F2C94C"
+                strokeWidth={1}
+                rx={1}
+              />
+            </g>
+          </svg>
+        </div>
+      )}
+
+      {/* Coordinate bar */}
       <div className="absolute bottom-3 left-3 flex items-center gap-3 z-10 rounded-md px-3 py-1.5"
         style={{ background: 'rgba(18, 10, 32, 0.85)', backdropFilter: 'blur(4px)', border: '1px solid rgba(242, 201, 76, 0.12)' }}>
         <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">X: {mousePos.x.toFixed(1)}</span>
