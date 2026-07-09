@@ -22,6 +22,8 @@ interface SidebarProps {
   onPenColorChange?: (pen: number, color: string) => void;
   flattened?: boolean;
   onToggleFlattened?: () => void;
+  showNotches?: boolean;
+  onToggleNotches?: () => void;
 }
 
 export default function Sidebar({
@@ -29,6 +31,7 @@ export default function Sidebar({
   unit, onUnitChange, snapGrid, onToggleSnap,
   pens, penVisibility, onPenToggle, penColors, onPenColorChange,
   flattened, onToggleFlattened,
+  showNotches, onToggleNotches,
 }: SidebarProps) {
   const { t } = useTranslation();
 
@@ -140,6 +143,19 @@ export default function Sidebar({
                 })}
               </div>
             </div>
+          </>
+        )}
+
+        {/* Notch overlay toggle */}
+        {pens && pens.length > 0 && (
+          <>
+            <div className="h-px bg-drapera-border" />
+            <label className="flex items-center justify-between cursor-pointer">
+              <span className="text-xs text-gray-400">Mostra intagli</span>
+              <button onClick={onToggleNotches} className={`w-8 h-4 rounded-full transition-colors relative ${showNotches ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${showNotches ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
+              </button>
+            </label>
           </>
         )}
       </div>
