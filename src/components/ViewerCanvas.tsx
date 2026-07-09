@@ -238,7 +238,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   }
 
-  const fillColor = invertColors ? 'rgba(0,229,255,0.06)' : 'rgba(242,201,76,0.06)';
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
 
   const renderPaths = () => {
@@ -296,7 +295,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.08)' : fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
+          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.08)' : 'none'} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
         } else {
           elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
         }
