@@ -295,6 +295,15 @@ export const trainingApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+  async getTrainingStats() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/training-stats`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{
+      total_samples: number; unique_classes: number;
+      by_class: Record<string, number>; by_class_raw: Record<string, number>;
+    }>;
+  },
 };
 
 export const hpglApi = {

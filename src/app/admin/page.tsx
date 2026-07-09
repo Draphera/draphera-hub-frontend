@@ -86,6 +86,7 @@ export default function AdminPage() {
   const [mlTraining, setMlTraining] = useState(false);
   const [mlResult, setMlResult] = useState<{ accuracy?: number; samples?: number; test_samples?: number; classes?: string[]; error?: string } | null>(null);
   const [trainingCount, setTrainingCount] = useState(0);
+  const [trainingStats, setTrainingStats] = useState<{ total_samples: number; unique_classes: number; by_class: Record<string, number> } | null>(null);
 
   const [waitlist, setWaitlist] = useState<Array<{ id: string; email: string; name: string; position: number; created_at: string; approved: boolean }>>([]);
   const [regConfig, setRegConfig] = useState<{ max_users: number; current_users: number; registration_open: boolean } | null>(null);
@@ -199,6 +200,7 @@ export default function AdminPage() {
       const r = await trainingApi.trainModel();
       setMlResult(r.result || r);
       setMsg('Modello addestrato con successo!');
+      await loadTrainingStats();
     } catch (e: any) { setMlResult({ error: e.message }); setMsg(`Errore: ${e.message}`); }
     setMlTraining(false);
   };
@@ -207,6 +209,13 @@ export default function AdminPage() {
     try {
       const data = await trainingApi.getTrainingData();
       setTrainingCount(data.total ?? 0);
+    } catch {}
+  };
+
+  const loadTrainingStats = async () => {
+    try {
+      const data = await trainingApi.getTrainingStats();
+      setTrainingStats(data);
     } catch {}
   };
 
@@ -339,6 +348,7 @@ export default function AdminPage() {
       const result = await adminCadApi.train(trainFiles, trainCadId);
       setTrainResults(result);
       setMsg(`Training: ${result.processed ?? 0} processati, ${result.errors ?? 0} errori, ${result.features_saved ?? 0} feature salvate`);
+      await loadTrainingStats();
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
     setTraining(false);
   };
@@ -350,6 +360,9 @@ export default function AdminPage() {
     }
     if (tab === 'cad') {
       await loadTrainingCount();
+    }
+    if (tab === 'trainer') {
+      await loadTrainingStats();
     }
     if (tab === 'waitlist') {
       await loadWaitlist();
@@ -709,6 +722,28 @@ export default function AdminPage() {
 
         {activeTab === 'trainer' && (
           <div>
+            {trainingStats && (
+              <div className="premium-card p-5 mb-6">
+                <h3 className="font-display font-bold text-base text-white mb-4">Campioni per Classe ({trainingStats.total_samples} totali, {trainingStats.unique_classes} classi)</h3>
+                {Object.keys(trainingStats.by_class).length > 0 ? (() => {
+                  const entries = Object.entries(trainingStats.by_class);
+                  const maxS = Math.max(...entries.map(([, v]) => v), 1);
+                  return entries.map(([cls, count]) => (
+                    <div key={cls} className="flex items-center gap-3 mb-2">
+                      <span className="text-[11px] text-gray-400 w-28 truncate">{cls}</span>
+                      <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden">
+                        <div className="h-full rounded bg-gradient-to-r from-drapera-gold to-amber-500 transition-all duration-500"
+                          style={{ width: `${(count / maxS) * 100}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-white font-mono w-10 text-right">{count}</span>
+                    </div>
+                  ));
+                })() : (
+                  <p className="text-xs text-gray-600">Nessun campione</p>
+                )}
+              </div>
+            )}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="premium-card">
                 <h3 className="font-display font-bold text-base text-white mb-4">{t('admin.cad_train')}</h3>
