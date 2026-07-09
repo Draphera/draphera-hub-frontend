@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
-import { adminApi, adminCadApi, trainingApi, waitlistApi } from '@/lib/api';
+import { adminApi, adminCadApi, trainingApi, waitlistApi, detectionRulesApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface Upload {
@@ -16,6 +16,12 @@ interface Upload {
 
 interface CadSystem {
   id: string; name: string; description?: string; color?: string; created_at?: string;
+  training_ready?: boolean; sample_threshold?: number; country?: string;
+}
+
+interface CadReadiness {
+  id: string; name: string; samples: number; threshold: number;
+  training_ready: boolean; can_train: boolean;
 }
 
 interface TrainResult {
@@ -42,7 +48,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics' | 'system';
+type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics' | 'system';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -65,7 +71,7 @@ export default function AdminPage() {
   const [cadSystems, setCadSystems] = useState<CadSystem[]>([]);
   const [showCadForm, setShowCadForm] = useState(false);
   const [editingCadId, setEditingCadId] = useState<string | null>(null);
-  const [cadForm, setCadForm] = useState({ id: '', name: '', description: '', color: '' });
+  const [cadForm, setCadForm] = useState({ id: '', name: '', description: '', color: '', country: '' });
 
   const [stats, setStats] = useState<{
     total_profiles: number; total_founders: number; waitlist_count: number;
@@ -86,7 +92,13 @@ export default function AdminPage() {
   const [mlTraining, setMlTraining] = useState(false);
   const [mlResult, setMlResult] = useState<{ accuracy?: number; samples?: number; test_samples?: number; classes?: string[]; error?: string } | null>(null);
   const [trainingCount, setTrainingCount] = useState(0);
-  const [trainingStats, setTrainingStats] = useState<{ total_samples: number; unique_classes: number; by_class: Record<string, number> } | null>(null);
+  const [trainingStats, setTrainingStats] = useState<{ total_samples: number; unique_classes: number; by_class: Record<string, number>; cad_readiness?: CadReadiness[]; min_samples?: number } | null>(null);
+
+  const [rulesList, setRulesList] = useState<Array<{ id: number; rule_type: string; cad_id: string; pattern: string; created_at?: string }>>([]);
+  const [rulesLoading, setRulesLoading] = useState(false);
+  const [newRuleCad, setNewRuleCad] = useState('');
+  const [newRuleType, setNewRuleType] = useState<'filename' | 'content_marker'>('filename');
+  const [newRulePattern, setNewRulePattern] = useState('');
 
   const [waitlist, setWaitlist] = useState<Array<Record<string, unknown>>>([]);
   const [waitlistTotal, setWaitlistTotal] = useState(0);
@@ -271,6 +283,39 @@ export default function AdminPage() {
     setUploadLoading(false);
   };
 
+  const loadRules = async () => {
+    setRulesLoading(true);
+    try {
+      const data = await detectionRulesApi.list();
+      setRulesList(data.rules ?? []);
+    } catch {}
+    setRulesLoading(false);
+  };
+
+  const handleAddRule = async () => {
+    if (!newRuleCad || !newRulePattern) return;
+    try {
+      await detectionRulesApi.create({ rule_type: newRuleType, cad_id: newRuleCad, pattern: newRulePattern });
+      setNewRuleCad('');
+      setNewRulePattern('');
+      await loadRules();
+    } catch {}
+  };
+
+  const handleDeleteRule = async (ruleId: number) => {
+    try {
+      await detectionRulesApi.remove(ruleId);
+      await loadRules();
+    } catch {}
+  };
+
+  const handleReloadRules = async () => {
+    try {
+      const res = await detectionRulesApi.reload();
+      setMsg(`${t('admin.rules_reloaded')} (${res.filename_rules} filename, ${res.content_marker_rules} content marker)`);
+    } catch {}
+  };
+
   const loadCadSystems = async () => {
     try {
       const data = await adminCadApi.list();
@@ -344,10 +389,10 @@ export default function AdminPage() {
   const openCadForm = (cad?: CadSystem) => {
     if (cad) {
       setEditingCadId(cad.id);
-      setCadForm({ id: cad.id, name: cad.name, description: cad.description || '', color: cad.color || '' });
+      setCadForm({ id: cad.id, name: cad.name, description: cad.description || '', color: cad.color || '', country: cad.country || '' });
     } else {
       setEditingCadId(null);
-      setCadForm({ id: '', name: '', description: '', color: '' });
+      setCadForm({ id: '', name: '', description: '', color: '', country: '' });
     }
     setShowCadForm(true);
   };
@@ -355,9 +400,11 @@ export default function AdminPage() {
   const handleCadSave = async () => {
     try {
       if (editingCadId) {
-        await adminCadApi.update(editingCadId, { name: cadForm.name, description: cadForm.description, color: cadForm.color });
+        const updates: Record<string, unknown> = { name: cadForm.name, description: cadForm.description, color: cadForm.color };
+        if (cadForm.country) updates.country = cadForm.country;
+        await adminCadApi.update(editingCadId, updates);
       } else {
-        await adminCadApi.create({ id: cadForm.id, name: cadForm.name, description: cadForm.description, color: cadForm.color });
+        await adminCadApi.create({ id: cadForm.id, name: cadForm.name, description: cadForm.description, color: cadForm.color, country: cadForm.country || undefined });
       }
       setShowCadForm(false);
       try {
@@ -392,7 +439,7 @@ export default function AdminPage() {
 
   const switchTab = async (tab: AdminTab) => {
     setActiveTab(tab);
-    if (tab === 'cad' || tab === 'trainer') {
+    if (tab === 'cad' || tab === 'trainer' || tab === 'rules') {
       await loadCadSystems();
     }
     if (tab === 'cad') {
@@ -400,6 +447,9 @@ export default function AdminPage() {
     }
     if (tab === 'trainer') {
       await loadTrainingStats();
+    }
+    if (tab === 'rules') {
+      await loadRules();
     }
     if (tab === 'waitlist') {
       await loadWaitlist();
@@ -513,6 +563,7 @@ export default function AdminPage() {
   const tabs: { key: AdminTab; label: string }[] = [
     { key: 'uploads', label: t('admin.tab_uploads') },
     { key: 'cad', label: t('admin.tab_cad') },
+    { key: 'rules', label: t('admin.tab_rules') },
     { key: 'trainer', label: t('admin.tab_trainer') },
     { key: 'waitlist', label: 'Waitlist' },
     { key: 'profiles', label: t('admin.tab_profiles') },
@@ -699,39 +750,63 @@ export default function AdminPage() {
             <div className="premium-card overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
-                      <th className="px-4 py-3 font-medium">{t('admin.cad_id')}</th>
-                      <th className="px-4 py-3 font-medium">{t('admin.cad_name')}</th>
-                      <th className="px-4 py-3 font-medium">{t('admin.cad_description')}</th>
-                      <th className="px-4 py-3 font-medium">{t('admin.cad_color')}</th>
-                      <th className="px-4 py-3 font-medium text-right">{t('admin.cad_edit')}</th>
-                      <th className="px-4 py-3 font-medium text-right">{t('admin.cad_delete')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cadSystems.map(cad => (
-                      <tr key={cad.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
-                        <td className="px-4 py-3 text-white font-mono text-xs">{cad.id}</td>
-                        <td className="px-4 py-3 text-sm text-white">{cad.name}</td>
-                        <td className="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate">{cad.description || '-'}</td>
-                        <td className="px-4 py-3">
-                          {cad.color ? (
-                            <span className="inline-block w-5 h-5 rounded border border-white/10" style={{ backgroundColor: cad.color }} />
-                          ) : '-'}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button onClick={() => openCadForm(cad)} className="text-drapera-gold hover:text-amber-400 text-xs">{t('admin.cad_edit')}</button>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button onClick={() => handleCadDelete(cad.id)} className="text-red-400 hover:text-red-300 text-xs">{t('admin.cad_delete')}</button>
-                        </td>
+<thead>
+                      <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                        <th className="px-4 py-3 font-medium">{t('admin.cad_id')}</th>
+                        <th className="px-4 py-3 font-medium">{t('admin.cad_name')}</th>
+                        <th className="px-4 py-3 font-medium">Naz.</th>
+                        <th className="px-4 py-3 font-medium">{t('admin.cad_samples')}</th>
+                        <th className="px-4 py-3 font-medium">{t('admin.cad_threshold')}</th>
+                        <th className="px-4 py-3 font-medium">{t('admin.cad_training_ready')}</th>
+                        <th className="px-4 py-3 font-medium text-right">{t('admin.cad_edit')}</th>
+                        <th className="px-4 py-3 font-medium text-right">{t('admin.cad_delete')}</th>
                       </tr>
-                    ))}
-                    {cadSystems.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">Nessun CAD presente</td></tr>
-                    )}
-                  </tbody>
+                    </thead>
+                    <tbody>
+                      {cadSystems.map(cad => {
+                        const cr = trainingStats?.cad_readiness?.find(r => r.id === cad.id);
+                        const samples = cr?.samples ?? 0;
+                        const threshold = cad.sample_threshold ?? trainingStats?.min_samples ?? 20;
+                        const canTrain = samples >= threshold;
+                        return (
+                        <tr key={cad.id} className={`border-b border-drapera-border/50 text-gray-300 hover:bg-white/5 ${cad.training_ready ? 'bg-green-500/5' : ''}`}>
+                          <td className="px-4 py-3 text-white font-mono text-xs">{cad.id}</td>
+                          <td className="px-4 py-3 text-sm text-white">{cad.name}</td>
+                          <td className="px-4 py-3 text-xs">{cad.country ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-gray-400 font-mono">{cad.country}</span> : '-'}</td>
+                          <td className="px-4 py-3 text-xs font-mono">{samples}</td>
+                          <td className="px-4 py-3 text-xs font-mono text-gray-500">{threshold}</td>
+                          <td className="px-4 py-3">
+                            {cad.training_ready ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/20">{t('cad.trained')}</span>
+                            ) : canTrain ? (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await adminCadApi.update(cad.id, { training_ready: true });
+                                    await loadCadSystems();
+                                    await loadTrainingStats();
+                                  } catch {}
+                                }}
+                                className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 cursor-pointer"
+                              >
+                                {t('admin.cad_enable')}
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-gray-600">Mancano {threshold - samples} file</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => openCadForm(cad)} className="text-drapera-gold hover:text-amber-400 text-xs">{t('admin.cad_edit')}</button>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => handleCadDelete(cad.id)} className="text-red-400 hover:text-red-300 text-xs">{t('admin.cad_delete')}</button>
+                          </td>
+                        </tr>
+                      );})}
+                      {cadSystems.length === 0 && (
+                        <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-600 text-xs">Nessun CAD presente</td></tr>
+                      )}
+                    </tbody>
                 </table>
               </div>
             </div>
@@ -770,6 +845,30 @@ export default function AdminPage() {
                         onChange={e => setCadForm(f => ({ ...f, description: e.target.value }))}
                         placeholder="es. Lectra Modaris"
                       />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">{t('cad.country')}</label>
+                      <select
+                        className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-drapera-gold/50 transition-colors appearance-none cursor-pointer"
+                        value={cadForm.country}
+                        onChange={e => setCadForm(f => ({ ...f, country: e.target.value }))}
+                      >
+                        <option value="">—</option>
+                        <option value="BR">BR — Brasile</option>
+                        <option value="CA">CA — Canada</option>
+                        <option value="CN">CN — Cina</option>
+                        <option value="KR">KR — Corea del Sud</option>
+                        <option value="FR">FR — Francia</option>
+                        <option value="DE">DE — Germania</option>
+                        <option value="GB">GB — Gran Bretagna</option>
+                        <option value="IL">IL — Israele</option>
+                        <option value="IT">IT — Italia</option>
+                        <option value="NL">NL — Paesi Bassi</option>
+                        <option value="SG">SG — Singapore</option>
+                        <option value="ES">ES — Spagna</option>
+                        <option value="US">US — Stati Uniti</option>
+                        <option value="IN">IN — India</option>
+                      </select>
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">{t('admin.cad_color')}</label>
@@ -834,27 +933,129 @@ export default function AdminPage() {
           </div>
         )}
 
+        {activeTab === 'rules' && (
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="font-display font-bold text-base text-white">{t('admin.rules_title')}</h2>
+              <button onClick={handleReloadRules} className="btn-ghost text-xs px-3 py-1.5">
+                {t('admin.rules_reload')}
+              </button>
+            </div>
+            <div className="premium-card p-5 mb-6">
+              <p className="text-xs text-gray-500 mb-4">{t('admin.rules_reload_confirm')}</p>
+              <div className="grid grid-cols-[1fr_140px_1fr_auto] gap-2 items-end">
+                <div>
+                  <label className="text-[10px] text-gray-500 block mb-1">{t('admin.cad_name')}</label>
+                  <select className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-drapera-gold/50"
+                    value={newRuleCad} onChange={e => setNewRuleCad(e.target.value)}>
+                    <option value="">{t('admin.cad_select')}...</option>
+                    {cadSystems.map(s => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 block mb-1">{t('admin.rules_type')}</label>
+                  <select className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-drapera-gold/50"
+                    value={newRuleType} onChange={e => setNewRuleType(e.target.value as 'filename' | 'content_marker')}>
+                    <option value="filename">{t('admin.rules_filename')}</option>
+                    <option value="content_marker">{t('admin.rules_content_marker')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 block mb-1">{t('admin.rules_pattern')}</label>
+                  <input className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-xs text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 font-mono"
+                    value={newRulePattern} onChange={e => setNewRulePattern(e.target.value)}
+                    placeholder="es. \\blectra\\b" />
+                </div>
+                <button onClick={handleAddRule} disabled={!newRuleCad || !newRulePattern}
+                  className="btn-gold text-xs px-3 py-1.5 disabled:opacity-40">
+                  + {t('admin.rules_add')}
+                </button>
+              </div>
+            </div>
+            <div className="premium-card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 font-medium">{t('admin.cad_name')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.rules_type')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.rules_pattern')}</th>
+                      <th className="px-4 py-3 font-medium text-right">{t('admin.rules_delete')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rulesList.map(rule => {
+                      const cadName = cadSystems.find(s => s.id === rule.cad_id)?.name || rule.cad_id;
+                      return (
+                        <tr key={rule.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                          <td className="px-4 py-3 text-xs">{cadName}</td>
+                          <td className="px-4 py-3">
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full ${rule.rule_type === 'filename' ? 'bg-blue-500/15 text-blue-400' : 'bg-purple-500/15 text-purple-400'}`}>
+                              {rule.rule_type === 'filename' ? t('admin.rules_filename') : t('admin.rules_content_marker')}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-[11px] text-gray-400 max-w-[300px] truncate">{rule.pattern}</td>
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => handleDeleteRule(rule.id)} className="text-red-400 hover:text-red-300 text-xs">{t('admin.rules_delete')}</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {rulesList.length === 0 && (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-600 text-xs">{t('admin.rules_no_rules')}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'trainer' && (
           <div>
             {trainingStats && (
               <div className="premium-card p-5 mb-6">
-                <h3 className="font-display font-bold text-base text-white mb-4">Campioni per Classe ({trainingStats.total_samples} totali, {trainingStats.unique_classes} classi)</h3>
-                {Object.keys(trainingStats.by_class).length > 0 ? (() => {
-                  const entries = Object.entries(trainingStats.by_class);
-                  const maxS = Math.max(...entries.map(([, v]) => v), 1);
-                  return entries.map(([cls, count]) => (
-                    <div key={cls} className="flex items-center gap-3 mb-2">
-                      <span className="text-[11px] text-gray-400 w-28 truncate">{cls}</span>
-                      <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden">
-                        <div className="h-full rounded bg-gradient-to-r from-drapera-gold to-amber-500 transition-all duration-500"
-                          style={{ width: `${(count / maxS) * 100}%` }}
-                        />
+                <h3 className="font-display font-bold text-base text-white mb-4">Stato Training per CAD ({trainingStats.total_samples} campioni, soglia {trainingStats.min_samples ?? 20})</h3>
+                {trainingStats.cad_readiness && trainingStats.cad_readiness.length > 0 ? (
+                  trainingStats.cad_readiness.map(cr => {
+                    const pct = Math.min(100, (cr.samples / cr.threshold) * 100);
+                    return (
+                      <div key={cr.id} className="flex items-center gap-3 mb-2">
+                        <span className="text-[11px] text-gray-400 w-28 truncate">{cr.name}</span>
+                        <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden relative">
+                          <div className={`h-full rounded transition-all duration-500 ${
+                            cr.can_train ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-drapera-gold to-amber-500'
+                          }`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-white font-mono w-20 text-right">
+                          {cr.samples}/{cr.threshold}
+                          {cr.training_ready && <span className="text-green-400 ml-1">✓</span>}
+                        </span>
                       </div>
-                      <span className="text-xs text-white font-mono w-10 text-right">{count}</span>
-                    </div>
-                  ));
-                })() : (
-                  <p className="text-xs text-gray-600">Nessun campione</p>
+                    );
+                  })
+                ) : (
+                  trainingStats.by_class && Object.keys(trainingStats.by_class).length > 0 ? (() => {
+                    const entries = Object.entries(trainingStats.by_class);
+                    const maxS = Math.max(...entries.map(([, v]) => v), 1);
+                    return entries.map(([cls, count]) => (
+                      <div key={cls} className="flex items-center gap-3 mb-2">
+                        <span className="text-[11px] text-gray-400 w-28 truncate">{cls}</span>
+                        <div className="flex-1 h-5 rounded bg-drapera-dark/50 overflow-hidden">
+                          <div className="h-full rounded bg-gradient-to-r from-drapera-gold to-amber-500 transition-all duration-500"
+                            style={{ width: `${(count / maxS) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-white font-mono w-10 text-right">{count}</span>
+                      </div>
+                    ));
+                  })() : (
+                    <p className="text-xs text-gray-600">Nessun campione</p>
+                  )
                 )}
               </div>
             )}
@@ -915,9 +1116,16 @@ export default function AdminPage() {
                       onChange={e => setTrainCadId(e.target.value)}
                     >
                       <option value="">{t('admin.cad_select')}...</option>
-                      {cadSystems.map(cad => (
-                        <option key={cad.id} value={cad.id}>{cad.name} ({cad.id})</option>
+                      {cadSystems.filter(c => c.training_ready).map(cad => (
+                        <option key={cad.id} value={cad.id}>{cad.name} ({cad.id}) — {t('cad.trained')}</option>
                       ))}
+                      {cadSystems.filter(c => !c.training_ready).length > 0 && (
+                        <optgroup label={t('cad.in_training')}>
+                          {cadSystems.filter(c => !c.training_ready).map(cad => (
+                            <option key={cad.id} value={cad.id}>{cad.name} ({cad.id})</option>
+                          ))}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
                   <button

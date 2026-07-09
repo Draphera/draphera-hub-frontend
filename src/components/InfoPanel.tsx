@@ -26,6 +26,7 @@ interface MLInfo {
   final_cad?: string;
   final_confidence?: number;
   source?: string;
+  note?: string;
 }
 
 interface Props {
@@ -60,16 +61,31 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
           </div>
         )}
         {ml && (
-          <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+          <div className={`px-3 py-2 rounded-lg border ${
+            ml.source === 'no_model'
+              ? 'bg-gray-500/5 border-gray-500/15'
+              : ml.source === 'ml_rule_agreement'
+                ? 'bg-green-500/5 border-green-500/15'
+                : 'bg-cyan-500/5 border-cyan-500/15'
+          }`}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">
-                {ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') : ml.source === 'rule_based_fallback' ? t('info.ml_fallback') : t('info.ml_only')}
+              <span className="text-[10px] font-semibold uppercase tracking-wider"
+                style={{ color: ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
+                {ml.source === 'no_model' ? 'Modello non addestrato' :
+                 ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') :
+                 ml.source === 'rule_based_fallback' ? t('info.ml_fallback') :
+                 t('info.ml_only')}
               </span>
               <span className={`text-xs font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
-                {((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%
+                {ml.source === 'no_model' ? '—' : `${((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%`}
               </span>
             </div>
-            <p className="text-xs text-white font-medium">{ml.final_cad ?? ml.ml_cad}</p>
+            <p className="text-xs text-white font-medium">
+              {ml.final_cad === 'general_hpgl' ? t('cad.general_hpgl') : ml.final_cad ?? ml.ml_cad}
+            </p>
+            {ml.note && (
+              <p className="text-[10px] text-gray-500 mt-1 italic">{ml.note}</p>
+            )}
             {ml.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
               <div className="mt-1.5 space-y-0.5">
                 {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad, score]) => (

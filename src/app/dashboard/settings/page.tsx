@@ -21,7 +21,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string }>>([]);
+  const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; training_ready?: boolean; country?: string }>>([]);
   const [founder, setFounder] = useState<{ is_founder: boolean; position?: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -185,9 +185,20 @@ export default function SettingsPage() {
               onChange={e => set('cad_system', e.target.value)}
             >
               <option value="">{t('cad.none')}</option>
-              {cadSystems.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
+              {cadSystems.filter(s => s.training_ready).length > 0 && (
+                <optgroup label={t('cad.trained')}>
+                  {cadSystems.filter(s => s.training_ready).map(s => (
+                    <option key={s.id} value={s.id}>{s.name}{s.country ? ` [${s.country}]` : ''}</option>
+                  ))}
+                </optgroup>
+              )}
+              {cadSystems.filter(s => !s.training_ready).length > 0 && (
+                <optgroup label={t('cad.other')}>
+                  {cadSystems.filter(s => !s.training_ready).map(s => (
+                    <option key={s.id} value={s.id}>{s.name}{s.country ? ` [${s.country}]` : ''}</option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
           <div>

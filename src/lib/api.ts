@@ -189,7 +189,7 @@ export const adminCadApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async create(data: { id: string; name: string; description?: string; color?: string }) {
+  async create(data: { id: string; name: string; description?: string; color?: string; country?: string }) {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad`, {
@@ -198,7 +198,7 @@ export const adminCadApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async update(cadId: string, data: Record<string, string>) {
+  async update(cadId: string, data: Record<string, unknown>) {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/${cadId}`, {
@@ -233,6 +233,41 @@ export const adminCadApi = {
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/uploads/${uploadId}/cad`, {
       method: 'PUT', headers, body: JSON.stringify({ cad_id: cadId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+};
+
+export const detectionRulesApi = {
+  async list() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/detection-rules`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async create(data: { rule_type: string; cad_id: string; pattern: string }) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/detection-rules`, {
+      method: 'POST', headers, body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async remove(ruleId: number) {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/detection-rules/${ruleId}`, {
+      method: 'DELETE', headers,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async reload() {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/detection-rules/reload`, {
+      method: 'POST', headers,
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
