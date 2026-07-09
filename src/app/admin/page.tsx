@@ -67,6 +67,14 @@ export default function AdminPage() {
   const [editingCadId, setEditingCadId] = useState<string | null>(null);
   const [cadForm, setCadForm] = useState({ id: '', name: '', description: '', color: '' });
 
+  const [stats, setStats] = useState<{
+    total_profiles: number; total_founders: number; waitlist_count: number;
+    total_uploads: number; uploads_by_type: Record<string, number>;
+    uploads_by_vendor: Record<string, number>;
+    training_samples: number;
+    registration: { max_users: number; current_users: number; registration_open: boolean };
+  } | null>(null);
+
   const [trainFiles, setTrainFiles] = useState<File[]>([]);
   const [trainCadId, setTrainCadId] = useState('');
   const [trainResults, setTrainResults] = useState<TrainResult | null>(null);
@@ -165,6 +173,7 @@ export default function AdminPage() {
         if (a.is_admin) {
           await load('');
           await loadCadSystems();
+          try { setStats(await adminApi.stats()); } catch {}
         }
       } catch { setIsAdmin(false); }
       setLoading(false);
@@ -312,7 +321,6 @@ export default function AdminPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
             <h1 className="section-title text-white">{t('admin.title')}</h1>
-            <p className="text-drapera-steel-light mt-1">{t('admin.total')}: {uploads.length}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Link href="/dashboard" className="btn-ghost text-xs px-3 py-1.5">{t('nav.dashboard')}</Link>
@@ -322,6 +330,40 @@ export default function AdminPage() {
         {msg && (
           <div className="mb-4 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold">
             {msg}
+          </div>
+        )}
+
+        {stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-drapera-gold">{stats.total_profiles}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Utenti</p>
+            </div>
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-drapera-gold">{stats.total_founders}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Founder</p>
+            </div>
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-white">{stats.waitlist_count}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Waitlist</p>
+            </div>
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-white">{stats.total_uploads}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Upload</p>
+              <div className="flex justify-center gap-1.5 mt-1">
+                {Object.entries(stats.uploads_by_type).map(([k, v]) => (
+                  <span key={k} className="text-[9px] px-1 py-0.5 rounded bg-white/5 text-gray-400">{k.toUpperCase()} {v}</span>
+                ))}
+              </div>
+            </div>
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-white">{stats.training_samples}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Campioni ML</p>
+            </div>
+            <div className="premium-card p-3 text-center">
+              <p className="text-xl font-bold text-white">{stats.registration.current_users} / {stats.registration.max_users}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{stats.registration.registration_open ? 'Iscrizioni Aperte' : 'Iscrizioni Chiuse'}</p>
+            </div>
           </div>
         )}
 

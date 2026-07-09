@@ -62,6 +62,21 @@ export const adminApi = {
       return res.ok ? res.json() : { is_admin: false };
     } catch { return { is_admin: false }; }
   },
+  async stats() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/stats`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{
+      total_profiles: number;
+      total_founders: number;
+      waitlist_count: number;
+      total_uploads: number;
+      uploads_by_type: Record<string, number>;
+      uploads_by_vendor: Record<string, number>;
+      training_samples: number;
+      registration: { max_users: number; current_users: number; registration_open: boolean };
+    }>;
+  },
   async listUploads(type?: string, limit = 50, offset = 0) {
     const headers = await getHeaders();
     const params = `limit=${limit}&offset=${offset}`;
