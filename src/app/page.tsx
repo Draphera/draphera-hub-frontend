@@ -329,7 +329,7 @@ export default function HomePage() {
                 <div>
                   <h3 className="text-xs text-drapera-gold font-semibold uppercase tracking-wider mb-3">Formati accettati</h3>
                   <ul className="space-y-2 text-xs text-gray-400">
-                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" /> <strong className="text-gray-300">HPGL</strong> — file nativi plotter</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" /> <strong className="text-gray-300">HPGL</strong> — file nativi plotter</li>
                     <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" /> <strong className="text-gray-300">ISO</strong> — codice G per macchine taglio</li>
                     <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" /> <strong className="text-gray-300">DXF</strong> — interscambio CAD</li>
                     <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-gray-500 shrink-0" /> <strong className="text-gray-300">Altri formati</strong> — in fase di sviluppo</li>
