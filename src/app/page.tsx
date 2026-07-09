@@ -36,6 +36,7 @@ export default function HomePage() {
   const { t } = useTranslation();
   const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number; by_vendor: Record<string, number> } | null>(null);
   const [regState, setRegState] = useState<{ open: boolean; remaining: number; current_users: number; max_users: number } | null>(null);
+  const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; color?: string; country?: string; training_ready?: boolean }>>([]);
   const [userOffice, setUserOffice] = useState('');
   const [wlEmail, setWlEmail] = useState('');
   const [wlMsg, setWlMsg] = useState('');
@@ -43,6 +44,7 @@ export default function HomePage() {
   useEffect(() => {
     fetch(`${API_BASE}/api/profile/stats/public`).then(r => r.json()).then(setStats).catch(() => {});
     fetch(`${API_BASE}/api/profile/registration-state`).then(r => r.json()).then(setRegState).catch(() => {});
+    fetch(`${API_BASE}/api/profile/cad-systems`).then(r => r.json()).then(d => setCadSystems(d.cad_systems ?? [])).catch(() => {});
     supabase.auth.getSession().then(({ data }) => {
       if (data?.session?.access_token) {
         fetch(`${API_BASE}/api/profile`, {
@@ -51,6 +53,9 @@ export default function HomePage() {
       }
     });
   }, []);
+
+  const trainedCadCount = cadSystems.filter(c => c.training_ready).length;
+  const pendingCadCount = cadSystems.filter(c => !c.training_ready).length;
 
   const handleWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,6 +212,29 @@ export default function HomePage() {
             </div>
           </div>
 
+          <div className="max-w-4xl mx-auto mb-20">
+            <h2 className="text-2xl font-bold text-white font-display text-center mb-8">Come funziona</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { step: '1', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12', title: 'Carica il file', desc: 'HPGL, PLT, ISO o DXF. Il sistema analizza struttura, comandi e coordinate.' },
+                { step: '2', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7', title: '113 feature', desc: 'Firme HPGL, angoli, intagli, pattern penna, comandi vendor.' },
+                { step: '3', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', title: 'ML + Regole', desc: 'RandomForest + rule-based voting. Confidence smoothing al 65%.' },
+                { step: '4', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Report CAD', desc: 'CAD riconosciuto, confidence, feature scores e suggerimenti.' },
+              ].map(s => (
+                <div key={s.step} className="premium-card text-center py-6 px-4 relative overflow-hidden">
+                  <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-drapera-gold/10 flex items-center justify-center">
+                    <span className="text-[10px] font-bold text-drapera-gold">{s.step}</span>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-drapera-gold/10 flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-5 h-5 text-drapera-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={s.icon} /></svg>
+                  </div>
+                  <h3 className="text-sm text-white font-semibold mb-1">{s.title}</h3>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="max-w-3xl mx-auto mb-20">
             <div className="premium-card text-center">
               <h2 className="text-2xl font-bold text-white font-display mb-4">Perché Early Access?</h2>
@@ -247,6 +275,42 @@ export default function HomePage() {
             </div>
           </div>
 
+          {cadSystems.length > 0 && (
+            <div className="mb-16">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="section-title text-white">CAD supportati</h2>
+                  <p className="text-xs text-gray-500 mt-1">{trainedCadCount} addestrati · {pendingCadCount} in attesa dataset</p>
+                </div>
+                <div className="flex gap-3 text-xs">
+                  <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> Active</span>
+                  <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Training</span>
+                  <span className="flex items-center gap-1.5 text-gray-500"><span className="w-2 h-2 rounded-full bg-gray-500" /> Pending</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {cadSystems.map((cad, ci) => {
+                  const isTrained = cad.training_ready;
+                  const colors = ['#F2C94C','#4ECDC4','#FF6B6B','#A78BFA','#FB923C','#34D399','#F472B6','#60A5FA','#FBBF24','#E879F9','#2DD4BF','#FCD34D','#F87171','#818CF8','#34D399','#9CA3AF','#E5E7EB','#C084FC','#FCA5A5','#FDA4AF','#6EE7B7','#A78BFA','#F472B6','#34D399'];
+                  return (
+                    <div key={cad.id}
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        isTrained
+                          ? 'border-green-500/30 bg-green-500/10 text-green-300'
+                          : 'border-gray-600/30 bg-gray-700/30 text-gray-400'
+                      }`}
+                      title={cad.country ? `Paese: ${cad.country}` : ''}
+                    >
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[ci % colors.length] }} />
+                      {cad.name}
+                      {isTrained && <span className="text-[9px] text-green-400/60">✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="premium-card p-6 text-center max-w-lg mx-auto">
             <h3 className="text-base font-semibold text-white mb-2">Laboratorio Draphera</h3>
             <p className="text-xs text-gray-500 mb-4">
@@ -256,6 +320,44 @@ export default function HomePage() {
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
               Suggerisci il prossimo tool
             </Link>
+          </div>
+
+          <div className="max-w-3xl mx-auto mt-16">
+            <div className="premium-card p-6">
+              <h2 className="text-lg font-bold text-white font-display mb-4">Linee guida upload</h2>
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-xs text-drapera-gold font-semibold uppercase tracking-wider mb-3">Formati accettati</h3>
+                  <ul className="space-y-2 text-xs text-gray-400">
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" /> <strong className="text-gray-300">HPGL</strong> — file nativi plotter (.hpgl, .plt, .hpg)</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" /> <strong className="text-gray-300">ISO</strong> — codice G per macchine taglio (.iso)</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" /> <strong className="text-gray-300">DXF</strong> — interscambio CAD (.dxf)</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0" /> <strong className="text-gray-300">Altri formati</strong> — in fase di sviluppo (PDF, AI, EPS)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-xs text-cyan-400 font-semibold uppercase tracking-wider mb-3">Cosa NON facciamo</h3>
+                  <ul className="space-y-2 text-xs text-gray-400">
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" /> Non usiamo i tuoi file per addestrare il modello ML</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" /> Non condividiamo i tuoi file con terze parti</li>
+                    <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" /> Non salviamo il contenuto dei file oltre la sessione</li>
+                  </ul>
+                </div>
+                <div className="sm:col-span-2 pt-2 border-t border-drapera-border/40">
+                  <h3 className="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-3">Come contribuire al training</h3>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Il modello ML viene addestrato esclusivamente su un dataset Draphera verificato manualmente.
+                    Puoi contribuire scaricando il tuo file dall&apos;HPGL Viewer, verificando il CAD di origine
+                    e inviandolo come campione per il training. I file vengono controllati prima di entrare nel dataset.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Dataset: 20 campioni minimo per CAD</span>
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Feature: 113</span>
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Modello: RandomForest</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
