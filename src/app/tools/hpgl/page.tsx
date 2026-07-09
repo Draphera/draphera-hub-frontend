@@ -64,7 +64,7 @@ export default function HPGLViewerPage() {
   const [measureMode, setMeasureMode] = useState<'off' | 'distance' | 'angle'>('off');
   const [measurePoints, setMeasurePoints] = useState<Array<{ x: number; y: number }>>([]);
   const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number }>>([]);
-  const [showNotches, setShowNotches] = useState(true);
+  const [showNotches, setShowNotches] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
