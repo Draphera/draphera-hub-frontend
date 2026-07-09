@@ -52,7 +52,7 @@ export default function SettingsPage() {
     setSaving(true); setMsg('');
     try {
       const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
+      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'cad_system_other', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
         const v = profile[key];
         if (v !== undefined && v !== null) updates[key] = v;
       }
@@ -181,8 +181,11 @@ export default function SettingsPage() {
             <label className="text-xs text-gray-400 mb-1.5 block">{t('profile.cad_system')}</label>
             <select
               className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-drapera-gold/50 transition-colors appearance-none cursor-pointer"
-              value={profile.cad_system ?? ''}
-              onChange={e => set('cad_system', e.target.value)}
+              value={profile.cad_system === '__other__' ? '__other__' : profile.cad_system ?? ''}
+              onChange={e => {
+                set('cad_system', e.target.value);
+                if (e.target.value !== '__other__') set('cad_system_other', '');
+              }}
             >
               <option value="">{t('cad.none')}</option>
               {cadSystems.filter(s => s.training_ready).length > 0 && (
@@ -199,7 +202,16 @@ export default function SettingsPage() {
                   ))}
                 </optgroup>
               )}
+              <option value="__other__">{t('cad.other')}...</option>
             </select>
+            {profile.cad_system === '__other__' && (
+              <input
+                className="mt-2 w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 transition-colors"
+                value={profile.cad_system_other ?? ''}
+                onChange={e => set('cad_system_other', e.target.value)}
+                placeholder="Specifica il CAD che utilizzi..."
+              />
+            )}
           </div>
           <div>
             <label className="text-xs text-gray-400 mb-1.5 block">{t('settings.office_label')}</label>
