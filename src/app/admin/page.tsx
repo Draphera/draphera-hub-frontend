@@ -515,10 +515,10 @@ export default function AdminPage() {
     { key: 'cad', label: t('admin.tab_cad') },
     { key: 'trainer', label: t('admin.tab_trainer') },
     { key: 'waitlist', label: 'Waitlist' },
-    { key: 'profiles', label: 'Utenti' },
-    { key: 'founders', label: 'Founder' },
-    { key: 'analytics', label: 'Analytics' },
-    { key: 'system', label: 'Sistema' },
+    { key: 'profiles', label: t('admin.tab_profiles') },
+    { key: 'founders', label: t('admin.tab_founders') },
+    { key: 'analytics', label: t('admin.tab_analytics') },
+    { key: 'system', label: t('admin.tab_system') },
   ];
 
   return (
@@ -544,19 +544,19 @@ export default function AdminPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-drapera-gold">{stats.total_profiles}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Utenti</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.tab_profiles')}</p>
             </div>
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-drapera-gold">{stats.total_founders}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Founder</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.tab_founders')}</p>
             </div>
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-white">{stats.waitlist_count}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Waitlist</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Waitlist</p> {/* keep as Waitlist */}
             </div>
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-white">{stats.total_uploads}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Upload</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.table_upload')}</p>
               <div className="flex justify-center gap-1.5 mt-1">
                 {Object.entries(stats.uploads_by_type).map(([k, v]) => (
                   <span key={k} className="text-[9px] px-1 py-0.5 rounded bg-white/5 text-gray-400">{k.toUpperCase()} {v}</span>
@@ -565,11 +565,11 @@ export default function AdminPage() {
             </div>
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-white">{stats.training_samples}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Campioni ML</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.trainer.samples_count')}</p>
             </div>
             <div className="premium-card p-3 text-center">
               <p className="text-xl font-bold text-white">{stats.registration.current_users} / {stats.registration.max_users}</p>
-              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{stats.registration.registration_open ? 'Iscrizioni Aperte' : 'Iscrizioni Chiuse'}</p>
+              <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{stats.registration.registration_open ? t('admin.waitlist.open') : t('admin.waitlist.closed')}</p>
             </div>
           </div>
         )}
@@ -1003,37 +1003,37 @@ export default function AdminPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                 <div className="premium-card p-3 text-center">
                   <p className="text-xl font-bold text-white">{waitlistStats.total}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Totale</p>
-                </div>
-                <div className="premium-card p-3 text-center">
-                  <p className="text-xl font-bold text-yellow-400">{waitlistStats.pending}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">In attesa</p>
-                </div>
-                <div className="premium-card p-3 text-center">
-                  <p className="text-xl font-bold text-green-400">{waitlistStats.approved}</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Approvati</p>
-                </div>
-                <div className="premium-card p-3 text-center">
-                  <p className="text-xl font-bold text-drapera-gold">{waitlistStats.avg_wait_days}g</p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">Attesa media</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.waitlist.stats_total')}</p>
+              </div>
+              <div className="premium-card p-3 text-center">
+                <p className="text-xl font-bold text-yellow-400">{waitlistStats.pending}</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.waitlist.stats_pending')}</p>
+              </div>
+              <div className="premium-card p-3 text-center">
+                <p className="text-xl font-bold text-green-400">{waitlistStats.approved}</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.waitlist.stats_approved')}</p>
+              </div>
+              <div className="premium-card p-3 text-center">
+                <p className="text-xl font-bold text-drapera-gold">{waitlistStats.avg_wait_days}g</p>
+                <p className="text-[10px] text-gray-500 uppercase tracking-wider mt-0.5">{t('admin.waitlist.stats_avg_wait')}</p>
                 </div>
               </div>
             )}
 
             <div className="premium-card mb-6">
-              <h3 className="font-display font-bold text-base text-white mb-3">Configurazione Accesso</h3>
+              <h3 className="font-display font-bold text-base text-white mb-3">{t('admin.waitlist.config_title')}</h3>
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">Max utenti:</span>
+                  <span className="text-xs text-gray-500">{t('admin.waitlist.max_users')}</span>
                   <input type="number" value={regMaxInput} onChange={e => setRegMaxInput(e.target.value)}
                     className="w-20 bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-sm text-white text-center" />
-                  <button onClick={handleUpdateRegConfig} className="btn-ghost text-xs px-2 py-1">Aggiorna</button>
+                  <button onClick={handleUpdateRegConfig} className="btn-ghost text-xs px-2 py-1">{t('admin.waitlist.update')}</button>
                 </div>
                 <button onClick={handleToggleRegistration}
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${regConfig?.registration_open ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
-                  {regConfig?.registration_open ? 'Aperta' : 'Chiusa'}
+                  {regConfig?.registration_open ? t('admin.waitlist.open') : t('admin.waitlist.closed')}
                 </button>
-                <span className="text-xs text-gray-500">{regConfig?.current_users ?? 0} / {regConfig?.max_users ?? 100} utenti</span>
+                <span className="text-xs text-gray-500">{regConfig?.current_users ?? 0} / {regConfig?.max_users ?? 100} {t('admin.waitlist.user_count')}</span>
               </div>
             </div>
 
@@ -1043,12 +1043,12 @@ export default function AdminPage() {
                 value={waitlistSearch}
                 onChange={e => { setWaitlistSearch(e.target.value); }}
                 onKeyDown={e => { if (e.key === 'Enter') { setWaitlistOffset(0); loadWaitlist(); } }}
-                placeholder="Cerca per email o nome..."
+                placeholder={t('admin.search_placeholder_email_name')}
               />
               <button onClick={() => { setWaitlistOffset(0); loadWaitlist(); }} className="btn-gold text-xs px-3 py-2">
-                Cerca
+                {t('admin.search')}
               </button>
-              <span className="text-xs text-gray-500">{waitlistTotal} richieste</span>
+              <span className="text-xs text-gray-500">{waitlistTotal} {t('admin.waitlist.requests')}</span>
             </div>
 
             <div className="premium-card overflow-hidden">
@@ -1056,12 +1056,12 @@ export default function AdminPage() {
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
-                      <th className="px-4 py-3 font-medium">#</th>
-                      <th className="px-4 py-3 font-medium">Email</th>
-                      <th className="px-4 py-3 font-medium">Nome</th>
-                      <th className="px-4 py-3 font-medium">Data</th>
-                      <th className="px-4 py-3 font-medium">Stato</th>
-                      <th className="px-4 py-3 font-medium text-right">Azioni</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.table_hash')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.table_email')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.table_name')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.table_date')}</th>
+                      <th className="px-4 py-3 font-medium">{t('admin.table_status')}</th>
+                      <th className="px-4 py-3 font-medium text-right">{t('admin.table_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1077,15 +1077,15 @@ export default function AdminPage() {
                           <td className="px-4 py-3 text-xs">{w.created_at ? new Date(String(w.created_at)).toLocaleDateString() : '-'}</td>
                           <td className="px-4 py-3">
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${wApproved ? 'bg-green-500/10 text-green-400' : 'bg-yellow-500/10 text-yellow-400'}`}>
-                              {wApproved ? 'Approvato' : 'In attesa'}
+                              {wApproved ? t('admin.waitlist.stats_approved') : t('admin.waitlist.stats_pending')}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right">
                             <div className="flex items-center justify-end gap-1">
                               {!wApproved && (
                                 <>
-                                  <button onClick={() => handleApproveWaitlist(wEmail)} className="text-drapera-gold hover:text-amber-400 text-[10px] px-1.5 py-1 rounded hover:bg-drapera-gold/10">Approva</button>
-                                  <button onClick={() => handleApproveAndFounder(wEmail)} className="text-[10px] px-1.5 py-1 rounded text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">Founder+</button>
+                                  <button onClick={() => handleApproveWaitlist(wEmail)} className="text-drapera-gold hover:text-amber-400 text-[10px] px-1.5 py-1 rounded hover:bg-drapera-gold/10">{t('admin.waitlist.approve')}</button>
+                                  <button onClick={() => handleApproveAndFounder(wEmail)} className="text-[10px] px-1.5 py-1 rounded text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">{t('admin.waitlist.approve_founder')}</button>
                                 </>
                               )}
                             </div>
@@ -1094,17 +1094,17 @@ export default function AdminPage() {
                       );
                     })}
                     {waitlist.length === 0 && (
-                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">{waitlistSearch ? 'Nessun risultato' : 'Nessuno in waitlist'}</td></tr>
+                      <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">{waitlistSearch ? t('admin.waitlist.no_results') : t('admin.waitlist.nobody')}</td></tr>
                     )}
                   </tbody>
                 </table>
               </div>
               {waitlist.length > 0 && waitlist.length < waitlistTotal && (
                 <div className="px-4 py-3 border-t border-drapera-border/50 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">{waitlist.length} / {waitlistTotal} richieste</span>
+                  <span className="text-xs text-gray-500">{waitlist.length} / {waitlistTotal} {t('admin.waitlist.requests')}</span>
                   <button onClick={() => loadWaitlist(true)}
                     className="text-xs text-drapera-gold hover:underline">
-                    Carica altri
+                    {t('admin.load_more')}
                   </button>
                 </div>
               )}

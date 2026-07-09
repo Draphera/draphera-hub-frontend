@@ -78,24 +78,24 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
     { label: 'DXF Viewer', href: '/tools/dxf', comingSoon: true, group: 'viewers' },
     { label: 'TechSheet Light', href: '/tools/techsheet-light', comingSoon: true, group: 'generators' },
     { label: 'BOM Generator', href: '/tools/bom-generator', comingSoon: true, group: 'generators' },
-    { label: 'Generatore Etichette', href: '/tools/generatore-etichette', comingSoon: true, group: 'generators' },
+    { label: t('header.label_generator'), href: '/tools/generatore-etichette', comingSoon: true, group: 'generators' },
     { label: 'Material Normalizer', href: '/tools/material-normalizer', comingSoon: true, group: 'normalizers' },
     { label: 'Accessory Normalizer', href: '/tools/accessory-normalizer', comingSoon: true, group: 'normalizers' },
-    { label: 'Checklist Qualità', href: '/tools/checklist-qualita', comingSoon: true, group: 'quality' },
+    { label: t('header.checklist_quality'), href: '/tools/checklist-qualita', comingSoon: true, group: 'quality' },
   ];
 
   const uffici = [
-    { label: 'Ufficio Stile', href: '/uffici/stile' },
-    { label: 'Ufficio Modellistica', href: '/uffici/modellistica' },
-    { label: 'Ufficio Prodotto', href: '/uffici/prodotto' },
-    { label: 'Ufficio Produzione', href: '/uffici/produzione' },
+    { label: t('header.office_stile'), href: '/uffici/stile' },
+    { label: t('header.office_modellistica'), href: '/uffici/modellistica' },
+    { label: t('header.office_prodotto'), href: '/uffici/prodotto' },
+    { label: t('header.office_produzione'), href: '/uffici/produzione' },
   ];
 
   const toolGroups: Record<string, { label: string; tools: typeof navTools }> = {
-    viewers: { label: 'Visualizzatori', tools: navTools.filter(t => t.group === 'viewers') },
-    generators: { label: 'Generatori', tools: navTools.filter(t => t.group === 'generators') },
-    normalizers: { label: 'Normalizzatori', tools: navTools.filter(t => t.group === 'normalizers') },
-    quality: { label: 'Qualità', tools: navTools.filter(t => t.group === 'quality') },
+    viewers: { label: t('header.group_viewers'), tools: navTools.filter(t => t.group === 'viewers') },
+    generators: { label: t('header.group_generators'), tools: navTools.filter(t => t.group === 'generators') },
+    normalizers: { label: t('header.group_normalizers'), tools: navTools.filter(t => t.group === 'normalizers') },
+    quality: { label: t('header.group_quality'), tools: navTools.filter(t => t.group === 'quality') },
   };
 
   useEffect(() => {

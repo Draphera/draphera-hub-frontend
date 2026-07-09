@@ -99,11 +99,11 @@ export default function SettingsPage() {
   if (!session) return null;
 
   const OFFICE_OPTIONS = [
-    { value: '', label: 'Seleziona ufficio' },
-    { value: 'modellistica', label: 'Modellista' },
-    { value: 'produzione', label: 'Produzione' },
-    { value: 'fornitore', label: 'Fornitore' },
-    { value: 'freelance', label: 'Freelance' },
+    { value: '', label: t('settings.select_office') },
+    { value: 'modellistica', label: t('settings.office_modellista') },
+    { value: 'produzione', label: t('settings.office_produzione') },
+    { value: 'fornitore', label: t('settings.office_fornitore') },
+    { value: 'freelance', label: t('settings.office_freelance') },
   ];
 
   const fields = [
@@ -156,10 +156,10 @@ export default function SettingsPage() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-base text-white font-bold">Founder</p>
+                  <p className="text-base text-white font-bold">{t('settings.founder_badge')}</p>
                   <span className="text-sm font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
                 </div>
-                <p className="text-[11px] text-gray-500">Early Access 2026 — Primi 100 utenti</p>
+                <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
               </div>
             </div>
           </div>
@@ -191,7 +191,7 @@ export default function SettingsPage() {
             </select>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1.5 block">Ufficio</label>
+            <label className="text-xs text-gray-400 mb-1.5 block">{t('settings.office_label')}</label>
             <select
               className="w-full bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white outline-none focus:border-drapera-gold/50 transition-colors appearance-none cursor-pointer"
               value={profile.office ?? ''}
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                   <input
                     name="confirm_text"
                     className="w-full bg-drapera-dark border border-red-500/30 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-red-500/50 transition-colors"
-                    placeholder="Scrivi DELETE per confermare"
+                    placeholder={t('settings.delete_placeholder')}
                   />
                   <button type="submit" className="mt-2 w-full px-4 py-2 bg-red-600/20 border border-red-600/40 text-red-400 text-xs font-medium rounded-lg hover:bg-red-600/30 transition-colors">
                     {t('dashboard.delete_confirm_btn')}
@@ -282,7 +282,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h3 className="text-white font-semibold text-sm mb-2">{t('dashboard.legal_links')}</h3>
-              <p className="text-xs text-gray-500 mb-4">Documenti legali e privacy.</p>
+              <p className="text-xs text-gray-500 mb-4">{t('settings.legal_desc')}</p>
               <div className="space-y-2">
                 <Link href="/termini" className="flex items-center gap-2 text-xs text-gray-400 hover:text-drapera-gold transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
