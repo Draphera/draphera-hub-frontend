@@ -724,7 +724,9 @@ export default function AdminPage() {
                                 try {
                                   await adminCadApi.setUploadCad(u.id, val);
                                   await load(filterType, false);
-                                } catch {}
+                                } catch (e2: any) {
+                                  setMsg(`Errore: ${e2.message}`);
+                                }
                               }}
                               onBlur={() => setEditingCadUpload(null)}
                               autoFocus
