@@ -495,42 +495,22 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         )}
       </svg>
 
-      {/* Notch overlay */}
+      {/* Notch overlay — subtle markers */}
       {showNotches && notches.length > 0 && (
         <div className="absolute inset-0 pointer-events-none z-[5]">
           <svg className="w-full h-full" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
-              {notches.map((n, i) => {
-                const COLORS: Record<string, string> = { triangle: '#F2C94C', v: '#00E5FF', square: '#FF4081', slash: '#69F0AE' };
-                const LABELS: Record<string, string> = { triangle: 'Triangolo', v: 'V', square: 'Quadrato', slash: 'Slash' };
-                const color = COLORS[n.type] || '#fff';
-                const pts = n.points.map(p => `${p[0]},${p[1]}`).join(' ');
-                return (
-                  <g key={i}>
-                    <polygon points={pts} fill="none" stroke={color} strokeWidth={2 / effectiveZoom} strokeLinejoin="round" opacity={0.9} />
-                    <title>{LABELS[n.type]} (conf: {Math.round(n.confidence * 100)}%)</title>
-                    <circle cx={n.center[0]} cy={n.center[1]} r={clampFontSize(3 / effectiveZoom, 2, 6)} fill={color} opacity={0.6} />
-                  </g>
-                );
-              })}
+              {notches.map((n, i) => (
+                <g key={i}>
+                  <line x1={n.center[0] - 3} y1={n.center[1]} x2={n.center[0] + 3} y2={n.center[1]} stroke="rgba(255,255,255,0.25)" strokeWidth={0.5 / effectiveZoom} />
+                  <line x1={n.center[0]} y1={n.center[1] - 3} x2={n.center[0]} y2={n.center[1] + 3} stroke="rgba(255,255,255,0.25)" strokeWidth={0.5 / effectiveZoom} />
+                  <title>Intaglio {n.type}</title>
+                </g>
+              ))}
             </g>
           </svg>
-          <div className="absolute top-3 right-3 rounded-lg px-2.5 py-2 border"
-            style={{ background: 'rgba(18, 10, 32, 0.9)', backdropFilter: 'blur(4px)', borderColor: 'rgba(242,201,76,0.15)' }}>
-            <p className="text-[9px] text-gray-400 font-semibold uppercase tracking-wider mb-1.5">Intagli</p>
-            {['triangle', 'v', 'square', 'slash'].map(type => {
-              const count = notches.filter(n => n.type === type).length;
-              if (!count) return null;
-              const COL: Record<string, string> = { triangle: '#F2C94C', v: '#00E5FF', square: '#FF4081', slash: '#69F0AE' };
-              const LBL: Record<string, string> = { triangle: 'Triangolo', v: 'V', square: 'Quadrato', slash: 'Slash' };
-              return (
-                <div key={type} className="flex items-center gap-2 text-[10px]">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COL[type] }} />
-                  <span className="text-gray-400">{LBL[type]}</span>
-                  <span className="text-white font-mono ml-auto">{count}</span>
-                </div>
-              );
-            })}
+          <div className="absolute top-3 right-3">
+            <span className="text-[9px] text-gray-600 font-mono">{notches.length} intagli</span>
           </div>
         </div>
       )}
