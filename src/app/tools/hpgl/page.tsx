@@ -60,6 +60,7 @@ export default function HPGLViewerPage() {
   const [msg, setMsg] = useState('');
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
   const [showCadModal, setShowCadModal] = useState(false);
+  const [userSelectedCad, setUserSelectedCad] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/profile/cad-systems`)
@@ -80,18 +81,18 @@ export default function HPGLViewerPage() {
     if (!features) return;
     try {
       await correctionApi.submitCorrection(correctedCadId, features, uploadId, uploadId);
-      setMsg(`CAD corretto: ${cadSystems.find(s => s.id === correctedCadId)?.name || correctedCadId}`);
+      setUserSelectedCad(correctedCadId);
       setShowCadModal(false);
     } catch { setMsg('Errore salvataggio correzione'); }
-  }, [features, uploadId, cadSystems]);
+  }, [features, uploadId]);
 
   // Auto-show modal when ML is uncertain or no_model
   const ml = hpglData?.ml;
   useEffect(() => {
-    if (hpglData && ml && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
+    if (hpglData && ml && !userSelectedCad && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
       setShowCadModal(true);
     }
-  }, [hpglData, ml]);
+  }, [hpglData, ml, userSelectedCad]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -242,7 +243,7 @@ export default function HPGLViewerPage() {
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} onOpenCadModal={() => setShowCadModal(true)} cadSystems={cadSystems} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
@@ -255,9 +256,8 @@ export default function HPGLViewerPage() {
               </button>
             </div>
             {ml && (
-              <div className="mb-4 px-3 py-2 rounded-lg bg-gray-500/10 border border-gray-500/20 text-xs text-gray-400">
-                Rilevato: <strong className="text-white">{ml.final_cad === 'general_hpgl' ? 'HPGL Generico' : ml.final_cad}</strong>
-                {ml.source === 'no_model' && <span className="text-amber-400 ml-2">(modello non addestrato)</span>}
+              <div className="mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
+                Modello non addestrato
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">

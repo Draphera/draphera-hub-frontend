@@ -38,13 +38,12 @@ interface Props {
   ml?: MLInfo | null;
   features?: Record<string, unknown>;
   onCorrectCad?: (correctedCadId: string) => void;
-  onOpenCadModal?: () => void;
-  cadSystems?: Array<{ id: string; name: string; country?: string }>;
+  userSelectedCad?: string | null;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, onOpenCadModal, cadSystems }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -55,43 +54,48 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
           <div className="h-px bg-drapera-border mt-2.5" />
         </div>
 
-        {/* Main CAD result: prefer ML, fallback to rule-based */}
+        {/* Main CAD result: prefer user selection, then ML, then rule-based */}
         <div className={`px-3 py-2 rounded-lg border ${
-          !ml
-            ? 'bg-drapera-gold/5 border-drapera-gold/15'
-            : ml.source === 'no_model'
-              ? 'bg-gray-500/5 border-gray-500/15'
-              : ml.source === 'ml_rule_agreement'
-                ? 'bg-green-500/5 border-green-500/15'
-                : 'bg-cyan-500/5 border-cyan-500/15'
+          userSelectedCad
+            ? 'bg-amber-500/10 border-amber-500/20'
+            : !ml
+              ? 'bg-drapera-gold/5 border-drapera-gold/15'
+              : ml.source === 'no_model'
+                ? 'bg-gray-500/5 border-gray-500/15'
+                : ml.source === 'ml_rule_agreement'
+                  ? 'bg-green-500/5 border-green-500/15'
+                  : 'bg-cyan-500/5 border-cyan-500/15'
         }`}>
           <div className="flex items-center justify-between mb-1">
             <span className="text-[10px] font-semibold uppercase tracking-wider"
-              style={{ color: !ml ? '#F2C94C' : ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
-              {!ml ? t('cad.detected') :
+              style={{ color: userSelectedCad ? '#FBBF24' : !ml ? '#F2C94C' : ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
+              {userSelectedCad ? 'Modello non addestrato' :
+               !ml ? t('cad.detected') :
                ml.source === 'no_model' ? 'Modello non addestrato' :
                ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') :
                ml.source === 'rule_based_fallback' ? t('info.ml_fallback') :
                t('info.ml_only')}
             </span>
-            {ml && (
+            {!userSelectedCad && ml && (
               <span className={`text-xs font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
                 {ml.source === 'no_model' ? '—' : `${((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%`}
               </span>
             )}
-            {!ml && cad && (
+            {!userSelectedCad && !ml && cad && (
               <span className={`ml-auto w-1.5 h-1.5 rounded-full ${cad.confidence === 'high' ? 'bg-green-400' : cad.confidence === 'medium' ? 'bg-yellow-400' : 'bg-gray-500'}`} />
             )}
           </div>
           <p className="text-xs text-white font-medium">
-            {ml
-              ? (ml.final_cad === 'general_hpgl' ? t('cad.general_hpgl') : ml.final_cad ?? ml.ml_cad)
-              : (cad ? t(`cad.${cad.cad}`) : t('cad.unknown'))}
+            {userSelectedCad
+              ? userSelectedCad
+              : ml
+                ? (ml.final_cad === 'general_hpgl' ? t('cad.general_hpgl') : ml.final_cad ?? ml.ml_cad)
+                : (cad ? t(`cad.${cad.cad}`) : t('cad.unknown'))}
           </p>
-          {ml?.note && (
+          {!userSelectedCad && ml?.note && (
             <p className="text-[10px] text-gray-500 mt-1 italic">{ml.note}</p>
           )}
-          {ml?.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
+          {!userSelectedCad && ml?.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
             <div className="mt-1.5 space-y-0.5">
               {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad_, score]) => (
                 <div key={cad_} className="flex justify-between text-[10px]">
@@ -101,15 +105,6 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
               ))}
             </div>
           )}
-            {onOpenCadModal && (
-              <div className="mt-2 pt-2 border-t border-cyan-500/10">
-                <p className="text-[9px] text-gray-600 mb-1">{t('info.cad_error')}</p>
-                <button onClick={onOpenCadModal}
-                  className="w-full text-[10px] px-2 py-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors font-medium">
-                  Seleziona CAD corretta ({cadSystems?.length ?? 0} disponibili)
-                </button>
-              </div>
-            )}
           </div>
 
         <div className="space-y-2.5">
