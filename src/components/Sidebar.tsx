@@ -15,6 +15,8 @@ interface SidebarProps {
   onUnitChange: (u: 'cm' | 'inch') => void;
   snapGrid: boolean;
   onToggleSnap: () => void;
+  viewMode: 'outline' | 'tack' | 'measurement';
+  onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
   pens?: number[];
   penVisibility?: Record<number, boolean>;
   onPenToggle?: (pen: number) => void;
@@ -29,6 +31,7 @@ interface SidebarProps {
 export default function Sidebar({
   onFileUpload, invertColors, onToggleInvert, zoom, onZoomChange,
   unit, onUnitChange, snapGrid, onToggleSnap,
+  viewMode, onViewModeChange,
   pens, penVisibility, onPenToggle, penColors, onPenColorChange,
   flattened, onToggleFlattened,
   showNotches, onToggleNotches,
@@ -95,12 +98,47 @@ export default function Sidebar({
               </div>
             </div>
 
-            <label className="flex items-center justify-between cursor-pointer">
-              <span className="text-xs text-gray-400">{t('sidebar.snap_grid')}</span>
-              <button onClick={onToggleSnap} className={`w-8 h-4 rounded-full transition-colors relative ${snapGrid ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
-                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${snapGrid ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
+          </div>
+        </div>
+
+        {/* View mode + toggles */}
+        <div className="h-px bg-drapera-border" />
+        <div>
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-drapera-steel-light mb-2.5">Visualizzazione</h3>
+          <div className="space-y-1">
+            {([
+              { key: 'outline' as const, label: 'Contorno', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+              { key: 'tack' as const, label: 'Tack', icon: 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+              { key: 'measurement' as const, label: 'Misure', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+            ]).map(mode => (
+              <button key={mode.key} onClick={() => onViewModeChange(mode.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all ${
+                  viewMode === mode.key
+                    ? 'bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                }`}>
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={mode.icon} />
+                </svg>
+                {mode.label}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 space-y-1.5">
+            <label className="flex items-center justify-between cursor-pointer px-1">
+              <span className="text-[11px] text-gray-400">{t('sidebar.snap_grid')}</span>
+              <button onClick={onToggleSnap} className={`w-7 h-3.5 rounded-full transition-colors relative ${snapGrid ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${snapGrid ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
               </button>
             </label>
+            {pens && pens.length > 0 && (
+              <label className="flex items-center justify-between cursor-pointer px-1">
+                <span className="text-[11px] text-gray-400">Mostra intagli</span>
+                <button onClick={onToggleNotches} className={`w-7 h-3.5 rounded-full transition-colors relative ${showNotches ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                  <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${showNotches ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
+                </button>
+              </label>
+            )}
           </div>
         </div>
 
@@ -146,18 +184,6 @@ export default function Sidebar({
           </>
         )}
 
-        {/* Notch overlay toggle */}
-        {pens && pens.length > 0 && (
-          <>
-            <div className="h-px bg-drapera-border" />
-            <label className="flex items-center justify-between cursor-pointer">
-              <span className="text-xs text-gray-400">Mostra intagli</span>
-              <button onClick={onToggleNotches} className={`w-8 h-4 rounded-full transition-colors relative ${showNotches ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
-                <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-transform ${showNotches ? 'translate-x-[17px]' : 'translate-x-0.5'}`} />
-              </button>
-            </label>
-          </>
-        )}
       </div>
     </aside>
   );
