@@ -238,7 +238,7 @@ export const adminCadApi = {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/uploads/${uploadId}/cad`, {
-      method: 'PUT', headers, body: JSON.stringify({ cad_id: cadId }),
+      method: 'POST', headers, body: JSON.stringify({ cad_id: cadId }),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
