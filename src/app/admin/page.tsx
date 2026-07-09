@@ -12,8 +12,7 @@ import type { Session } from '@supabase/supabase-js';
 interface Upload {
   id: string; user_id: string; filename: string; file_type: string;
   file_size: number; content_hash: string; created_at: string;
-  cad_id?: string; cad_auto?: string; cad_filename?: string;
-  cad_content_marker?: string; format_family?: string;
+  cad_id?: string;
 }
 
 interface CadSystem {
@@ -705,7 +704,6 @@ export default function AdminPage() {
                   <tbody>
                     {uploads.map(u => {
                       const cadName = u.cad_id ? (cadSystems.find(s => s.id === u.cad_id)?.name || u.cad_id) : null;
-                      const cadAuto = u.cad_auto && u.cad_auto !== 'unknown' ? u.cad_auto : null;
                       return (
                       <tr key={u.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
                         <td className="px-4 py-3 text-white font-mono text-xs max-w-[200px] truncate">{u.filename}</td>
@@ -717,8 +715,6 @@ export default function AdminPage() {
                         <td className="px-4 py-3">
                           {cadName ? (
                             <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">{cadName}</span>
-                          ) : cadAuto ? (
-                            <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">{cadAuto}</span>
                           ) : (
                             <span className="text-[10px] text-gray-600">—</span>
                           )}
