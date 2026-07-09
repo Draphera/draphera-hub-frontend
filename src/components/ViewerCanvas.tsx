@@ -495,17 +495,21 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       >
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         {data ? (
+          <>
+          {showBounds && bounds && (
+            <rect x={pan.x + bounds.minX * effectiveZoom}
+                  y={pan.y + bounds.minY * effectiveZoom}
+                  width={bounds.w * effectiveZoom}
+                  height={bounds.h * effectiveZoom}
+              fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={0.5} rx={1} />
+          )}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {gridLines}
-            {/* Pattern bounding box */}
-            {showBounds && bounds && (
-              <rect x={bounds.minX} y={bounds.minY} width={bounds.w} height={bounds.h}
-                fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={0.5 / effectiveZoom} rx={2} />
-            )}
             {renderPaths()}
             {renderTackMarks()}
             {renderMeasurement()}
           </g>
+          </>
         ) : (
           <>
             {gridLines}
