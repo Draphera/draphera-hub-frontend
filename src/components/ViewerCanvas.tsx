@@ -261,7 +261,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const bbDiag = bounds ? Math.max(1, (bounds.w + bounds.h) / 2) : 1000;
       const sizeRatio = ptDiag / bbDiag;
       // Closed + large = contour (thick, solid), small/open = internals (thin)
-      const isContour = showBounds && path.closed && sizeRatio > 0.05;
+      const isContour = path.closed && sizeRatio > 0.05;
       const isText = sizeRatio < 0.03;  // small paths = vector text / details
       const thick = isContour ? 1.8 : isText ? 1.3 : 1.0;
       const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
