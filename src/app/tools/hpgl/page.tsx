@@ -408,24 +408,21 @@ export default function HPGLViewerPage() {
             </div>
           </div>
         ) : compareMode === 'overlay' && secondTabId ? (
-          <div className="relative" style={{ height: 'calc(100vh - 12rem)' }}>
-            <div className="absolute inset-0">
-              <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+          <div style={{ height: 'calc(100vh - 12rem)' }}>
+            {(() => {
+              const t = fileTabs.find(t => t.id === secondTabId);
+              return <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
-                selectedPathIndex={selectedPath?.index ?? -1} onPathSelect={(path, idx) => {
+                overlayData={t?.data ?? null} overlayOpacity={overlayOpacity}
+                selectedPathIndex={selectedPath?.index ?? -1}
+                onPathSelect={(path, idx) => {
                   if (!path) { setSelectedPath(null); return; }
                   const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
                   let length = 0;
                   for (let i = 1; i < pts.length; i++) length += Math.sqrt((pts[i][0] - pts[i-1][0]) ** 2 + (pts[i][1] - pts[i-1][1]) ** 2);
                   setSelectedPath({ index: idx, path, info: { type: path.type, vertices: pts.length, pen: path.pen ?? 0, lineType: path.lineType ?? 0, closed: path.closed, length, firstPoint: pts.length > 0 ? [pts[0][0], pts[0][1]] : undefined } });
-                }} />
-            </div>
-            <div className="absolute inset-0 pointer-events-none" style={{ opacity: overlayOpacity }}>
-              {(() => {
-                const t = fileTabs.find(t => t.id === secondTabId);
-                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} flattened /> : null;
-              })()}
-            </div>
+                }} />;
+            })()}
           </div>
         ) : (
           <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
