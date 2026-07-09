@@ -193,16 +193,16 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
 
         <div className="space-y-2.5">
           {[
-            { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]' },
-            { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? meta.dimensions.width.toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? meta.dimensions.height.toFixed(1) : '0'}` : '\u2014' },
-            { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014' },
-            { label: t('info.lines'), value: meta?.polylines ?? '\u2014' },
-            { label: t('info.arcs'), value: meta?.arcs ?? '\u2014' },
-            { label: t('info.circles'), value: meta?.circles ?? '\u2014' },
-            { label: t('info.rectangles'), value: meta?.rectangles ?? '\u2014' },
-            { label: t('info.labels'), value: meta?.labels ?? '\u2014' },
-            { label: t('info.pens'), value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '\u2014' },
-          ].map(f => (
+            { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]', always: true },
+            { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? meta.dimensions.width.toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? meta.dimensions.height.toFixed(1) : '0'}` : '\u2014', always: true },
+            { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014', always: true },
+            { label: t('info.lines'), value: meta?.polylines, hideZero: true },
+            { label: t('info.arcs'), value: meta?.arcs, hideZero: true },
+            { label: t('info.circles'), value: meta?.circles, hideZero: true },
+            { label: t('info.rectangles'), value: meta?.rectangles, hideZero: true },
+            { label: t('info.labels'), value: meta?.labels, hideZero: true },
+            { label: t('info.pens'), value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '', hideZero: true },
+          ].filter(f => f.always || (f.hideZero && f.value && f.value !== 0 && f.value !== '0')).map(f => (
             <div key={f.label} className="flex justify-between py-1.5 border-b border-drapera-border/40">
               <span className="tech-label">{f.label}</span>
               <span className={`tech-value text-right ${f.cls || ''}`}>{f.value}</span>
