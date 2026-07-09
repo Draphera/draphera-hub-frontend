@@ -283,15 +283,13 @@ export default function HomePage() {
                   <p className="text-xs text-gray-500 mt-1">{trainedCadCount} addestrati · {pendingCadCount} in attesa dataset</p>
                 </div>
                 <div className="flex gap-3 text-xs">
-                  <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> Active</span>
-                  <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> Training</span>
-                  <span className="flex items-center gap-1.5 text-gray-500"><span className="w-2 h-2 rounded-full bg-gray-500" /> Pending</span>
+                  <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> Addestrato</span>
+                  <span className="flex items-center gap-1.5 text-gray-500"><span className="w-2 h-2 rounded-full bg-gray-500" /> In attesa dataset</span>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {cadSystems.map((cad, ci) => {
+                {cadSystems.map(cad => {
                   const isTrained = cad.training_ready;
-                  const colors = ['#F2C94C','#4ECDC4','#FF6B6B','#A78BFA','#FB923C','#34D399','#F472B6','#60A5FA','#FBBF24','#E879F9','#2DD4BF','#FCD34D','#F87171','#818CF8','#34D399','#9CA3AF','#E5E7EB','#C084FC','#FCA5A5','#FDA4AF','#6EE7B7','#A78BFA','#F472B6','#34D399'];
                   return (
                     <div key={cad.id}
                       className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -301,7 +299,7 @@ export default function HomePage() {
                       }`}
                       title={cad.country ? `Paese: ${cad.country}` : ''}
                     >
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: colors[ci % colors.length] }} />
+                      <span className={`w-2 h-2 rounded-full ${isTrained ? 'bg-green-400' : 'bg-gray-500'}`} />
                       {cad.name}
                       {isTrained && <span className="text-[9px] text-green-400/60">✓</span>}
                     </div>
