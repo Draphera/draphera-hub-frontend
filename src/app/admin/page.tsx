@@ -67,6 +67,7 @@ export default function AdminPage() {
   const [authAlg, setAuthAlg] = useState('');
   const [filterType, setFilterType] = useState('');
   const [cadFilter, setCadFilter] = useState('');
+  const [editingCadUpload, setEditingCadUpload] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('uploads');
 
@@ -713,10 +714,35 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          {cadName ? (
-                            <span className="inline-block text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">{cadName}</span>
+                          {editingCadUpload === u.id ? (
+                            <select
+                              className="bg-drapera-dark border border-drapera-border rounded px-1.5 py-1 text-[10px] text-white outline-none focus:border-drapera-gold/50 w-28"
+                              value={u.cad_id || ''}
+                              onChange={async e => {
+                                const val = e.target.value;
+                                try {
+                                  await adminCadApi.setUploadCad(u.id, val);
+                                  await load(filterType, false);
+                                } catch {}
+                                setEditingCadUpload(null);
+                              }}
+                              onBlur={() => setEditingCadUpload(null)}
+                              autoFocus
+                            >
+                              <option value="">—</option>
+                              {cadSystems.map(s => (
+                                <option key={s.id} value={s.id}>{s.name}</option>
+                              ))}
+                            </select>
                           ) : (
-                            <span className="text-[10px] text-gray-600">—</span>
+                            <button onClick={() => setEditingCadUpload(u.id)}
+                              className={`text-[10px] font-medium px-2 py-0.5 rounded-full border transition-colors ${
+                                cadName
+                                  ? 'bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20'
+                                  : 'text-gray-600 border-gray-600/30 hover:text-gray-400 hover:border-gray-500/50'
+                              }`}>
+                              {cadName || '—'}
+                            </button>
                           )}
                         </td>
                         <td className="px-4 py-3 text-xs">{u.user_id?.slice(0, 8)}...</td>
