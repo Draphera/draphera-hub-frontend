@@ -118,17 +118,23 @@ export const adminApi = {
       registration: { max_users: number; current_users: number; registration_open: boolean };
     }>;
   },
-  async listUploads(type?: string, limit = 50, offset = 0) {
+  async listUploads(type?: string, limit = 50, offset = 0, cad?: string) {
     const headers = await getHeaders();
     const params = `limit=${limit}&offset=${offset}`;
-    const url = type ? `${API_BASE}/api/admin/uploads?type=${type}&${params}` : `${API_BASE}/api/admin/uploads?${params}`;
+    let url = `${API_BASE}/api/admin/uploads?${params}`;
+    if (type) url += `&type=${type}`;
+    if (cad) url += `&cad=${cad}`;
     const res = await fetchWithTimeout(url, { headers });
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async exportZip(type?: string) {
+  async exportZip(type?: string, cad?: string) {
     const headers = await getHeaders();
-    const url = type ? `${API_BASE}/api/admin/uploads/export-zip?type=${type}` : `${API_BASE}/api/admin/uploads/export-zip`;
+    let url = `${API_BASE}/api/admin/uploads/export-zip`;
+    const params: string[] = [];
+    if (type) params.push(`type=${type}`);
+    if (cad) params.push(`cad=${cad}`);
+    if (params.length) url += `?${params.join('&')}`;
     const res = await fetchWithTimeout(url, { headers });
     if (!res.ok) throw new Error(await res.text());
     return res.blob();

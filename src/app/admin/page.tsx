@@ -67,6 +67,7 @@ export default function AdminPage() {
   const [authError, setAuthError] = useState('');
   const [authAlg, setAuthAlg] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [cadFilter, setCadFilter] = useState('');
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('uploads');
 
@@ -273,7 +274,7 @@ export default function AdminPage() {
   const load = async (ft: string, append = false) => {
     setUploadLoading(true);
     try {
-      const u = ft ? await adminApi.listUploads(ft, 50, append ? uploadOffset : 0) : await adminApi.listUploads(undefined, 50, append ? uploadOffset : 0);
+      const u = await adminApi.listUploads(ft || undefined, 50, append ? uploadOffset : 0, cadFilter || undefined);
       if (append) {
         setUploads(prev => [...prev, ...(u.uploads ?? [])]);
       } else {
@@ -344,6 +345,12 @@ export default function AdminPage() {
     });
   }, [router]);
 
+  const handleCadFilter = async (cid: string) => {
+    setCadFilter(cid);
+    setUploadOffset(0);
+    await load(filterType, false);
+  };
+
   const handleFilter = async (ft: string) => {
     setFilterType(ft);
     setUploadOffset(0);
@@ -353,9 +360,10 @@ export default function AdminPage() {
   const handleExportZip = async () => {
     setExporting(true);
     try {
-      const blob = filterType ? await adminApi.exportZip(filterType) : await adminApi.exportZip();
+      const blob = await adminApi.exportZip(filterType || undefined, cadFilter || undefined);
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `uploads-${filterType || 'all'}.zip`; a.click();
+      const label = `${cadFilter || 'all'}-${filterType || 'all'}`;
+      const a = document.createElement('a'); a.href = url; a.download = `uploads-${label}.zip`; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     } catch { setMsg(t('admin.error')); }
     setExporting(false);
@@ -658,6 +666,16 @@ export default function AdminPage() {
                 </button>
               ))}
               <div className="flex-1" />
+              <select
+                className="bg-drapera-dark border border-drapera-border rounded-lg px-2 py-1.5 text-xs text-white outline-none focus:border-drapera-gold/50"
+                value={cadFilter}
+                onChange={e => handleCadFilter(e.target.value)}
+              >
+                <option value="">Tutti i CAD</option>
+                {cadSystems.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
               <button onClick={handleExportZip} disabled={exporting || uploads.length === 0}
                 className="btn-gold text-xs px-3 py-1.5"
               >
