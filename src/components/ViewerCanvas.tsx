@@ -261,7 +261,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const sizeRatio = ptDiag / bbDiag;
       // Closed + large = contour (thick, solid), small/open = internals (thin)
       const isContour = path.closed && sizeRatio > 0.05;
-      const thick = isContour ? 1.8 : sizeRatio < 0.01 ? 0.5 : 1.0;
+      const thick = isContour ? 1.8 : 1.0;
       const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
       const highlightSw = sw * 3;
       const dash = isContour ? '' : (LT_PATTERNS[path.lineType ?? 0] || '');
@@ -295,7 +295,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.08)' : 'none'} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
+          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.1)' : 'rgba(242,201,76,0.03)'} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
         } else {
           elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
         }
