@@ -36,6 +36,7 @@ interface HPGLData {
   cad?: { cad: string; confidence: string; score: number };
   ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number>; final_cad?: string; final_confidence?: number; source?: string };
   features?: Record<string, unknown>;
+  iw?: [number, number, number, number] | null;
 }
 
 const APP_VERSION = '1.0.0';

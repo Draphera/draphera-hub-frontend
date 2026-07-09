@@ -23,6 +23,7 @@ interface HPGLData {
     dimensions: { width: number; height: number };
     pens: number[];
   };
+  iw?: [number, number, number, number] | null;
 }
 
 interface NotchInfo {
@@ -311,7 +312,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   }
 
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
-  const placementBounds = useMemo(() => data ? detectPlacementBounds(data.paths) : null, [data]);
+  const placementBounds = useMemo(() => {
+    if (!data) return null;
+    // Prefer IW from the HPGL parse (most accurate for placement)
+    if (data.iw) {
+      return { minX: data.iw[0], minY: data.iw[1], maxX: data.iw[2], maxY: data.iw[3] };
+    }
+    return detectPlacementBounds(data.paths);
+  }, [data]);
 
   const renderPaths = () => {
     if (!data) return null;
