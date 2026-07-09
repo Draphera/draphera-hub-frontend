@@ -401,7 +401,7 @@ export default function HPGLViewerPage() {
             <div className="flex-1 min-w-0">
               {(() => {
                 const t = fileTabs.find(t => t.id === secondTabId);
-                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} /> : null;
+                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} /> : null;
               })()}
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function HPGLViewerPage() {
                   },
                 },
               };
-              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
