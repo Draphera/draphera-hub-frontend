@@ -449,6 +449,10 @@ export default function AdminPage() {
 
   const switchTab = async (tab: AdminTab) => {
     setActiveTab(tab);
+    if (tab === 'uploads') {
+      setUploadOffset(0);
+      await load(filterType, false);
+    }
     if (tab === 'cad' || tab === 'trainer' || tab === 'rules') {
       await loadCadSystems();
     }
