@@ -276,7 +276,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
   const placementBounds = useMemo(() => {
     if (!data) return null;
-    return detectPlacementBounds(data.paths);
+    const pb = detectPlacementBounds(data.paths);
+    if (pb) console.log('Placement bounds:', pb);
+    return pb;
   }, [data]);
 
   const renderPaths = () => {
@@ -534,6 +536,12 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         {data ? (
           <>
+          <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
+            {gridLines}
+            {renderPaths()}
+            {renderTackMarks()}
+            {renderMeasurement()}
+          </g>
           {placementBounds && (
             <rect
               x={pan.x + placementBounds.minX * effectiveZoom}
@@ -541,15 +549,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
               height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
               fill="none"
-              stroke={showBounds ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0)'}
-              strokeWidth={0.5} rx={1} />
+              stroke={showBounds ? '#00E5FF' : 'transparent'}
+              strokeWidth={showBounds ? 1 : 0}
+              rx={1}
+              style={{ pointerEvents: 'none' }} />
           )}
-          <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
-            {gridLines}
-            {renderPaths()}
-            {renderTackMarks()}
-            {renderMeasurement()}
-          </g>
           </>
         ) : (
           <>
