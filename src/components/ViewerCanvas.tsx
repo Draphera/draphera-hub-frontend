@@ -86,55 +86,25 @@ function detectNotchesFromPaths(paths: HPGLPath[]): NotchInfo[] {
   return notches;
 }
 
-/** Detect the placement bounding box from parsed HPGL paths */
+/** Detect the placement bounding box: bounds of the largest closed path (the main piece) */
 function detectPlacementBounds(paths: HPGLPath[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
-  let bestRect: { minX: number; minY: number; maxX: number; maxY: number; area: number } | null = null;
+  let best: { minX: number; minY: number; maxX: number; maxY: number; area: number } | null = null;
 
-  for (let idx = 0; idx < paths.length; idx++) {
-    const p = paths[idx];
+  for (const p of paths) {
     const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
-    if (!pts || pts.length < 4) continue;
-
-    // Check if this path looks like a rectangle: first ≈ last and axis-aligned
+    if (!pts || pts.length < 3) continue;
     const isClosed = Math.abs(pts[0][0] - pts[pts.length - 1][0]) + Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 5;
     if (!isClosed) continue;
-
     const xs = pts.map(pt => pt[0]);
     const ys = pts.map(pt => pt[1]);
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
-    const w = maxX - minX;
-    const h = maxY - minY;
-    if (w < 10 || h < 10) continue;
-
-    // Axis-aligned check: most points should be at the extremes
-    const onEdge = pts.filter(pt =>
-      Math.abs(pt[0] - minX) < 1 || Math.abs(pt[0] - maxX) < 1 ||
-      Math.abs(pt[1] - minY) < 1 || Math.abs(pt[1] - maxY) < 1
-    ).length;
-    if (onEdge < pts.length * 0.7) continue;
-
-    // Near origin check (relaxed for CADs that use offset)
-    const nearOrigin = (minX < 2000 || minY < 2000);
-    // Early command (within first 30% of paths)
-    const isEarly = idx < paths.length * 0.3;
-
-    const area = w * h;
-    // Aspect ratio: placement rects are typically wide (3:1 to 6:1)
-    const ratio = w / Math.max(h, 1);
-    const goodRatio = ratio > 1.5 && ratio < 15;
-
-    if (goodRatio && nearOrigin && isEarly) {
-      if (!bestRect || area > bestRect.area) {
-        bestRect = { minX, minY, maxX, maxY, area };
-      }
+    const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+    if (!best || area > best.area) {
+      best = { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys), area };
     }
   }
 
-  // Fallback: use overall min/max of all path points
-  if (!bestRect) {
+  if (!best) {
+    // Fallback: overall data bounds
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     for (const p of paths) {
       const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
@@ -142,19 +112,11 @@ function detectPlacementBounds(paths: HPGLPath[]): { minX: number; minY: number;
         if (x < minX) minX = x; if (y < minY) minY = y;
         if (x > maxX) maxX = x; if (y > maxY) maxY = y;
       }
-      if ((p.type === 'circle' || p.type === 'arc') && p.cx !== undefined && p.cy !== undefined && p.radius !== undefined) {
-        if (p.cx - p.radius < minX) minX = p.cx - p.radius;
-        if (p.cy - p.radius < minY) minY = p.cy - p.radius;
-        if (p.cx + p.radius > maxX) maxX = p.cx + p.radius;
-        if (p.cy + p.radius > maxY) maxY = p.cy + p.radius;
-      }
     }
-    if (minX !== Infinity) {
-      bestRect = { minX, minY, maxX, maxY, area: (maxX - minX) * (maxY - minY) };
-    }
+    if (minX !== Infinity) best = { minX, minY, maxX, maxY, area: 0 };
   }
 
-  return bestRect ? { minX: bestRect.minX, minY: bestRect.minY, maxX: bestRect.maxX, maxY: bestRect.maxY } : null;
+  return best ? { minX: best.minX, minY: best.minY, maxX: best.maxX, maxY: best.maxY } : null;
 }
 
 interface MeasurePoint {
@@ -314,10 +276,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
   const placementBounds = useMemo(() => {
     if (!data) return null;
-    // Prefer IW from the HPGL parse (most accurate for placement)
-    if (data.iw) {
-      return { minX: data.iw[0], minY: data.iw[1], maxX: data.iw[2], maxY: data.iw[3] };
-    }
     return detectPlacementBounds(data.paths);
   }, [data]);
 
