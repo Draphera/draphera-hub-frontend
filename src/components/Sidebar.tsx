@@ -25,6 +25,8 @@ interface SidebarProps {
   onToggleNotches?: () => void;
   filled?: boolean;
   onToggleFilled?: () => void;
+  showBounds?: boolean;
+  onToggleBounds?: () => void;
 }
 
 export default function Sidebar({
@@ -35,6 +37,7 @@ export default function Sidebar({
   flattened, onToggleFlattened,
   showNotches, onToggleNotches,
   filled, onToggleFilled,
+  showBounds, onToggleBounds,
 }: SidebarProps) {
   const { t } = useTranslation();
 
@@ -143,6 +146,12 @@ export default function Sidebar({
               <span className="text-[11px] text-gray-400">Riempimento</span>
               <button onClick={onToggleFilled} className={`w-7 h-3.5 rounded-full transition-colors relative ${filled ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
                 <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${filled ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
+              </button>
+            </label>
+            <label className="flex items-center justify-between cursor-pointer px-1">
+              <span className="text-[11px] text-gray-400">Bordi pattern</span>
+              <button onClick={onToggleBounds} className={`w-7 h-3.5 rounded-full transition-colors relative ${showBounds ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${showBounds ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
               </button>
             </label>
           </div>

@@ -98,6 +98,7 @@ interface MeasureResult {
 interface Props {
   data: HPGLData | null;
   filled?: boolean;
+  showBounds?: boolean;
   showNotches?: boolean;
   zoom: number;
   onZoomChange?: (z: number) => void;
@@ -177,7 +178,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -496,6 +497,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         {data ? (
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {gridLines}
+            {/* Pattern bounding box */}
+            {showBounds && bounds && (
+              <rect x={bounds.minX} y={bounds.minY} width={bounds.w} height={bounds.h}
+                fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={0.5 / effectiveZoom} rx={2} />
+            )}
             {renderPaths()}
             {renderTackMarks()}
             {renderMeasurement()}
