@@ -85,6 +85,77 @@ function detectNotchesFromPaths(paths: HPGLPath[]): NotchInfo[] {
   return notches;
 }
 
+/** Detect the placement bounding box from parsed HPGL paths */
+function detectPlacementBounds(paths: HPGLPath[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
+  let bestRect: { minX: number; minY: number; maxX: number; maxY: number; area: number } | null = null;
+
+  for (let idx = 0; idx < paths.length; idx++) {
+    const p = paths[idx];
+    const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
+    if (!pts || pts.length < 4) continue;
+
+    // Check if this path looks like a rectangle: first ≈ last and axis-aligned
+    const isClosed = Math.abs(pts[0][0] - pts[pts.length - 1][0]) + Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 5;
+    if (!isClosed) continue;
+
+    const xs = pts.map(pt => pt[0]);
+    const ys = pts.map(pt => pt[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const w = maxX - minX;
+    const h = maxY - minY;
+    if (w < 10 || h < 10) continue;
+
+    // Axis-aligned check: most points should be at the extremes
+    const onEdge = pts.filter(pt =>
+      Math.abs(pt[0] - minX) < 1 || Math.abs(pt[0] - maxX) < 1 ||
+      Math.abs(pt[1] - minY) < 1 || Math.abs(pt[1] - maxY) < 1
+    ).length;
+    if (onEdge < pts.length * 0.7) continue;
+
+    // Near origin check
+    const nearOrigin = (minX < 500 || minY < 500);
+    // Early command (within first 20% of paths)
+    const isEarly = idx < paths.length * 0.2;
+
+    const area = w * h;
+    // Aspect ratio: placement rects are typically wide (3:1 to 6:1)
+    const ratio = w / Math.max(h, 1);
+    const goodRatio = ratio > 1.5 && ratio < 15;
+
+    if (goodRatio && nearOrigin && isEarly) {
+      if (!bestRect || area > bestRect.area) {
+        bestRect = { minX, minY, maxX, maxY, area };
+      }
+    }
+  }
+
+  // Fallback: if no placement rect found, use the largest rectangle overall
+  if (!bestRect) {
+    for (const p of paths) {
+      const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
+      if (!pts || pts.length < 4) continue;
+      const isClosed = Math.abs(pts[0][0] - pts[pts.length - 1][0]) + Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 5;
+      if (!isClosed) continue;
+      const xs = pts.map(pt => pt[0]);
+      const ys = pts.map(pt => pt[1]);
+      const w = Math.max(...xs) - Math.min(...xs);
+      const h = Math.max(...ys) - Math.min(...ys);
+      const area = w * h;
+      if (!bestRect || area > bestRect.area) {
+        bestRect = {
+          minX: Math.min(...xs), minY: Math.min(...ys),
+          maxX: Math.max(...xs), maxY: Math.max(...ys), area,
+        };
+      }
+    }
+  }
+
+  return bestRect ? { minX: bestRect.minX, minY: bestRect.minY, maxX: bestRect.maxX, maxY: bestRect.maxY } : null;
+}
+
 interface MeasurePoint {
   x: number; y: number;
 }
@@ -240,6 +311,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   }
 
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
+  const placementBounds = useMemo(() => data ? detectPlacementBounds(data.paths) : null, [data]);
 
   const renderPaths = () => {
     if (!data) return null;
@@ -496,11 +568,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         {data ? (
           <>
-          {showBounds && bounds && (
-            <rect x={pan.x + bounds.minX * effectiveZoom}
-                  y={pan.y + bounds.minY * effectiveZoom}
-                  width={bounds.w * effectiveZoom}
-                  height={bounds.h * effectiveZoom}
+          {showBounds && placementBounds && (
+            <rect x={pan.x + placementBounds.minX * effectiveZoom}
+                  y={pan.y + placementBounds.minY * effectiveZoom}
+                  width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
+                  height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
               fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={0.5} rx={1} />
           )}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
