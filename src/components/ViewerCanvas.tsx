@@ -576,12 +576,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         {data ? (
           <>
-          {showBounds && placementBounds && (
-            <rect x={pan.x + placementBounds.minX * effectiveZoom}
-                  y={pan.y + placementBounds.minY * effectiveZoom}
-                  width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
-                  height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
-              fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={0.5} rx={1} />
+          {placementBounds && (
+            <rect
+              x={pan.x + placementBounds.minX * effectiveZoom}
+              y={pan.y + placementBounds.minY * effectiveZoom}
+              width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
+              height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
+              fill="none"
+              stroke={showBounds ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0)'}
+              strokeWidth={0.5} rx={1} />
           )}
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {gridLines}
