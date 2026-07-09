@@ -154,6 +154,17 @@ export const adminApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+  async systemHealth() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/system/health`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{
+      status: string; supabase_url: string; python_version: string;
+      fastapi_version: string; admin_emails: number;
+      ml_model: { loaded: boolean; exists: boolean };
+      tables: Array<{ table: string; reachable: boolean; count: number; error?: string }>;
+    }>;
+  },
 };
 
 export const userApi = {

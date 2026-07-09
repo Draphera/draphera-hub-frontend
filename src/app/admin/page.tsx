@@ -42,7 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics';
+type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics' | 'system';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -104,6 +104,12 @@ export default function AdminPage() {
 
   const [founders, setFounders] = useState<Array<Record<string, unknown>>>([]);
   const [founderAddUserId, setFounderAddUserId] = useState('');
+  const [systemHealth, setSystemHealth] = useState<{
+    status: string; supabase_url: string; python_version: string;
+    fastapi_version: string; admin_emails: number;
+    ml_model: { loaded: boolean; exists: boolean };
+    tables: Array<{ table: string; reachable: boolean; count: number; error?: string }>;
+  } | null>(null);
 
   const loadWaitlist = async (append = false) => {
     try {
@@ -216,6 +222,12 @@ export default function AdminPage() {
       setMsg('Founder rimosso');
       await loadFounders();
       setStats(await adminApi.stats());
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const loadSystemHealth = async () => {
+    try {
+      setSystemHealth(await adminApi.systemHealth());
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
@@ -398,6 +410,9 @@ export default function AdminPage() {
     if (tab === 'founders') {
       await loadFounders();
     }
+    if (tab === 'system') {
+      await loadSystemHealth();
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
@@ -413,12 +428,85 @@ export default function AdminPage() {
           {authError && (
             <div className="inline-block px-4 py-2 rounded-lg bg-red-900/20 border border-red-500/30 text-xs text-red-400 font-mono whitespace-pre text-left">
               {authError}{authAlg ? `\nalg: ${authAlg}` : ''}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {activeTab === 'system' && (
+          <div className="space-y-6">
+            {systemHealth ? (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="premium-card p-4 text-center">
+                    <div className={`w-3 h-3 rounded-full mx-auto mb-2 ${systemHealth.status === 'ok' ? 'bg-green-400' : 'bg-red-400'}`} />
+                    <p className="text-xs text-white font-semibold">{systemHealth.status === 'ok' ? 'Salute OK' : 'Problemi'}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Stato sistema</p>
+                  </div>
+                  <div className="premium-card p-4 text-center">
+                    <p className="text-sm font-bold text-white font-mono">{systemHealth.python_version}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Python</p>
+                  </div>
+                  <div className="premium-card p-4 text-center">
+                    <p className="text-sm font-bold text-white font-mono">{systemHealth.fastapi_version}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">FastAPI</p>
+                  </div>
+                  <div className="premium-card p-4 text-center">
+                    <p className="text-sm font-bold text-white font-mono">{systemHealth.admin_emails}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Admin</p>
+                  </div>
+                </div>
+
+                <div className="premium-card p-5">
+                  <h3 className="font-display font-bold text-base text-white mb-4">ML Model</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.exists ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+                      <p className={`text-sm font-bold ${systemHealth.ml_model.exists ? 'text-green-400' : 'text-red-400'}`}>
+                        {systemHealth.ml_model.exists ? 'Presente' : 'Assente'}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">File modello</p>
+                    </div>
+                    <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.loaded ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                      <p className={`text-sm font-bold ${systemHealth.ml_model.loaded ? 'text-green-400' : 'text-yellow-400'}`}>
+                        {systemHealth.ml_model.loaded ? 'Caricato' : 'Non caricato'}
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">Stato in memoria</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="premium-card p-5">
+                  <h3 className="font-display font-bold text-base text-white mb-4">Database — Tabelle</h3>
+                  <div className="space-y-2">
+                    {systemHealth.tables.map(t => (
+                      <div key={t.table} className="flex items-center justify-between px-3 py-2 rounded-lg bg-drapera-dark/30">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${t.reachable ? 'bg-green-400' : 'bg-red-400'}`} />
+                          <span className="text-xs text-white font-mono">{t.table}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] text-gray-500">{t.count >= 0 ? `${t.count} records` : '?'}</span>
+                          {t.error && <span className="text-[9px] text-red-400 max-w-[200px] truncate">{t.error}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="premium-card p-5">
+                  <h3 className="font-display font-bold text-base text-white mb-3">Supabase</h3>
+                  <p className="text-xs text-gray-400 font-mono">{systemHealth.supabase_url}</p>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   const filters = ['', 'hpgl', 'iso', 'dxf'];
 
@@ -430,6 +518,7 @@ export default function AdminPage() {
     { key: 'profiles', label: 'Utenti' },
     { key: 'founders', label: 'Founder' },
     { key: 'analytics', label: 'Analytics' },
+    { key: 'system', label: 'Sistema' },
   ];
 
   return (
