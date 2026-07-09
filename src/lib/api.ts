@@ -281,11 +281,11 @@ export const detectionRulesApi = {
 };
 
 export const correctionApi = {
-  async submitCorrection(cadId: string, features: Record<string, unknown>, fileId = '') {
+  async submitCorrection(cadId: string, features: Record<string, unknown>, fileId = '', uploadId = '') {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/cad/correct`, {
-      method: 'POST', headers, body: JSON.stringify({ cad_id: cadId, features, file_id: fileId }),
+      method: 'POST', headers, body: JSON.stringify({ cad_id: cadId, features, file_id: fileId, upload_id: uploadId }),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();

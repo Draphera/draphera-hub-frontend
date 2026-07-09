@@ -38,11 +38,13 @@ interface Props {
   ml?: MLInfo | null;
   features?: Record<string, unknown>;
   onCorrectCad?: (correctedCadId: string) => void;
+  onOpenCadModal?: () => void;
+  cadSystems?: Array<{ id: string; name: string; country?: string }>;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad }: Props) {
+export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, onOpenCadModal, cadSystems }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -96,14 +98,13 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
                 ))}
               </div>
             )}
-            {onCorrectCad && (
+            {onOpenCadModal && (
               <div className="mt-2 pt-2 border-t border-cyan-500/10">
                 <p className="text-[9px] text-gray-600 mb-1">{t('info.cad_error')}</p>
-                <div className="flex gap-1">
-                  {['lectra', 'gerber', 'investronica', 'optitex', 'tukatech', 'assyst', 'audaces', 'richpeace'].map(c => (
-                    <button key={c} onClick={() => onCorrectCad(c)} className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-gray-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors">{c}</button>
-                  ))}
-                </div>
+                <button onClick={onOpenCadModal}
+                  className="w-full text-[10px] px-2 py-1.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors font-medium">
+                  Seleziona CAD corretta ({cadSystems?.length ?? 0} disponibili)
+                </button>
               </div>
             )}
           </div>

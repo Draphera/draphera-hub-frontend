@@ -8,7 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import ViewerCanvas from '@/components/ViewerCanvas';
 import InfoPanel from '@/components/InfoPanel';
 import FooterActions from '@/components/FooterActions';
-import { hpglApi, correctionApi } from '@/lib/api';
+import { hpglApi, correctionApi, adminCadApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HPGLPath {
@@ -58,6 +58,15 @@ export default function HPGLViewerPage() {
   const [features, setFeatures] = useState<Record<string, unknown> | null>(null);
   const [uploadId, setUploadId] = useState('');
   const [msg, setMsg] = useState('');
+  const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
+  const [showCadModal, setShowCadModal] = useState(false);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/profile/cad-systems`)
+      .then(r => r.json())
+      .then(d => setCadSystems(d.cad_systems ?? []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -70,10 +79,19 @@ export default function HPGLViewerPage() {
   const handleCorrectCad = useCallback(async (correctedCadId: string) => {
     if (!features) return;
     try {
-      await correctionApi.submitCorrection(correctedCadId, features, uploadId);
-      setMsg('Correzione salvata. Grazie!');
+      await correctionApi.submitCorrection(correctedCadId, features, uploadId, uploadId);
+      setMsg(`CAD corretto: ${cadSystems.find(s => s.id === correctedCadId)?.name || correctedCadId}`);
+      setShowCadModal(false);
     } catch { setMsg('Errore salvataggio correzione'); }
-  }, [features, uploadId]);
+  }, [features, uploadId, cadSystems]);
+
+  // Auto-show modal when ML is uncertain or no_model
+  const ml = hpglData?.ml;
+  useEffect(() => {
+    if (hpglData && ml && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
+      setShowCadModal(true);
+    }
+  }, [hpglData, ml]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -224,7 +242,45 @@ export default function HPGLViewerPage() {
         <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} onOpenCadModal={() => setShowCadModal(true)} cadSystems={cadSystems} />
+
+      {/* CAD Selection Modal */}
+      {showCadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowCadModal(false)}>
+          <div className="premium-card w-full max-w-lg mx-4 p-6 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-lg text-white">Seleziona CAD</h3>
+              <button onClick={() => setShowCadModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            {ml && (
+              <div className="mb-4 px-3 py-2 rounded-lg bg-gray-500/10 border border-gray-500/20 text-xs text-gray-400">
+                Rilevato: <strong className="text-white">{ml.final_cad === 'general_hpgl' ? 'HPGL Generico' : ml.final_cad}</strong>
+                {ml.source === 'no_model' && <span className="text-amber-400 ml-2">(modello non addestrato)</span>}
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-2">
+              {cadSystems.map(cad => (
+                <button
+                  key={cad.id}
+                  onClick={() => handleCorrectCad(cad.id)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-drapera-border hover:border-drapera-gold/40 hover:bg-drapera-gold/5 transition-all text-left"
+                >
+                  <div className="w-6 h-6 rounded-full bg-drapera-gold/10 flex items-center justify-center shrink-0">
+                    <span className="text-[9px] font-bold text-drapera-gold">{cad.name[0]}</span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-white truncate">{cad.name}</p>
+                    {cad.country && <p className="text-[9px] text-gray-500">{cad.country}</p>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <FooterActions
         onZoomIn={() => setZoom(z => Math.min(5, z + 0.15))}
         onZoomOut={() => setZoom(z => Math.max(0.1, z - 0.15))}
