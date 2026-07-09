@@ -281,7 +281,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   };
 
   return (
-    <div className="relative w-full h-full overflow-hidden rounded-xl border border-drapera-border bg-drapera-dark">
+    <div className="relative w-full overflow-hidden rounded-xl border border-drapera-border bg-drapera-dark"
+      style={{ height: 'calc(100vh - 8rem)', minHeight: 460 }}>
       {data && (
         <div
           className="absolute inset-0 rounded-xl pointer-events-none z-0"
