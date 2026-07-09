@@ -249,7 +249,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const color = flattened
         ? (invertColors ? '#00e5ff' : '#F2C94C')
         : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
-      const sw = (path.penWidth ?? 0.25) / effectiveZoom;
+      // Auto-thickness: closed paths and long paths are thicker (likely contours)
+      const ptsLen = (path.type === 'polyline' || path.type === 'rectangle') ? (path.points?.length ?? 0) : 0;
+      let ptDiag = 0;
+      if (ptsLen >= 2 && path.points) {
+        const xs = path.points.map(p => p[0]);
+        const ys = path.points.map(p => p[1]);
+        ptDiag = Math.sqrt((Math.max(...xs) - Math.min(...xs)) ** 2 + (Math.max(...ys) - Math.min(...ys)) ** 2);
+      }
+      const bbDiag = bounds ? Math.max(1, (bounds.w + bounds.h) / 2) : 1000;
+      const sizeRatio = ptDiag / bbDiag;
+      // Closed + large = contour (thick), small/open = internals (thin)
+      const thick = path.closed && sizeRatio > 0.05 ? 1.8 : sizeRatio < 0.01 ? 0.5 : 1.0;
+      const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
       const highlightSw = sw * 3;
       const dash = LT_PATTERNS[path.lineType ?? 0] || '';
       const dashProps = dash ? { strokeDasharray: dash } : {};
