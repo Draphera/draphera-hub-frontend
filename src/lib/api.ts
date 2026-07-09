@@ -78,6 +78,29 @@ export const adminApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+  async listFounders() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/founders`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ founders: Array<Record<string, unknown>>; total: number }>;
+  },
+  async addFounder(userId: string) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/founders`, {
+      method: 'POST', headers, body: JSON.stringify({ user_id: userId }),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async deleteFounder(userId: string) {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/founders/${userId}`, {
+      method: 'DELETE', headers,
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
   async stats() {
     const headers = await getHeaders();
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/stats`, { headers });

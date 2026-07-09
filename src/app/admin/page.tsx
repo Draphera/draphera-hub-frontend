@@ -42,7 +42,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles';
+type AdminTab = 'uploads' | 'cad' | 'trainer' | 'waitlist' | 'profiles' | 'founders';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -94,6 +94,9 @@ export default function AdminPage() {
   const [profilesOffset, setProfilesOffset] = useState(0);
   const [profilesTotal, setProfilesTotal] = useState(0);
   const [profilesLoading, setProfilesLoading] = useState(false);
+
+  const [founders, setFounders] = useState<Array<Record<string, unknown>>>([]);
+  const [founderAddUserId, setFounderAddUserId] = useState('');
 
   const loadWaitlist = async () => {
     try {
@@ -157,6 +160,34 @@ export default function AdminPage() {
       await adminApi.updateProfile(profileId, { office });
       setMsg(`Office aggiornato: ${office}`);
       await loadProfiles();
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const loadFounders = async () => {
+    try {
+      const data = await adminApi.listFounders();
+      setFounders(data.founders);
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleAddFounder = async () => {
+    if (!founderAddUserId.trim()) return;
+    try {
+      await adminApi.addFounder(founderAddUserId.trim());
+      setFounderAddUserId('');
+      setMsg('Founder aggiunto');
+      await loadFounders();
+      setStats(await adminApi.stats());
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleRemoveFounder = async (userId: string) => {
+    if (!window.confirm('Rimuovere questo founder?')) return;
+    try {
+      await adminApi.deleteFounder(userId);
+      setMsg('Founder rimosso');
+      await loadFounders();
+      setStats(await adminApi.stats());
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
@@ -324,6 +355,9 @@ export default function AdminPage() {
     if (tab === 'profiles') {
       await loadProfiles();
     }
+    if (tab === 'founders') {
+      await loadFounders();
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
@@ -354,6 +388,7 @@ export default function AdminPage() {
     { key: 'trainer', label: t('admin.tab_trainer') },
     { key: 'waitlist', label: 'Waitlist' },
     { key: 'profiles', label: 'Utenti' },
+    { key: 'founders', label: 'Founder' },
   ];
 
   return (
@@ -974,7 +1009,63 @@ export default function AdminPage() {
             </div>
           </div>
         )}
-      </div>
+
+        {activeTab === 'founders' && (
+          <div>
+            <div className="premium-card mb-6">
+              <h3 className="font-display font-bold text-base text-white mb-3">Aggiungi Founder</h3>
+              <div className="flex gap-2">
+                <input
+                className="flex-1 bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50 transition-colors font-mono"
+                value={founderAddUserId}
+                onChange={e => setFounderAddUserId(e.target.value)}
+                placeholder="Incolla UUID utente..."
+              />
+              <button onClick={handleAddFounder} disabled={!founderAddUserId.trim()} className="btn-gold text-xs px-3 py-2 disabled:opacity-40">
+                Aggiungi
+              </button>
+            </div>
+          </div>
+
+          <div className="premium-card overflow-hidden">
+            <h3 className="font-display font-bold text-base text-white mb-3 px-4 pt-4">Fondatori ({founders.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 font-medium">#</th>
+                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Nome</th>
+                    <th className="px-4 py-3 font-medium">User ID</th>
+                    <th className="px-4 py-3 font-medium">Data</th>
+                    <th className="px-4 py-3 font-medium text-right">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {founders.map(f => (
+                    <tr key={String(f.user_id)} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                      <td className="px-4 py-3">
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[9px] font-bold text-drapera-dark">#{String(f.position)}</div>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-white">{String(f.email || '-')}</td>
+                      <td className="px-4 py-3 text-xs">{String(f.full_name || '-')}</td>
+                      <td className="px-4 py-3 text-[10px] font-mono text-gray-500">{String(f.user_id || '').slice(0, 12)}...</td>
+                      <td className="px-4 py-3 text-xs">{f.created_at ? new Date(String(f.created_at)).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button onClick={() => handleRemoveFounder(String(f.user_id))} className="text-red-400 hover:text-red-300 text-xs">Rimuovi</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {founders.length === 0 && (
+                    <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">Nessun founder</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
 }
