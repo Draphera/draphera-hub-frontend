@@ -55,49 +55,52 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
           <div className="h-px bg-drapera-border mt-2.5" />
         </div>
 
-        {cad && cad.cad !== 'unknown' && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-drapera-gold/5 border border-drapera-gold/15">
-            <span className="text-xs text-drapera-gold font-medium">{t('cad.detected')}:</span>
-            <span className="text-xs text-white font-semibold">{t(`cad.${cad.cad}`)}</span>
-            <span className={`ml-auto w-1.5 h-1.5 rounded-full ${cad.confidence === 'high' ? 'bg-green-400' : cad.confidence === 'medium' ? 'bg-yellow-400' : 'bg-gray-500'}`} />
-          </div>
-        )}
-        {ml && (
-          <div className={`px-3 py-2 rounded-lg border ${
-            ml.source === 'no_model'
+        {/* Main CAD result: prefer ML, fallback to rule-based */}
+        <div className={`px-3 py-2 rounded-lg border ${
+          !ml
+            ? 'bg-drapera-gold/5 border-drapera-gold/15'
+            : ml.source === 'no_model'
               ? 'bg-gray-500/5 border-gray-500/15'
               : ml.source === 'ml_rule_agreement'
                 ? 'bg-green-500/5 border-green-500/15'
                 : 'bg-cyan-500/5 border-cyan-500/15'
-          }`}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider"
-                style={{ color: ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
-                {ml.source === 'no_model' ? 'Modello non addestrato' :
-                 ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') :
-                 ml.source === 'rule_based_fallback' ? t('info.ml_fallback') :
-                 t('info.ml_only')}
-              </span>
+        }`}>
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider"
+              style={{ color: !ml ? '#F2C94C' : ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
+              {!ml ? t('cad.detected') :
+               ml.source === 'no_model' ? 'Modello non addestrato' :
+               ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') :
+               ml.source === 'rule_based_fallback' ? t('info.ml_fallback') :
+               t('info.ml_only')}
+            </span>
+            {ml && (
               <span className={`text-xs font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
                 {ml.source === 'no_model' ? '—' : `${((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%`}
               </span>
+            )}
+            {!ml && cad && (
+              <span className={`ml-auto w-1.5 h-1.5 rounded-full ${cad.confidence === 'high' ? 'bg-green-400' : cad.confidence === 'medium' ? 'bg-yellow-400' : 'bg-gray-500'}`} />
+            )}
+          </div>
+          <p className="text-xs text-white font-medium">
+            {ml
+              ? (ml.final_cad === 'general_hpgl' ? t('cad.general_hpgl') : ml.final_cad ?? ml.ml_cad)
+              : (cad ? t(`cad.${cad.cad}`) : t('cad.unknown'))}
+          </p>
+          {ml?.note && (
+            <p className="text-[10px] text-gray-500 mt-1 italic">{ml.note}</p>
+          )}
+          {ml?.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
+            <div className="mt-1.5 space-y-0.5">
+              {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad_, score]) => (
+                <div key={cad_} className="flex justify-between text-[10px]">
+                  <span className="text-gray-500">{cad_}</span>
+                  <span className="text-gray-400 font-mono">{(score * 100).toFixed(0)}%</span>
+                </div>
+              ))}
             </div>
-            <p className="text-xs text-white font-medium">
-              {ml.final_cad === 'general_hpgl' ? t('cad.general_hpgl') : ml.final_cad ?? ml.ml_cad}
-            </p>
-            {ml.note && (
-              <p className="text-[10px] text-gray-500 mt-1 italic">{ml.note}</p>
-            )}
-            {ml.ml_scores && Object.keys(ml.ml_scores).length > 1 && (
-              <div className="mt-1.5 space-y-0.5">
-                {Object.entries(ml.ml_scores).sort(([, a], [, b]) => b - a).slice(0, 3).map(([cad, score]) => (
-                  <div key={cad} className="flex justify-between text-[10px]">
-                    <span className="text-gray-500">{cad}</span>
-                    <span className="text-gray-400 font-mono">{(score * 100).toFixed(0)}%</span>
-                  </div>
-                ))}
-              </div>
-            )}
+          )}
             {onOpenCadModal && (
               <div className="mt-2 pt-2 border-t border-cyan-500/10">
                 <p className="text-[9px] text-gray-600 mb-1">{t('info.cad_error')}</p>
@@ -108,7 +111,6 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
               </div>
             )}
           </div>
-        )}
 
         <div className="space-y-2.5">
           {[
