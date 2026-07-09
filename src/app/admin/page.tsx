@@ -720,11 +720,11 @@ export default function AdminPage() {
                               value={u.cad_id || ''}
                               onChange={async e => {
                                 const val = e.target.value;
+                                setEditingCadUpload(null);
                                 try {
                                   await adminCadApi.setUploadCad(u.id, val);
                                   await load(filterType, false);
                                 } catch {}
-                                setEditingCadUpload(null);
                               }}
                               onBlur={() => setEditingCadUpload(null)}
                               autoFocus
