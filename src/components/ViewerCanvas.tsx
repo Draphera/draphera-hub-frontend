@@ -33,6 +33,9 @@ interface Props {
   snapGrid: boolean;
   viewMode: 'outline' | 'tack' | 'measurement';
   fitKey?: number;
+  penVisibility?: Record<number, boolean>;
+  penColors?: Record<number, string>;
+  flattened?: boolean;
 }
 
 const PAD = 40;
@@ -96,7 +99,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -162,7 +165,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     if (!data) return null;
     return data.paths.map((path, idx) => {
       const pen = path.pen ?? 0;
-      const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
+      if (penVisibility && !penVisibility[pen]) return null;
+      const color = flattened
+        ? (invertColors ? '#00e5ff' : '#F2C94C')
+        : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
       const sw = (path.penWidth ?? 0.25) / effectiveZoom;
       const dash = LT_PATTERNS[path.lineType ?? 0] || '';
       const dashProps = dash ? { strokeDasharray: dash } : {};
@@ -199,13 +205,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   const renderTackMarks = () => {
     if (!data || viewMode !== 'tack') return null;
-    return data.paths.flatMap((path, idx) =>
-      (path.type === 'polyline' || path.type === 'rectangle') && path.points
+    return data.paths.flatMap((path, idx) => {
+      const pen = path.pen ?? 0;
+      if (penVisibility && !penVisibility[pen]) return [];
+      return (path.type === 'polyline' || path.type === 'rectangle') && path.points
         ? path.points.filter((_, pi) => pi % 8 === 0).map((pt, pi) => (
-            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={clampFontSize(1.5 / effectiveZoom, 1, 8)} fill={PEN_COLORS[(path.pen ?? 0) % PEN_COLORS.length]} opacity={0.4} />
+            <circle key={`t${idx}_${pi}`} cx={pt[0]} cy={pt[1]} r={clampFontSize(1.5 / effectiveZoom, 1, 8)} fill={PEN_COLORS[pen % PEN_COLORS.length]} opacity={0.4} />
           ))
-        : []
-    );
+        : [];
+    });
   };
 
   const renderMeasurement = () => {
@@ -267,7 +275,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     if (!data) return null;
     return data.paths.map((path, idx) => {
       const pen = path.pen ?? 0;
-      const color = invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length];
+      if (penVisibility && !penVisibility[pen]) return null;
+      const color = flattened
+        ? (invertColors ? '#00e5ff' : '#F2C94C')
+        : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${miniOffsetX + p[0] * miniScale},${miniOffsetY + p[1] * miniScale}`).join(' ');
         if (path.closed) return <polygon key={idx} points={pts} fill="none" stroke={color} strokeWidth={0.5} />;

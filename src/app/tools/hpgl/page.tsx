@@ -57,6 +57,24 @@ export default function HPGLViewerPage() {
   const [fitKey, setFitKey] = useState(0);
   const [features, setFeatures] = useState<Record<string, unknown> | null>(null);
   const [uploadId, setUploadId] = useState('');
+  const [penVisibility, setPenVisibility] = useState<Record<number, boolean>>({});
+  const [penColors, setPenColors] = useState<Record<number, string>>({});
+  const [flattened, setFlattened] = useState(false);
+
+  // Initialize pen visibility from data
+  useEffect(() => {
+    if (hpglData?.meta?.pens) {
+      const vis: Record<number, boolean> = {};
+      const colors: Record<number, string> = {};
+      const DEFAULT_PALETTE = ['#F2C94C','#00E5FF','#FF4081','#00E676','#FF9100','#448AFF','#E040FB','#FF1744','#FFFFFF','#69F0AE','#FFD740','#40C4FF'];
+      for (const p of hpglData.meta.pens) {
+        vis[p] = true;
+        colors[p] = DEFAULT_PALETTE[p % DEFAULT_PALETTE.length];
+      }
+      setPenVisibility(vis);
+      setPenColors(colors);
+    }
+  }, [hpglData]);
   const [msg, setMsg] = useState('');
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
   const [showCadModal, setShowCadModal] = useState(false);
@@ -238,9 +256,17 @@ export default function HPGLViewerPage() {
         zoom={zoom} onZoomChange={setZoom}
         unit={unit} onUnitChange={setUnit}
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
+        pens={hpglData?.meta?.pens ?? []}
+        penVisibility={penVisibility}
+        onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
+        penColors={penColors}
+        onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
+        flattened={flattened}
+        onToggleFlattened={() => setFlattened(v => !v)}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
-        <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} />
+        <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+          penVisibility={penVisibility} penColors={penColors} flattened={flattened} />
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} viewMode={viewMode} onViewModeChange={setViewMode} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} />
