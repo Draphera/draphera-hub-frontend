@@ -44,6 +44,8 @@ interface MeasureResultInfo {
   value: number;
 }
 
+const PALETTE = ['#F2C94C','#00E5FF','#FF4081','#00E676','#FF9100','#448AFF','#E040FB','#FF1744','#FFFFFF','#69F0AE','#FFD740','#40C4FF'];
+
 interface Props {
   meta: HPGLMeta | null;
   fileName: string;
@@ -54,11 +56,18 @@ interface Props {
   userSelectedCad?: string | null;
   selectedPath?: SelectedPathInfo | null;
   measureResults?: MeasureResultInfo[];
+  pens?: number[];
+  penVisibility?: Record<number, boolean>;
+  onPenToggle?: (pen: number) => void;
+  penColors?: Record<number, string>;
+  onPenColorChange?: (pen: number, color: string) => void;
+  flattened?: boolean;
+  onToggleFlattened?: () => void;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -185,6 +194,41 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {pens && pens.length > 0 && (
+          <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] text-cyan-400 font-semibold uppercase tracking-wider">Penne</span>
+              <button onClick={onToggleFlattened}
+                className={`text-[9px] px-2 py-0.5 rounded font-medium transition-colors ${
+                  flattened ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/20' : 'text-gray-500 border border-drapera-border hover:text-white'
+                }`}>
+                {flattened ? 'Unificate' : 'Separate'}
+              </button>
+            </div>
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {pens.map(p => {
+                const visible = penVisibility?.[p] ?? true;
+                const color = penColors?.[p] ?? PALETTE[p % PALETTE.length];
+                return (
+                  <div key={p} className="flex items-center gap-2 py-1">
+                    <button onClick={() => onPenToggle?.(p)}
+                      className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                        visible ? 'bg-cyan-500/20 border-cyan-500/40' : 'bg-drapera-dark border-drapera-border'
+                      }`}>
+                      {visible && <svg className="w-2 h-2 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </button>
+                    <span className="text-[9px] text-gray-400 w-6 font-mono">SP{p}</span>
+                    <input type="color" value={color}
+                      onChange={e => onPenColorChange?.(p, e.target.value)}
+                      className="w-4 h-4 rounded cursor-pointer border-0 bg-transparent p-0 shrink-0" />
+                    <div className="flex-1 h-2 rounded" style={{ backgroundColor: visible ? color : 'transparent', opacity: visible ? 1 : 0.15 }} />
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

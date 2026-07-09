@@ -476,7 +476,11 @@ export default function HPGLViewerPage() {
         )}
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} measureResults={measureResults} />
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} measureResults={measureResults}
+        pens={hpglData?.meta?.pens ?? []}
+        penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
+        penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
+        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

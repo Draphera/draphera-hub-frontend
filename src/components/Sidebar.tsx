@@ -1,9 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
-
-const PALETTE = ['#F2C94C','#00E5FF','#FF4081','#00E676','#FF9100','#448AFF','#E040FB','#FF1744','#FFFFFF','#69F0AE','#FFD740','#40C4FF'];
 
 interface SidebarProps {
   onFileUpload: (file: File) => void;
@@ -141,48 +138,6 @@ export default function Sidebar({
             )}
           </div>
         </div>
-
-        {/* Pen layers */}
-        {pens && pens.length > 0 && (
-          <>
-            <div className="h-px bg-drapera-border" />
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-drapera-steel-light">Penne</h3>
-                <button onClick={onToggleFlattened}
-                  className={`text-[9px] px-2 py-0.5 rounded font-medium transition-colors ${
-                    flattened ? 'bg-drapera-gold/15 text-drapera-gold border border-drapera-gold/20' : 'text-gray-500 border border-drapera-border hover:text-white'
-                  }`}>
-                  {flattened ? 'Unificate' : 'Separate'}
-                </button>
-              </div>
-              <div className="space-y-1 max-h-40 overflow-y-auto">
-                {pens.map(p => {
-                  const visible = penVisibility?.[p] ?? true;
-                  const color = penColors?.[p] ?? PALETTE[p % PALETTE.length];
-                  return (
-                    <div key={p} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
-                      <button onClick={() => onPenToggle?.(p)}
-                        className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                          visible ? 'bg-drapera-gold/20 border-drapera-gold/40' : 'bg-drapera-dark border-drapera-border'
-                        }`}>
-                        {visible && <svg className="w-2.5 h-2.5 text-drapera-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                      </button>
-                      <span className="text-[10px] text-gray-400 w-8 font-mono">SP{p}</span>
-                      <input type="color"
-                        value={color}
-                        onChange={e => onPenColorChange?.(p, e.target.value)}
-                        className="w-5 h-5 rounded cursor-pointer border-0 bg-transparent p-0"
-                        disabled={!visible}
-                      />
-                      <div className="flex-1 h-3 rounded" style={{ backgroundColor: visible ? color : 'transparent', opacity: visible ? 1 : 0.2 }} />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </>
-        )}
 
       </div>
     </aside>
