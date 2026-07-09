@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from '@/lib/i18n';
 
 interface HPGLMeta {
@@ -59,6 +60,19 @@ interface Props {
 }
 
 const APP_VERSION = '1.0.0';
+
+function DetailsPanel({ title, defaultOpen, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  return (
+    <div>
+      <button onClick={() => setOpen(v => !v)} className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+        {title}
+        <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      {open && <div className="mt-1 px-2">{children}</div>}
+    </div>
+  );
+}
 
 export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults }: Props) {
   const { t } = useTranslation();
@@ -123,6 +137,35 @@ export default function InfoPanel({ meta, fileName, viewMode, onViewModeChange, 
             </div>
           )}
           </div>
+
+        {/* Feature explorer */}
+        {features && (
+          <DetailsPanel title="Feature estratte" defaultOpen={false}>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {Object.entries(features).filter(([k]) => k !== 'command_histogram' && k !== 'path_signature').sort().map(([k, v]) => (
+                <div key={k} className="flex justify-between text-[9px]">
+                  <span className="text-gray-500 truncate max-w-[120px]">{k}</span>
+                  <span className="text-gray-300 font-mono">{typeof v === 'number' ? v.toFixed(4) : String(v)}</span>
+                </div>
+              ))}
+            </div>
+          </DetailsPanel>
+        )}
+
+        {/* CAD status message */}
+        {(ml || userSelectedCad) && (
+          <div className="px-3 py-2 rounded-lg bg-drapera-gold/5 border border-drapera-gold/10 text-[10px] text-gray-400 leading-relaxed">
+            {userSelectedCad ? (
+              <>Questo file è stato assegnato a <strong className="text-white">{userSelectedCad}</strong>.</>
+            ) : ml?.source === 'no_model' ? (
+              <>Modello non addestrato per questo CAD. Usa il menu per correggere.</>
+            ) : ml?.final_cad ? (
+              <>Rilevato: <strong className="text-white">{ml.final_cad}</strong> con confidence <strong className="text-white">{((ml.final_confidence ?? 0) * 100).toFixed(0)}%</strong>.
+              {ml.final_confidence && ml.final_confidence < 0.65 && <> Se non è corretto, seleziona il CAD dal menu.</>}
+              </>
+            ) : null}
+          </div>
+        )}
 
         {selectedPath && (
           <div className="px-3 py-2 rounded-lg bg-cyan-500/5 border border-cyan-500/15">
