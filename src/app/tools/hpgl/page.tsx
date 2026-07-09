@@ -72,6 +72,7 @@ export default function HPGLViewerPage() {
   const [measurePoints, setMeasurePoints] = useState<Array<{ x: number; y: number }>>([]);
   const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number }>>([]);
   const [showNotches, setShowNotches] = useState(false);
+  const [filled, setFilled] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -338,6 +339,8 @@ export default function HPGLViewerPage() {
         onToggleFlattened={() => setFlattened(v => !v)}
         showNotches={showNotches}
         onToggleNotches={() => setShowNotches(v => !v)}
+        filled={filled}
+        onToggleFilled={() => setFilled(v => !v)}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         {/* File tabs */}
@@ -451,7 +454,7 @@ export default function HPGLViewerPage() {
             penVisibility={penVisibility} penColors={penColors} flattened={flattened}
             selectedPathIndex={selectedPath?.index ?? -1}
             measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}
-            onCanvasClick={handleCanvasClick} showNotches={showNotches}
+            onCanvasClick={handleCanvasClick} showNotches={showNotches} filled={filled}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];

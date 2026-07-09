@@ -97,6 +97,7 @@ interface MeasureResult {
 
 interface Props {
   data: HPGLData | null;
+  filled?: boolean;
   showNotches?: boolean;
   zoom: number;
   onZoomChange?: (z: number) => void;
@@ -176,7 +177,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -259,11 +260,12 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       }
       const bbDiag = bounds ? Math.max(1, (bounds.w + bounds.h) / 2) : 1000;
       const sizeRatio = ptDiag / bbDiag;
-      // Closed + large = contour (thick), small/open = internals (thin)
-      const thick = path.closed && sizeRatio > 0.05 ? 1.8 : sizeRatio < 0.01 ? 0.5 : 1.0;
+      // Closed + large = contour (thick, solid), small/open = internals (thin)
+      const isContour = path.closed && sizeRatio > 0.05;
+      const thick = isContour ? 1.8 : sizeRatio < 0.01 ? 0.5 : 1.0;
       const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
       const highlightSw = sw * 3;
-      const dash = LT_PATTERNS[path.lineType ?? 0] || '';
+      const dash = isContour ? '' : (LT_PATTERNS[path.lineType ?? 0] || '');
       const dashProps = dash ? { strokeDasharray: dash } : {};
 
       const commonProps = {
@@ -294,7 +296,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
         const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          elements.push(<polygon key={idx} points={pts} fill={fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
+          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.08)' : fillColor} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
         } else {
           elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
         }
