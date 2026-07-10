@@ -43,8 +43,12 @@ export default function Sidebar({
 }: SidebarProps) {
   const { t } = useTranslation();
 
-  const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg', '.iso', '.dxf'];
-  const isValidFile = (f: File) => VALID_EXTENSIONS.some(ext => f.name.toLowerCase().endsWith(ext));
+  const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg'];
+  const isValidFile = (f: File) => {
+    const name = f.name.toLowerCase();
+    // Accept known HPGL extensions OR files with no extension at all
+    return VALID_EXTENSIONS.some(ext => name.endsWith(ext)) || !name.includes('.');
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -70,7 +74,7 @@ export default function Sidebar({
             </svg>
             <p className="text-[11px] text-drapera-steel-light group-hover:text-gray-300 transition-colors">{t('sidebar.upload_hint')}</p>
           </div>
-          <input id="hpgl-upload" type="file" accept=".hpgl,.plt,.hpg,.iso,.dxf" onChange={handleInput} className="hidden" />
+          <input id="hpgl-upload" type="file" onChange={handleInput} className="hidden" />
         </div>
 
         <div className="h-px bg-drapera-border" />
