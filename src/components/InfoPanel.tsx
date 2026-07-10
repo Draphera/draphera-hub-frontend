@@ -244,9 +244,9 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
           )}
           {showOcr && (
             <button onClick={onOcr} disabled={ocrLoading}
-              className="ml-auto flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-medium transition-all bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 disabled:opacity-40">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-              {ocrLoading ? '...' : ocrTextsCount ? `OCR (${ocrTextsCount})` : 'OCR'}
+              className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold transition-all bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 disabled:opacity-40">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              {ocrLoading ? 'OCR...' : ocrTextsCount ? `OCR (${ocrTextsCount})` : 'OCR'}
             </button>
           )}
         </div>
