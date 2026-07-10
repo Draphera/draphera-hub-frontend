@@ -86,37 +86,19 @@ function detectNotchesFromPaths(paths: HPGLPath[]): NotchInfo[] {
   return notches;
 }
 
-/** Detect the placement bounding box: bounds of the largest closed path (the main piece) */
+/** Detect the placement bounding box: overall extent of all content (placement height + header width) */
 function detectPlacementBounds(paths: HPGLPath[]): { minX: number; minY: number; maxX: number; maxY: number } | null {
-  let best: { minX: number; minY: number; maxX: number; maxY: number; area: number } | null = null;
-
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  let found = false;
   for (const p of paths) {
     const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
-    if (!pts || pts.length < 3) continue;
-    const isClosed = Math.abs(pts[0][0] - pts[pts.length - 1][0]) + Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 5;
-    if (!isClosed) continue;
-    const xs = pts.map(pt => pt[0]);
-    const ys = pts.map(pt => pt[1]);
-    const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
-    if (!best || area > best.area) {
-      best = { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys), area };
+    if (pts) for (const [x, y] of pts) {
+      if (x < minX) minX = x; if (y < minY) minY = y;
+      if (x > maxX) maxX = x; if (y > maxY) maxY = y;
+      found = true;
     }
   }
-
-  if (!best) {
-    // Fallback: overall data bounds
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const p of paths) {
-      const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
-      if (pts) for (const [x, y] of pts) {
-        if (x < minX) minX = x; if (y < minY) minY = y;
-        if (x > maxX) maxX = x; if (y > maxY) maxY = y;
-      }
-    }
-    if (minX !== Infinity) best = { minX, minY, maxX, maxY, area: 0 };
-  }
-
-  return best ? { minX: best.minX, minY: best.minY, maxX: best.maxX, maxY: best.maxY } : null;
+  return found ? { minX, minY, maxX, maxY } : null;
 }
 
 interface MeasurePoint {
@@ -275,6 +257,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   const boundRectIdx = useMemo(() => {
     if (!data) return -1;
+    const overall = detectPlacementBounds(data.paths);
+    if (!overall) return -1;
+    const overallArea = (overall.maxX - overall.minX) * (overall.maxY - overall.minY);
+    if (overallArea <= 0) return -1;
     let bestIdx = -1;
     let bestArea = 0;
     for (let i = 0; i < data.paths.length; i++) {
@@ -288,6 +274,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
       if (area > bestArea) { bestArea = area; bestIdx = i; }
     }
+    // Skip only if the largest closed path is ≥60% of the overall area (i.e. it's the outer bounding rect)
+    if (bestIdx === -1 || bestArea < overallArea * 0.6) return -1;
     return bestIdx;
   }, [data]);
 
@@ -572,7 +560,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               stroke="#00E5FF"
               strokeWidth={showBounds ? 1.5 : 0}
               rx={1}
-              strokeDasharray="6 3"
               style={{ pointerEvents: 'none', transition: 'stroke-width 0.15s' }} />
           )}
           </>
