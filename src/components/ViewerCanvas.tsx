@@ -148,6 +148,9 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
+  ocrTexts?: Array<{ text: string; x: number; y: number; width: number; height: number; confidence: number }>;
+  ocrLoading?: boolean;
+  onOcr?: () => void;
 }
 
 const PAD = 40;
@@ -271,7 +274,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, ocrTexts, ocrLoading, onOcr }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -835,6 +838,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               <>{gridLines}{renderPaths()}</>
             )}
             {renderMeasurement()}
+            {/* OCR recognized text overlays */}
+            {ocrTexts?.map((t, i) => (
+              <g key={`ocr_${i}`}>
+                <rect x={t.x} y={t.y} width={t.width} height={t.height}
+                  fill="rgba(16,255,160,0.08)" stroke={t.confidence > 0.8 ? '#10FFA0' : '#FFB800'} strokeWidth={1.5 / effectiveZoom}
+                  strokeDasharray={t.confidence > 0.8 ? '' : '3 2'} rx={1} />
+                <text x={t.x + t.width / 2} y={t.y - 3} textAnchor="middle"
+                  fill={t.confidence > 0.8 ? '#10FFA0' : '#FFB800'} fontSize={Math.max(8, Math.min(14, t.height * 0.8))}
+                  fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
+                  {t.text}
+                </text>
+              </g>
+            ))}
             {/* Selection rectangle during drag */}
             {dragRect && (
               <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
@@ -989,6 +1005,16 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
               <span className="text-[13px]">↺</span> Reset vista
             </button>
+            {onOcr && (
+              <>
+                <div className="h-px bg-drapera-border/60 my-1 mx-2" />
+                <button onClick={() => { onOcr?.(); setCtxMenu(null); }} disabled={ocrLoading}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-green-400 hover:bg-green-500/10 transition-colors disabled:opacity-40">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  {ocrLoading ? 'OCR...' : 'Riconosci testi (OCR)'}
+                </button>
+              </>
+            )}
           </div>
         </>
       )}

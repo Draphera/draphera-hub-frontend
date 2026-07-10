@@ -94,6 +94,8 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(false);
   const [flipY, setFlipY] = useState(false);
+  const [ocrTexts, setOcrTexts] = useState<Array<{ text: string; x: number; y: number; width: number; height: number; confidence: number }>>();
+  const [ocrLoading, setOcrLoading] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -296,6 +298,18 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
   const handleFlipX = useCallback(() => setFlipX(v => !v), []);
   const handleFlipY = useCallback(() => setFlipY(v => !v), []);
   const handleResetTransform = useCallback(() => { setRotation(0); setFlipX(false); setFlipY(false); }, []);
+
+  const handleOcr = useCallback(async () => {
+    if (!rawFile) return;
+    setOcrLoading(true);
+    try {
+      const result = await hpglApi.ocr(rawFile);
+      setOcrTexts(result.texts ?? []);
+      if (result.texts?.length > 0) setMsg(`${result.texts.length} testi riconosciuti`);
+      else setMsg('Nessun testo riconosciuto');
+    } catch { setMsg('Errore OCR'); }
+    setOcrLoading(false);
+  }, [rawFile]);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -525,6 +539,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         onToggleBounds={() => setShowBounds(v => !v)}
         rotation={rotation} onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
         flipX={flipX} onFlipX={handleFlipX} flipY={flipY} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
+        ocrLoading={ocrLoading} ocrTextsCount={ocrTexts?.length ?? 0} onOcr={handleOcr}
+        formatFamily={hpglData?.formatInfo?.family}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         {/* File tabs */}
@@ -645,6 +661,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             rotation={rotation} flipX={flipX} flipY={flipY}
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
+            ocrTexts={ocrTexts} ocrLoading={ocrLoading} onOcr={handleOcr}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
