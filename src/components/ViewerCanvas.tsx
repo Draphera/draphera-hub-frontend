@@ -273,17 +273,35 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   }
 
+  const boundRectIdx = useMemo(() => {
+    if (!data) return -1;
+    let bestIdx = -1;
+    let bestArea = 0;
+    for (let i = 0; i < data.paths.length; i++) {
+      const p = data.paths[i];
+      const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
+      if (!pts || pts.length < 3) continue;
+      const isClosed = Math.abs(pts[0][0] - pts[pts.length - 1][0]) + Math.abs(pts[0][1] - pts[pts.length - 1][1]) < 5;
+      if (!isClosed) continue;
+      const xs = pts.map(pt => pt[0]);
+      const ys = pts.map(pt => pt[1]);
+      const area = (Math.max(...xs) - Math.min(...xs)) * (Math.max(...ys) - Math.min(...ys));
+      if (area > bestArea) { bestArea = area; bestIdx = i; }
+    }
+    return bestIdx;
+  }, [data]);
+
   const notches = useMemo(() => data ? detectNotchesFromPaths(data.paths) : [], [data]);
   const placementBounds = useMemo(() => {
     if (!data) return null;
     const pb = detectPlacementBounds(data.paths);
-    if (pb) console.log('Placement bounds:', pb);
     return pb;
   }, [data]);
 
   const renderPaths = () => {
     if (!data) return null;
     return data.paths.map((path, idx) => {
+      if (idx === boundRectIdx) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
       const isSelected = selectedPathIndex === idx;
@@ -363,6 +381,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const renderTackMarks = () => {
     if (!data || viewMode !== 'tack') return null;
     return data.paths.flatMap((path, idx) => {
+      if (idx === boundRectIdx) return [];
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return [];
       return (path.type === 'polyline' || path.type === 'rectangle') && path.points
@@ -494,6 +513,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const renderMiniPaths = () => {
     if (!data) return null;
     return data.paths.map((path, idx) => {
+      if (idx === boundRectIdx) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
       const color = flattened
@@ -549,10 +569,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
               height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
               fill="none"
-              stroke={showBounds ? '#00E5FF' : 'transparent'}
-              strokeWidth={showBounds ? 1 : 0}
+              stroke="#00E5FF"
+              strokeWidth={showBounds ? 1.5 : 0}
               rx={1}
-              style={{ pointerEvents: 'none' }} />
+              strokeDasharray="6 3"
+              style={{ pointerEvents: 'none', transition: 'stroke-width 0.15s' }} />
           )}
           </>
         ) : (
