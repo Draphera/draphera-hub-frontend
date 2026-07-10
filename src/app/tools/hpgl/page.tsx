@@ -660,7 +660,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             ocrTexts={ocrTexts} ocrLoading={ocrLoading} onOcr={handleOcr}
-            showOcr={!!hpglData && (hpglData.meta.labels === 0)}
+            showOcr={!!hpglData}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -691,7 +691,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
         flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
-        showOcr={!!hpglData && (hpglData.meta.labels === 0)}
+        showOcr={!!hpglData}
         ocrLoading={ocrLoading} ocrTextsCount={ocrTexts?.length ?? 0} onOcr={handleOcr} />
 
       {/* CAD Selection Modal */}
