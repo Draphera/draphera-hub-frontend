@@ -446,6 +446,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           <g key={`guide-${i}`}>
             <line x1={-1e6} y1={p.y} x2={1e6} y2={p.y} stroke="rgba(255,107,107,0.15)" strokeWidth={sw} strokeDasharray="4 4" />
             <line x1={p.x} y1={-1e6} x2={p.x} y2={1e6} stroke="rgba(255,107,107,0.15)" strokeWidth={sw} strokeDasharray="4 4" />
+            <circle cx={p.x} cy={p.y} r={clampFontSize(4 / effectiveZoom, 3, 8)} fill="#ff6b6b" stroke="#fff" strokeWidth={sw * 0.5} />
           </g>
         ))}
 
@@ -468,6 +469,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               stroke="#ff6b6b" strokeWidth={sw} strokeDasharray="5 3" />
             <line x1={measurePoints[1].x} y1={measurePoints[1].y} x2={measurePoints[2].x} y2={measurePoints[2].y}
               stroke="#ff6b6b" strokeWidth={sw} strokeDasharray="5 3" />
+            <circle cx={measurePoints[1].x} cy={measurePoints[1].y} r={clampFontSize(4 / effectiveZoom, 3, 8)} fill="#ff6b6b" />
           </g>
         )}
 
@@ -477,19 +479,23 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           const midY = r.points.reduce((s, p) => s + p.y, 0) / r.points.length;
           return (
             <g key={`result-${i}`}>
+              {r.points.map((p, j) => {
+                const sz = 4;
+                return <rect key={j} x={p.x - sz / 2} y={p.y - sz / 2} width={sz} height={sz} fill="none" stroke="#ff6b6b" strokeWidth={1.2} opacity={0.8} />;
+              })}
               {r.type === 'distance' && r.points.length === 2 && (
                 <line x1={r.points[0].x} y1={r.points[0].y} x2={r.points[1].x} y2={r.points[1].y}
-                  stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+                  stroke="#ff6b6b" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
               )}
               {r.type === 'angle' && r.points.length === 3 && (
                 <>
                   <line x1={r.points[1].x} y1={r.points[1].y} x2={r.points[0].x} y2={r.points[0].y}
-                    stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+                    stroke="#ff6b6b" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
                   <line x1={r.points[1].x} y1={r.points[1].y} x2={r.points[2].x} y2={r.points[2].y}
-                    stroke="#00e5ff" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
+                    stroke="#ff6b6b" strokeWidth={sw * 0.7} strokeDasharray="4 3" opacity={0.7} />
                 </>
               )}
-              <text x={midX} y={midY - 10} textAnchor="middle" fill="#00e5ff" fontSize={fs} fontFamily="Inter" fontWeight="bold">
+              <text x={midX} y={midY - 10} textAnchor="middle" fill="#ff6b6b" fontSize={fs} fontFamily="Inter" fontWeight="bold">
                 {r.type === 'distance' ? `${r.value.toFixed(1)}` : `${r.value.toFixed(1)}°`}
               </text>
             </g>
@@ -497,35 +503,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         })}
       </g>
     );
-  };
-
-  const renderMeasureMarkers = () => {
-    if (viewMode !== 'measurement') return null;
-    const z = effectiveZoom, px = pan.x, py = pan.y;
-    const SQ = 5, CR = 3;
-    const elements: React.ReactNode[] = [];
-
-    // Active measurement points (red squares)
-    measurePoints?.forEach((p, i) => {
-      const sx = p.x * z + px, sy = p.y * z + py;
-      elements.push(
-        <rect key={`mp_${i}`} x={sx - SQ / 2} y={sy - SQ / 2}
-          width={SQ} height={SQ} fill="none" stroke="#ff6b6b" strokeWidth={1.5} />
-      );
-    });
-
-    // Completed result points (cyan circles)
-    measureResults?.forEach((r, ri) => {
-      r.points.forEach((p, pi) => {
-        const sx = p.x * z + px, sy = p.y * z + py;
-        elements.push(
-          <circle key={`mr_${ri}_${pi}`} cx={sx} cy={sy} r={CR}
-            fill="none" stroke="#00e5ff" strokeWidth={1.2} />
-        );
-      });
-    });
-
-    return <g>{elements}</g>;
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -631,7 +608,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {renderMeasurement()}
           </g>
           {renderTackMarks()}
-          {renderMeasureMarkers()}
           {placementBounds && (
             <rect
               x={pan.x + placementBounds.minX * effectiveZoom}
