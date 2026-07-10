@@ -389,8 +389,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   const renderTackMarks = () => {
     if (!data || viewMode !== 'tack') return null;
-    const markerSize = clampFontSize(2.5 / effectiveZoom, 2, 6);
+    const SQ = 4; // fixed 4px square
+    const CR = 3; // fixed 3px circle radius
     const elements: React.ReactNode[] = [];
+    const z = effectiveZoom, px = pan.x, py = pan.y;
     data.paths.forEach((path, idx) => {
       if (idx === boundRectIdx) return;
       const pen = path.pen ?? 0;
@@ -399,34 +401,31 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if (!pts || pts.length < 2) return;
 
       for (let i = 0; i < pts.length; i++) {
-        const p = pts[i];
+        const sx = pts[i][0] * z + px, sy = pts[i][1] * z + py;
         if (i === 0 || i === pts.length - 1) {
-          // Endpoints → red square
           elements.push(
-            <rect key={`c_${idx}_${i}`} x={p[0] - markerSize * 0.5} y={p[1] - markerSize * 0.5}
-              width={markerSize} height={markerSize} fill="#ff4444" />
+            <rect key={`c_${idx}_${i}`} x={sx - SQ / 2} y={sy - SQ / 2}
+              width={SQ} height={SQ} fill="none" stroke="#ff4444" strokeWidth={1.2} />
           );
         } else {
           const prev = pts[i - 1], next = pts[i + 1];
-          const dx1 = p[0] - prev[0], dy1 = p[1] - prev[1];
-          const dx2 = next[0] - p[0], dy2 = next[1] - p[1];
+          const dx1 = pts[i][0] - prev[0], dy1 = pts[i][1] - prev[1];
+          const dx2 = next[0] - pts[i][0], dy2 = next[1] - pts[i][1];
           const len1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
           const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
           if (len1 < 0.5 || len2 < 0.5) continue;
           const dot = (dx1 * dx2 + dy1 * dy2) / (len1 * len2);
           const angle = Math.acos(Math.max(-1, Math.min(1, dot))) * 180 / Math.PI;
-          if (angle < 20) continue; // nearly collinear, skip
+          if (angle < 20) continue;
           if (angle < 60) {
-            // Gentle bend → curve point → blue circle
             elements.push(
-              <circle key={`c_${idx}_${i}`} cx={p[0]} cy={p[1]} r={markerSize * 0.6}
-                fill="none" stroke="#4488ff" strokeWidth={Math.max(0.5, markerSize * 0.3)} />
+              <circle key={`c_${idx}_${i}`} cx={sx} cy={sy} r={CR}
+                fill="none" stroke="#4488ff" strokeWidth={1} />
             );
           } else {
-            // Sharp bend → corner → red square
             elements.push(
-              <rect key={`c_${idx}_${i}`} x={p[0] - markerSize * 0.4} y={p[1] - markerSize * 0.4}
-                width={markerSize * 0.8} height={markerSize * 0.8} fill="#ff4444" />
+              <rect key={`c_${idx}_${i}`} x={sx - SQ / 2} y={sy - SQ / 2}
+                width={SQ} height={SQ} fill="none" stroke="#ff4444" strokeWidth={1.2} />
             );
           }
         }
@@ -605,9 +604,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {gridLines}
             {renderPaths()}
-            {renderTackMarks()}
             {renderMeasurement()}
           </g>
+          {renderTackMarks()}
           {placementBounds && (
             <rect
               x={pan.x + placementBounds.minX * effectiveZoom}
