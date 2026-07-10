@@ -548,7 +548,7 @@ export default function HPGLViewerPage() {
         )}
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} measureResults={measureResults}
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
@@ -614,6 +614,69 @@ export default function HPGLViewerPage() {
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
         onExportPng={handleExportPng} onExportSvg={handleExportSvg} hasFile={!!hpglData}
       />
+
+      {/* Measurement modal */}
+      {measureMode !== 'off' && (
+        <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[360px] rounded-xl border border-drapera-border bg-drapera-midnight shadow-2xl shadow-black/40"
+          style={{ backdropFilter: 'blur(12px)' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-b border-drapera-border/60">
+            <span className="text-[11px] font-semibold text-red-400 uppercase tracking-wider">Misure</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] text-gray-500">{measureResults.length} risultati</span>
+              <button onClick={() => { setMeasureResults([]); setMeasurePoints([]); setMeasureMode('off'); setViewMode('outline'); }}
+                className="text-gray-500 hover:text-white transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center gap-2 px-4 py-2 border-b border-drapera-border/40">
+            <div className="flex gap-0.5">
+              <button onClick={() => setMeasureMode('distance')}
+                className={`px-3 py-1 rounded text-[10px] font-medium transition-colors ${measureMode === 'distance' ? 'bg-red-500/20 text-red-300' : 'text-gray-500 hover:text-white'}`}>Distanza</button>
+              <button onClick={() => setMeasureMode('angle')}
+                className={`px-3 py-1 rounded text-[10px] font-medium transition-colors ${measureMode === 'angle' ? 'bg-red-500/20 text-red-300' : 'text-gray-500 hover:text-white'}`}>Angolo</button>
+            </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="text-[9px] text-gray-500">Snap</span>
+              <button onClick={() => setSnapMeasure(v => !v)}
+                className={`w-6 h-3 rounded-full transition-colors relative ${snapMeasure ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                <span className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-transform ${snapMeasure ? 'translate-x-[13px]' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Results list */}
+          {measureResults.length > 0 && (
+            <div className="px-4 py-2 max-h-40 overflow-y-auto space-y-1">
+              {measureResults.map((r, i) => (
+                <div key={i} className="flex justify-between items-center py-1 px-2 rounded bg-white/5">
+                  <span className="text-[10px] text-gray-400">
+                    {r.type === 'distance' ? 'Distanza' : 'Angolo'} <span className="text-gray-600">#{i + 1}</span>
+                  </span>
+                  <span className="text-[11px] text-white font-mono font-medium">
+                    {r.type === 'distance' ? `${r.value.toFixed(1)}` : `${r.value.toFixed(1)}°`}
+                  </span>
+                </div>
+              ))}
+              {measureResults.length > 1 && (
+                <button onClick={() => setMeasureResults([])}
+                  className="w-full mt-1 py-1 text-[9px] text-gray-500 hover:text-red-400 transition-colors">
+                  Cancella tutte
+                </button>
+              )}
+            </div>
+          )}
+          {measureResults.length === 0 && (
+            <div className="px-4 py-3 text-center text-[10px] text-gray-500">
+              Clicca sul canvas per aggiungere punti
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }
