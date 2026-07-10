@@ -32,7 +32,7 @@ interface HPGLData {
   paths: HPGLPath[];
   meta: {
     total_paths: number; polylines: number; arcs: number; circles: number;
-    rectangles: number; labels: number;
+    rectangles: number; labels: number; labelChars?: number;
     dimensions: { width: number; height: number };
     pens: number[];
   };
@@ -41,6 +41,14 @@ interface HPGLData {
   ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number>; final_cad?: string; final_confidence?: number; source?: string };
   features?: Record<string, unknown>;
   iw?: [number, number, number, number] | null;
+  isLectra?: boolean;
+  formatInfo?: {
+    family: string;
+    variant: string;
+    astmStandard?: string | null;
+    comments: string[];
+    isLectra?: boolean;
+  };
 }
 
 const APP_VERSION = '1.0.0';
@@ -152,13 +160,25 @@ export default function HPGLViewerPage() {
     } catch { setMsg('Errore salvataggio correzione'); }
   }, [features, uploadId]);
 
-  // Auto-show modal when ML is uncertain or no_model
+  // Auto-show modal when ML is uncertain or no_model; auto-assign Lectra if detected
   const ml = hpglData?.ml;
   useEffect(() => {
-    if (hpglData && ml && !userSelectedCad && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
+    if (!hpglData) return;
+
+    const isLectra = hpglData.isLectra || hpglData.formatInfo?.isLectra ||
+      fileName.toUpperCase().includes('LECTRA');
+
+    if (isLectra) {
+      if (!userSelectedCad && features) {
+        handleCorrectCad('lectra');
+      }
+      return;
+    }
+
+    if (ml && !userSelectedCad && features && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
       setShowCadModal(true);
     }
-  }, [hpglData, ml, userSelectedCad]);
+  }, [hpglData, ml, userSelectedCad, features, handleCorrectCad, fileName]);
 
   const handleCanvasClick = useCallback((x: number, y: number) => {
     if (measureMode === 'off') return;
@@ -319,7 +339,18 @@ export default function HPGLViewerPage() {
       }
       const w = minX === Infinity ? 400 : maxX - minX || 400;
       const h = minY === Infinity ? 300 : maxY - minY || 300;
-      setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: paths.filter(p => p.type === 'label').length, dimensions: { width: w, height: h }, pens } });
+      const labelCount = paths.filter(p => p.type === 'label').length;
+      const labelChars = paths.filter(p => p.type === 'label').reduce((sum, p) => sum + ((p as any).text?.length ?? 0), 0);
+      const coMatches = Array.from(cleaned.matchAll(/CO"([^"]*)"/g));
+      const coComments = coMatches.map(m => m[1]);
+      const hasLECTRA = coComments.some(c => c.toUpperCase().includes('LECTRA'));
+      const hasASTM = coComments.some(c => c.toUpperCase().includes('ASTM'));
+      const astmStd = coComments.map(c => c.match(/ASTM\s*([A-Z0-9\-]+)/i)).find(Boolean)?.[0]?.trim();
+      let ff: string, fv: string;
+      if (labelCount > 0 && hasASTM) { ff = 'astm'; fv = 'hpgl_astm'; }
+      else if (labelCount > 0) { ff = 'hpgl2'; fv = 'hpgl_2'; }
+      else { ff = 'hpgl'; fv = 'hpgl_1'; }
+      setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: labelCount, labelChars, dimensions: { width: w, height: h }, pens }, isLectra: hasLECTRA, formatInfo: { family: ff, variant: fv, astmStandard: astmStd ?? null, comments: coComments, isLectra: hasLECTRA } });
       } catch { /* client-side parse also failed */ }
       setParsing(false);
     }
@@ -515,6 +546,7 @@ export default function HPGLViewerPage() {
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null} measureResults={measureResults}
+        formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}

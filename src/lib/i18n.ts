@@ -32,6 +32,7 @@ const it = {
     'viewer.scale': 'Scale',
 
     'info.title': 'Info Panel',
+    'info.format': 'Formato',
     'info.file_name': 'File Name',
     'info.dimensions': 'Dimensions',
     'info.total_paths': 'Total Paths',
@@ -65,6 +66,7 @@ const it = {
 
     'info.rectangles': 'Rettangoli',
     'info.labels': 'Etichette',
+    'info.label_chars': 'Caratteri',
     'info.pens': 'Penne',
     'info.ml_agreement': 'ML + Regole',
     'info.ml_fallback': 'Regole (ML basso)',
@@ -469,6 +471,7 @@ const en = {
     'viewer.scale': 'Scale',
 
     'info.title': 'Info Panel',
+    'info.format': 'Format',
     'info.file_name': 'File Name',
     'info.dimensions': 'Dimensions',
     'info.total_paths': 'Total Paths',
@@ -502,6 +505,7 @@ const en = {
 
     'info.rectangles': 'Rectangles',
     'info.labels': 'Labels',
+    'info.label_chars': 'Chars',
     'info.pens': 'Pens',
     'info.ml_agreement': 'ML + Rules',
     'info.ml_fallback': 'Rules (ML low)',

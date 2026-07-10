@@ -9,6 +9,7 @@ interface HPGLMeta {
   circles: number;
   rectangles: number;
   labels: number;
+  labelChars?: number;
   dimensions: { width: number; height: number };
   pens: number[];
 }
@@ -39,6 +40,13 @@ interface SelectedPathInfo {
   firstPoint?: [number, number];
 }
 
+interface FormatInfo {
+  family: string;
+  variant: string;
+  astmStandard?: string | null;
+  comments: string[];
+}
+
 interface MeasureResultInfo {
   type: 'distance' | 'angle';
   value: number;
@@ -56,6 +64,7 @@ interface Props {
   userSelectedCad?: string | null;
   selectedPath?: SelectedPathInfo | null;
   measureResults?: MeasureResultInfo[];
+  formatInfo?: FormatInfo;
   pens?: number[];
   penVisibility?: Record<number, boolean>;
   onPenToggle?: (pen: number) => void;
@@ -67,7 +76,7 @@ interface Props {
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, measureResults, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -135,13 +144,13 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
         {(ml || userSelectedCad) && (
           <div className="px-3 py-2 rounded-lg bg-drapera-gold/5 border border-drapera-gold/10 text-[10px] text-gray-400 leading-relaxed">
             {userSelectedCad ? (
-              <>Questo file è stato assegnato a <strong className="text-white">{userSelectedCad}</strong>.</>
+              <p>Questo file è stato assegnato a <strong className="text-white">{userSelectedCad}</strong>.</p>
             ) : ml?.source === 'no_model' ? (
-              <>Modello non addestrato per questo CAD. Usa il menu per correggere.</>
+              <p>Modello non addestrato per questo CAD. Usa il menu per correggere.</p>
             ) : ml?.final_cad ? (
-              <>Rilevato: <strong className="text-white">{ml.final_cad}</strong> con confidence <strong className="text-white">{((ml.final_confidence ?? 0) * 100).toFixed(0)}%</strong>.
+              <p>Rilevato: <strong className="text-white">{ml.final_cad}</strong> con confidence <strong className="text-white">{((ml.final_confidence ?? 0) * 100).toFixed(0)}%</strong>.
               {ml.final_confidence && ml.final_confidence < 0.65 && <> Se non è corretto, seleziona il CAD dal menu.</>}
-              </>
+              </p>
             ) : null}
           </div>
         )}
@@ -233,6 +242,23 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
           </div>
         )}
 
+        {/* Format line */}
+        <div className="flex items-center gap-2 px-3 py-3 rounded-lg bg-amber-500/15 border border-amber-500/30">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-amber-300 shrink-0">
+            {t('info.format')}
+          </span>
+          <span className="text-xs font-bold font-mono text-white uppercase">
+            {formatInfo
+              ? formatInfo.family === 'hpgl' ? 'HPGL/1' :
+                formatInfo.family === 'hpgl2' ? 'HPGL/2' :
+                formatInfo.family === 'astm' ? 'ASTM' : formatInfo.family
+              : meta && meta.labels > 0 ? 'HPGL/2' : 'HPGL/1'}
+          </span>
+          {formatInfo?.astmStandard && (
+            <span className="text-[11px] text-amber-400 font-semibold">({formatInfo.astmStandard})</span>
+          )}
+        </div>
+
         <div className="space-y-2.5">
           {[
             { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]', always: true },
@@ -243,6 +269,7 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             { label: t('info.circles'), value: meta?.circles, hideZero: true },
             { label: t('info.rectangles'), value: meta?.rectangles, hideZero: true },
             { label: t('info.labels'), value: meta?.labels, hideZero: true },
+            { label: t('info.label_chars'), value: meta?.labelChars, hideZero: true },
             { label: t('info.pens'), value: meta?.pens?.length ? meta.pens.map(p => `#${p}`).join(', ') : '', hideZero: true },
           ].filter(f => f.always || (f.hideZero && f.value && f.value !== 0 && f.value !== '0')).map(f => (
             <div key={f.label} className="flex justify-between py-1.5 border-b border-drapera-border/40">
