@@ -216,6 +216,54 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
+/** Simplify polyline points using stride sampling based on LOD factor */
+function simplifyPoints(pts: [number, number][], lodFactor: number): [number, number][] {
+  if (lodFactor >= 1 || pts.length < 50) return pts;
+  const stride = Math.max(1, Math.round(1 / lodFactor));
+  const result: [number, number][] = [pts[0]];
+  for (let i = stride; i < pts.length - 1; i += stride) {
+    result.push(pts[i]);
+  }
+  result.push(pts[pts.length - 1]);
+  return result;
+}
+
+/** Check if a path bbox intersects the visible viewport (with margin) */
+function isPathVisible(
+  path: HPGLPath,
+  viewLeft: number, viewTop: number, viewW: number, viewH: number
+): boolean {
+  const margin = Math.max(viewW, viewH) * 0.5;
+  const l = viewLeft - margin, r = viewLeft + viewW + margin;
+  const t = viewTop - margin, b = viewTop + viewH + margin;
+
+  if (path.type === 'polyline' || path.type === 'rectangle') {
+    if (!path.points || path.points.length === 0) return true;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    // Only check first and last to avoid O(n) per path
+    if (path.points.length <= 10) {
+      for (const [x, y] of path.points) {
+        if (x < minX) minX = x; if (x > maxX) maxX = x;
+        if (y < minY) minY = y; if (y > maxY) maxY = y;
+      }
+    } else {
+      minX = Math.min(path.points[0][0], path.points[path.points.length - 1][0]);
+      maxX = Math.max(path.points[0][0], path.points[path.points.length - 1][0]);
+      minY = Math.min(path.points[0][1], path.points[path.points.length - 1][1]);
+      maxY = Math.max(path.points[0][1], path.points[path.points.length - 1][1]);
+    }
+    return !(maxX < l || minX > r || maxY < t || minY > b);
+  }
+  if ((path.type === 'circle' || path.type === 'arc') && path.cx !== undefined && path.cy !== undefined) {
+    const r = path.radius ?? 0;
+    return !(path.cx + r < l || path.cx - r > r || path.cy + r < t || path.cy - r > b);
+  }
+  if (path.type === 'label' && path.x !== undefined && path.y !== undefined) {
+    return !(path.x < l || path.x > r || path.y < t || path.y > b);
+  }
+  return true;
+}
+
 export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -310,10 +358,24 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return pb;
   }, [data]);
 
+  const totalCommands = useMemo(() => {
+    if (!data) return 0;
+    let count = 0;
+    for (const p of data.paths) {
+      if (p.type === 'polyline' || p.type === 'rectangle') count += p.points?.length ?? 0;
+      else if (p.type === 'circle' || p.type === 'arc') count += 1;
+      else if (p.type === 'label') count += 1;
+    }
+    return count;
+  }, [data]);
+
   const renderPaths = () => {
     if (!data) return null;
+    const lodFactor = effectiveZoom >= 0.7 ? 1 : effectiveZoom >= 0.5 ? 0.5 : effectiveZoom >= 0.3 ? 0.25 : 0.1;
     return data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
+      // Viewport culling
+      if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
       const isSelected = selectedPathIndex === idx;
@@ -352,10 +414,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
       const elements: JSX.Element[] = [];
 
-      // Highlight for selected path
+      // Highlight for selected path (use LOD too)
       if (isSelected) {
         if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
-          const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
+          const lodPts = (lodFactor < 1 && path.points.length > 100) ? simplifyPoints(path.points, lodFactor) : path.points;
+          const pts = lodPts.map(p => `${p[0]},${p[1]}`).join(' ');
           if (path.closed) {
             elements.push(<polygon key={`sel-${idx}`} points={pts} fill="rgba(242,201,76,0.08)" stroke="#F2C94C" strokeWidth={highlightSw} strokeLinejoin="round" opacity={0.6} />);
           } else {
@@ -364,9 +427,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         }
       }
 
-      // Actual path
+      // Actual path with LOD simplification
       if ((path.type === 'polyline' || path.type === 'rectangle') && path.points) {
-        const pts = path.points.map(p => `${p[0]},${p[1]}`).join(' ');
+        const lodPts = (lodFactor < 1 && path.points.length > 100) ? simplifyPoints(path.points, lodFactor) : path.points;
+        const pts = lodPts.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
           elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.1)' : 'none'} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
         } else {
@@ -411,6 +475,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     const z = effectiveZoom, px = pan.x, py = pan.y;
     data.paths.forEach((path, idx) => {
       if (idx === boundRectIdx) return;
+      if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return;
       const pts = (path.type === 'polyline' || path.type === 'rectangle') ? path.points : null;
@@ -788,6 +853,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               />
             </g>
           </svg>
+        </div>
+      )}
+
+      {/* Command limit warning */}
+      {totalCommands > 500000 && (
+        <div className="absolute top-12 left-3 z-30 rounded-md px-3 py-2 max-w-[320px]"
+          style={{ background: 'rgba(255, 68, 68, 0.12)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255, 68, 68, 0.3)' }}>
+          <p className="text-[10px] text-red-400 font-semibold">File molto grande</p>
+          <p className="text-[9px] text-red-300/70 mt-0.5">{(totalCommands / 1000).toFixed(0)}k comandi — alcuni browser potrebbero rallentare</p>
         </div>
       )}
 
