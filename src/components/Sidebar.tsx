@@ -40,7 +40,7 @@ interface SidebarProps {
   ocrLoading?: boolean;
   ocrTextsCount?: number;
   onOcr?: () => void;
-  formatFamily?: string;
+  showOcr?: boolean;
 }
 
 export default function Sidebar({
@@ -53,7 +53,7 @@ export default function Sidebar({
   filled, onToggleFilled,
   showBounds, onToggleBounds,
   rotation, onRotateLeft, onRotateRight, flipX, onFlipX, flipY, onFlipY, onResetTransform,
-  ocrLoading, ocrTextsCount, onOcr, formatFamily,
+  ocrLoading, ocrTextsCount, onOcr, showOcr,
 }: SidebarProps) {
   const { t } = useTranslation();
 
@@ -210,7 +210,7 @@ export default function Sidebar({
                 </button>
               </div>
             </div>
-            {formatFamily === 'hpgl' && (
+            {showOcr && (
               <div className="mt-2">
                 <button onClick={onOcr} disabled={ocrLoading}
                   className="w-full flex items-center justify-center gap-2 py-1.5 rounded text-[10px] font-medium transition-all bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 disabled:opacity-40">

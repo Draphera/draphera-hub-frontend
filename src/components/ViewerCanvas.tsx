@@ -151,6 +151,7 @@ interface Props {
   ocrTexts?: Array<{ text: string; x: number; y: number; width: number; height: number; confidence: number }>;
   ocrLoading?: boolean;
   onOcr?: () => void;
+  showOcr?: boolean;
 }
 
 const PAD = 40;
@@ -274,7 +275,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, ocrTexts, ocrLoading, onOcr }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, ocrTexts, ocrLoading, onOcr, showOcr }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -1005,7 +1006,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
               <span className="text-[13px]">↺</span> Reset vista
             </button>
-            {onOcr && (
+            {showOcr && onOcr && (
               <>
                 <div className="h-px bg-drapera-border/60 my-1 mx-2" />
                 <button onClick={() => { onOcr?.(); setCtxMenu(null); }} disabled={ocrLoading}

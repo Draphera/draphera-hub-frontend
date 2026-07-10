@@ -540,7 +540,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         rotation={rotation} onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
         flipX={flipX} onFlipX={handleFlipX} flipY={flipY} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
         ocrLoading={ocrLoading} ocrTextsCount={ocrTexts?.length ?? 0} onOcr={handleOcr}
-        formatFamily={hpglData?.formatInfo?.family}
+        showOcr={!!hpglData && (hpglData.meta.labels === 0)}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         {/* File tabs */}
@@ -662,6 +662,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             ocrTexts={ocrTexts} ocrLoading={ocrLoading} onOcr={handleOcr}
+            showOcr={!!hpglData && (hpglData.meta.labels === 0)}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
