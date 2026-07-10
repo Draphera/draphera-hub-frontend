@@ -411,7 +411,7 @@ export default function HPGLViewerPage() {
         unit={unit} onUnitChange={setUnit}
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
         snapMeasure={snapMeasure} onToggleSnapMeasure={() => setSnapMeasure(v => !v)}
-        viewMode={viewMode} onViewModeChange={setViewMode}
+        viewMode={viewMode} onViewModeChange={v => { setViewMode(v); if (v === 'measurement') setMeasureMode('distance'); else setMeasureMode('off'); setMeasurePoints([]); }}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility}
         onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
