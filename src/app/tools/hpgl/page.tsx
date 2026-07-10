@@ -75,7 +75,9 @@ export default function HPGLViewerPage() {
   const [unit, setUnit] = useState<'cm' | 'inch'>('cm');
   const [snapGrid, setSnapGrid] = useState(true);
   const [snapMeasure, setSnapMeasure] = useState(false);
-  const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement'>('outline');
+  const [selectionActive, setSelectionActive] = useState(false);
+  const [selectionBounds, setSelectionBounds] = useState<{ minX: number; minY: number; maxX: number; maxY: number } | null>(null);
+  const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement' | 'selection'>('outline');
   const [gridOn, setGridOn] = useState(true);
   const [fitKey, setFitKey] = useState(0);
   const [penVisibility, setPenVisibility] = useState<Record<number, boolean>>({});
@@ -213,6 +215,102 @@ export default function HPGLViewerPage() {
   const handleLabelChange = useCallback((index: number, label: string) => {
     setMeasureResults(prev => prev.map((r, i) => i === index ? { ...r, label } : r));
   }, []);
+
+  const handleCopySvg = useCallback(async () => {
+    if (!rawFile) return;
+    try {
+      const svg = await hpglApi.exportSvg(rawFile);
+      await navigator.clipboard.writeText(svg);
+      setMsg('SVG copiato negli appunti');
+    } catch { setMsg('Errore copia SVG'); }
+  }, [rawFile]);
+
+  const handleExportCsv = useCallback(() => {
+    if (!features) return;
+    const headers = Object.keys(features);
+    const row = headers.map(k => {
+      const v = features[k];
+      return typeof v === 'number' ? v.toFixed(4) : String(v ?? '');
+    });
+    const csv = headers.join(',') + '\n' + row.join(',');
+    downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), fileName.replace(/\.[^.]+$/, '') + '_features.csv');
+  }, [features, fileName]);
+
+  const handleExportPdf = useCallback(() => {
+    const base = fileName.replace(/\.[^.]+$/, '');
+    const now = new Date().toLocaleDateString('it-IT');
+    const misure = measureResults.map((r, i) =>
+      `<tr><td>${r.label || (r.type === 'distance' ? 'Distanza' : 'Angolo') + ' #' + (i + 1)}</td><td>${r.type === 'distance' ? r.value.toFixed(1) : r.value.toFixed(1) + '°'}</td></tr>`
+    ).join('');
+    const cadName = hpglData?.cad?.cad ?? '-';
+    const formatInfo = hpglData?.formatInfo;
+    const formatName = formatInfo ? `${formatInfo.family} / ${formatInfo.variant}` : (hpglData?.meta?.labels ?? 0) > 0 ? 'HPGL/2' : 'HPGL/1';
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Scheda Tecnica - ${base}</title>
+<style>
+  body{font-family:Inter,sans-serif;padding:40px;color:#1a1a2e;font-size:12px}
+  h1{font-size:20px;margin-bottom:4px;color:#1a1a2e}
+  .sub{color:#666;font-size:11px;margin-bottom:24px}
+  table{width:100%;border-collapse:collapse;margin-bottom:16px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
+  th{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#888}
+  td{font-size:12px}
+  .section{margin-bottom:24px}
+  .section h2{font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #eee}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
+  .grid .lbl{color:#888;font-size:10px}
+  .grid .val{font-size:12px}
+  @media print{body{padding:20px}}
+</style></head><body>
+<h1>Scheda Tecnica</h1>
+<div class="sub">${base} &mdash; ${now}</div>
+<div class="section"><h2>File</h2>
+<div class="grid">
+  <span class="lbl">Nome</span><span class="val">${fileName}</span>
+  <span class="lbl">Formato</span><span class="val">${formatName}</span>
+  <span class="lbl">CAD</span><span class="val">${cadName}</span>
+</div></div>
+${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><table><thead><tr><th>Descrizione</th><th>Valore</th></tr></thead><tbody>${misure}</tbody></table></div>` : ''}
+<div class="section"><h2>Contenuto</h2><div class="grid">
+  <span class="lbl">Path</span><span class="val">${hpglData?.meta?.total_paths ?? '-'}</span>
+  <span class="lbl">Dimensioni</span><span class="val">${hpglData?.meta?.dimensions ? `${hpglData.meta.dimensions.width.toFixed(1)} × ${hpglData.meta.dimensions.height.toFixed(1)}` : '-'}</span>
+</div></div>
+${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aaa">Generato da Draphera Hub</p>' : ''}
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (!win) { setMsg('Apri il popup per esportare il PDF'); return; }
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setMsg('Scheda tecnica aperta — usa Ctrl+P per salvare PDF');
+  }, [fileName, measureResults, hpglData]);
+
+  const handleToggleSelection = useCallback(() => {
+    setSelectionActive(v => {
+      if (v) {
+        setSelectionBounds(null);
+        setViewMode('outline');
+        return false;
+      }
+      setViewMode('selection');
+      return true;
+    });
+  }, []);
+
+  const handleExportSelection = useCallback(async () => {
+    if (!rawFile || !selectionBounds) return;
+    try {
+      const svg = await hpglApi.exportSvg(rawFile);
+      const { minX, minY, maxX, maxY } = selectionBounds;
+      const w = maxX - minX;
+      const h = maxY - minY;
+      const modified = svg.replace(/viewBox="[^"]*"/, `viewBox="${minX} ${minY} ${w} ${h}"`);
+      const blob = new Blob([modified], { type: 'image/svg+xml;charset=utf-8' });
+      downloadBlob(blob, fileName.replace(/\.[^.]+$/, '') + '_selection.svg');
+      setMsg('Sezione esportata come SVG');
+    } catch { setMsg('Errore export sezione'); }
+  }, [rawFile, selectionBounds, fileName]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -400,7 +498,7 @@ export default function HPGLViewerPage() {
         unit={unit} onUnitChange={setUnit}
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
         snapMeasure={snapMeasure} onToggleSnapMeasure={() => setSnapMeasure(v => !v)}
-        viewMode={viewMode} onViewModeChange={v => { setViewMode(v); if (v === 'measurement') setMeasureMode('distance'); else setMeasureMode('off'); setMeasurePoints([]); }}
+        viewMode={viewMode} onViewModeChange={v => { setViewMode(v); if (v === 'measurement') setMeasureMode('distance'); else if (v !== 'selection') setMeasureMode('off'); setMeasurePoints([]); if (v !== 'selection') setSelectionActive(false); }}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility}
         onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
@@ -528,6 +626,8 @@ export default function HPGLViewerPage() {
             selectedPathIndex={selectedPath?.index ?? -1}
             measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}
             onCanvasClick={handleCanvasClick} showNotches={showNotches} filled={filled} showBounds={showBounds}
+            selectionActive={selectionActive} selectionBounds={selectionBounds}
+            onSelectionChange={b => setSelectionBounds(b)}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -616,7 +716,14 @@ export default function HPGLViewerPage() {
           setViewMode(m !== 'off' ? 'measurement' : viewMode === 'measurement' ? 'outline' : viewMode);
         }}
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
-        onExportPng={handleExportPng} onExportSvg={handleExportSvg} hasFile={!!hpglData}
+        onExportPng={handleExportPng} onExportSvg={handleExportSvg}
+        onCopySvg={handleCopySvg} onExportCsv={handleExportCsv}
+        onExportPdf={handleExportPdf}
+        onToggleSelection={handleToggleSelection}
+        onExportSelection={handleExportSelection}
+        hasFile={!!hpglData}
+        selectionActive={selectionActive}
+        selectionExists={!!selectionBounds}
       />
 
       {/* Measurement modal */}

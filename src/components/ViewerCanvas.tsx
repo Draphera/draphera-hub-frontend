@@ -125,7 +125,7 @@ interface Props {
   onZoomChange?: (z: number) => void;
   invertColors: boolean;
   snapGrid: boolean;
-  viewMode: 'outline' | 'tack' | 'measurement';
+  viewMode: 'outline' | 'tack' | 'measurement' | 'selection';
   fitKey?: number;
   penVisibility?: Record<number, boolean>;
   penColors?: Record<number, string>;
@@ -137,6 +137,9 @@ interface Props {
   onCanvasClick?: (x: number, y: number) => void;
   measureResults?: MeasureResult[];
   snapMeasure?: boolean;
+  selectionActive?: boolean;
+  selectionBounds?: { minX: number; minY: number; maxX: number; maxY: number } | null;
+  onSelectionChange?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
 }
 
 const PAD = 40;
@@ -213,7 +216,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -221,6 +224,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [wheelZoom, setWheelZoom] = useState(1);
   const [hoveredPath, setHoveredPath] = useState<{ idx: number; x: number; y: number } | null>(null);
+  const dragRef = useRef<{ active: boolean; startX: number; startY: number; endX: number; endY: number }>({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 });
+  const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
@@ -580,6 +585,11 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         onCanvasClick(worldX, worldY);
         return;
       }
+      if (selectionActive && onSelectionChange) {
+        dragRef.current = { active: true, startX: worldX, startY: worldY, endX: worldX, endY: worldY };
+        setDragRect({ x: worldX, y: worldY, w: 0, h: 0 });
+        return;
+      }
       setIsPanning(true);
       setPanStart({ x: vb.x - pan.x, y: vb.y - pan.y });
     }
@@ -591,6 +601,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
     const vb = screenToViewbox(svg, e.clientX, e.clientY);
 
+    if (dragRef.current.active) {
+      const wX = (vb.x - pan.x) / effectiveZoom;
+      const wY = (vb.y - pan.y) / effectiveZoom;
+      dragRef.current.endX = wX;
+      dragRef.current.endY = wY;
+      const x = Math.min(dragRef.current.startX, wX);
+      const y = Math.min(dragRef.current.startY, wY);
+      const w = Math.abs(wX - dragRef.current.startX);
+      const h = Math.abs(wY - dragRef.current.startY);
+      setDragRect({ x, y, w, h });
+      return;
+    }
+
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
 
     if (isPanning) {
@@ -598,7 +621,21 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
   };
 
-  const handleMouseUp = () => setIsPanning(false);
+  const handleMouseUp = () => {
+    if (dragRef.current.active) {
+      dragRef.current.active = false;
+      const minX = Math.min(dragRef.current.startX, dragRef.current.endX);
+      const minY = Math.min(dragRef.current.startY, dragRef.current.endY);
+      const maxX = Math.max(dragRef.current.startX, dragRef.current.endX);
+      const maxY = Math.max(dragRef.current.startY, dragRef.current.endY);
+      if (maxX - minX > 0.5 && maxY - minY > 0.5) {
+        onSelectionChange?.({ minX, minY, maxX, maxY });
+      }
+      setDragRect(null);
+      return;
+    }
+    setIsPanning(false);
+  };
 
   const svgStyle: React.CSSProperties = {
     minHeight: 460,
@@ -655,7 +692,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className={`w-full h-full select-none relative z-[1] ${measureMode && measureMode !== 'off' ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+        className={`w-full h-full select-none relative z-[1] ${selectionActive ? 'cursor-crosshair' : measureMode && measureMode !== 'off' ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
         style={svgStyle}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
@@ -670,6 +707,18 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {gridLines}
             {renderPaths()}
             {renderMeasurement()}
+            {/* Selection rectangle during drag */}
+            {dragRect && (
+              <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
+                fill="rgba(242,201,76,0.08)" stroke="#F2C94C" strokeWidth={1.5 / effectiveZoom} strokeDasharray="4 3" />
+            )}
+            {/* Confirmed selection rectangle */}
+            {selectionBounds && (
+              <rect x={selectionBounds.minX} y={selectionBounds.minY}
+                width={selectionBounds.maxX - selectionBounds.minX}
+                height={selectionBounds.maxY - selectionBounds.minY}
+                fill="rgba(242,201,76,0.06)" stroke="#F2C94C" strokeWidth={1.5 / effectiveZoom} strokeDasharray="4 3" />
+            )}
           </g>
           {renderTackMarks()}
           {renderMeasureMarkers()}

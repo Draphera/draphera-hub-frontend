@@ -14,8 +14,8 @@ interface SidebarProps {
   onToggleSnap: () => void;
   snapMeasure: boolean;
   onToggleSnapMeasure: () => void;
-  viewMode: 'outline' | 'tack' | 'measurement';
-  onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
+  viewMode: 'outline' | 'tack' | 'measurement' | 'selection';
+  onViewModeChange: (v: 'outline' | 'tack' | 'measurement' | 'selection') => void;
   pens?: number[];
   penVisibility?: Record<number, boolean>;
   onPenToggle?: (pen: number) => void;
