@@ -12,6 +12,8 @@ interface SidebarProps {
   onUnitChange: (u: 'cm' | 'inch') => void;
   snapGrid: boolean;
   onToggleSnap: () => void;
+  snapMeasure: boolean;
+  onToggleSnapMeasure: () => void;
   viewMode: 'outline' | 'tack' | 'measurement';
   onViewModeChange: (v: 'outline' | 'tack' | 'measurement') => void;
   pens?: number[];
@@ -31,7 +33,7 @@ interface SidebarProps {
 
 export default function Sidebar({
   onFileUpload, invertColors, onToggleInvert, zoom, onZoomChange,
-  unit, onUnitChange, snapGrid, onToggleSnap,
+  unit, onUnitChange, snapGrid, onToggleSnap, snapMeasure, onToggleSnapMeasure,
   viewMode, onViewModeChange,
   pens, penVisibility, onPenToggle, penColors, onPenColorChange,
   flattened, onToggleFlattened,
@@ -132,6 +134,12 @@ export default function Sidebar({
               <span className="text-[11px] text-gray-400">{t('sidebar.snap_grid')}</span>
               <button onClick={onToggleSnap} className={`w-7 h-3.5 rounded-full transition-colors relative ${snapGrid ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
                 <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${snapGrid ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
+              </button>
+            </label>
+            <label className="flex items-center justify-between cursor-pointer px-1">
+              <span className="text-[11px] text-gray-400">Snap misure</span>
+              <button onClick={onToggleSnapMeasure} className={`w-7 h-3.5 rounded-full transition-colors relative ${snapMeasure ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+                <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${snapMeasure ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
               </button>
             </label>
             {pens && pens.length > 0 && (

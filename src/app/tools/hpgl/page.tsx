@@ -74,6 +74,7 @@ export default function HPGLViewerPage() {
   const [invertColors, setInvertColors] = useState(false);
   const [unit, setUnit] = useState<'cm' | 'inch'>('cm');
   const [snapGrid, setSnapGrid] = useState(true);
+  const [snapMeasure, setSnapMeasure] = useState(false);
   const [viewMode, setViewMode] = useState<'outline' | 'tack' | 'measurement'>('outline');
   const [gridOn, setGridOn] = useState(true);
   const [fitKey, setFitKey] = useState(0);
@@ -186,7 +187,7 @@ export default function HPGLViewerPage() {
 
     // Snap to nearest vertex
     let sx = x, sy = y;
-    if (hpglData) {
+    if (snapMeasure && hpglData) {
       let bestDist = snapThreshold;
       for (const p of hpglData.paths) {
         const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
@@ -222,7 +223,7 @@ export default function HPGLViewerPage() {
     } else {
       setMeasurePoints(pts);
     }
-  }, [measureMode, measurePoints, hpglData]);
+  }, [measureMode, measurePoints, hpglData, snapMeasure]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -409,6 +410,7 @@ export default function HPGLViewerPage() {
         zoom={zoom} onZoomChange={setZoom}
         unit={unit} onUnitChange={setUnit}
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
+        snapMeasure={snapMeasure} onToggleSnapMeasure={() => setSnapMeasure(v => !v)}
         viewMode={viewMode} onViewModeChange={setViewMode}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility}
