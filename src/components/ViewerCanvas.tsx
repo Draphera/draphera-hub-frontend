@@ -113,6 +113,7 @@ interface MeasureResult {
   type: 'distance' | 'angle';
   points: MeasurePoint[];
   value: number;
+  label?: string;
 }
 
 interface Props {
@@ -534,6 +535,22 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             width={sz} height={sz} fill="none" stroke="#ff6b6b" strokeWidth={1.2} opacity={0.8} />
         );
       });
+    });
+
+    // Result labels
+    measureResults?.forEach((r, ri) => {
+      if (!r.label) return;
+      const midX = r.points.reduce((s, p) => s + p.x, 0) / r.points.length;
+      const midY = r.points.reduce((s, p) => s + p.y, 0) / r.points.length;
+      const sx = midX * z + px, sy = midY * z + py;
+      const fs = clampFontSize(11, 9, 13);
+      elements.push(
+        <text key={`rl_${ri}`} x={sx} y={sy - 4} textAnchor="middle"
+          fill="#ff6b6b" fontSize={fs} fontFamily="Inter" fontWeight="bold"
+          style={{ pointerEvents: 'none' }}>
+          {r.label}
+        </text>
+      );
     });
 
     return <g>{elements}</g>;

@@ -84,7 +84,7 @@ export default function HPGLViewerPage() {
   const [selectedPath, setSelectedPath] = useState<{ path: HPGLPath; index: number; info: { type: string; vertices: number; pen: number; lineType: number; closed?: boolean; length?: number; firstPoint?: [number, number] } } | null>(null);
   const [measureMode, setMeasureMode] = useState<'off' | 'distance' | 'angle'>('off');
   const [measurePoints, setMeasurePoints] = useState<Array<{ x: number; y: number }>>([]);
-  const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number }>>([]);
+  const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number; label?: string }>>([]);
   const [showNotches, setShowNotches] = useState(false);
   const [filled, setFilled] = useState(false);
   const [showBounds, setShowBounds] = useState(true);
@@ -191,7 +191,7 @@ export default function HPGLViewerPage() {
       const dx = pts[1].x - pts[0].x;
       const dy = pts[1].y - pts[0].y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      setMeasureResults(prev => [...prev, { type: 'distance', points: [pts[0], pts[1]], value: dist }]);
+      setMeasureResults(prev => [...prev, { type: 'distance', points: [pts[0], pts[1]], value: dist, label: '' }]);
       setMeasurePoints([]);
     } else if (measureMode === 'angle' && pts.length >= 3) {
       // Angle at pts[1] between pts[0] and pts[2]
@@ -202,13 +202,17 @@ export default function HPGLViewerPage() {
       const n2 = Math.sqrt(v2x * v2x + v2y * v2y);
       if (n1 > 0 && n2 > 0) {
         const angle = Math.acos(Math.max(-1, Math.min(1, dot / (n1 * n2)))) * 180 / Math.PI;
-        setMeasureResults(prev => [...prev, { type: 'angle', points: [pts[0], pts[1], pts[2]], value: angle }]);
+        setMeasureResults(prev => [...prev, { type: 'angle', points: [pts[0], pts[1], pts[2]], value: angle, label: '' }]);
       }
       setMeasurePoints([]);
     } else {
       setMeasurePoints(pts);
     }
   }, [measureMode, measurePoints]);
+
+  const handleLabelChange = useCallback((index: number, label: string) => {
+    setMeasureResults(prev => prev.map((r, i) => i === index ? { ...r, label } : r));
+  }, []);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -650,13 +654,16 @@ export default function HPGLViewerPage() {
 
           {/* Results list */}
           {measureResults.length > 0 && (
-            <div className="px-4 py-2 max-h-40 overflow-y-auto space-y-1">
+            <div className="px-4 py-2 max-h-48 overflow-y-auto space-y-1">
               {measureResults.map((r, i) => (
-                <div key={i} className="flex justify-between items-center py-1 px-2 rounded bg-white/5">
-                  <span className="text-[10px] text-gray-400">
-                    {r.type === 'distance' ? 'Distanza' : 'Angolo'} <span className="text-gray-600">#{i + 1}</span>
-                  </span>
-                  <span className="text-[11px] text-white font-mono font-medium">
+                <div key={i} className="flex items-center gap-2 py-1 px-2 rounded bg-white/5">
+                  <input
+                    value={r.label ?? ''}
+                    onChange={e => handleLabelChange(i, e.target.value)}
+                    placeholder={r.type === 'distance' ? 'Distanza #' + (i + 1) : 'Angolo #' + (i + 1)}
+                    className="flex-1 bg-transparent text-[10px] text-gray-300 border-b border-drapera-border/40 focus:border-drapera-gold/50 outline-none placeholder:text-gray-600"
+                  />
+                  <span className="text-[11px] text-white font-mono font-medium shrink-0">
                     {r.type === 'distance' ? `${r.value.toFixed(1)}` : `${r.value.toFixed(1)}°`}
                   </span>
                 </div>
