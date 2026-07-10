@@ -135,6 +135,7 @@ interface Props {
   measurePoints?: MeasurePoint[];
   onCanvasClick?: (x: number, y: number) => void;
   measureResults?: MeasureResult[];
+  snapMeasure?: boolean;
 }
 
 const PAD = 40;
@@ -202,7 +203,7 @@ function clampFontSize(size: number, min: number = 6, max: number = 18): number 
   return Math.max(min, Math.min(max, size));
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -534,9 +535,22 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const svg = svgRef.current;
       if (!svg) return;
       const vb = screenToViewbox(svg, e.clientX, e.clientY);
-      const worldX = (vb.x - pan.x) / effectiveZoom;
-      const worldY = (vb.y - pan.y) / effectiveZoom;
+      let worldX = (vb.x - pan.x) / effectiveZoom;
+      let worldY = (vb.y - pan.y) / effectiveZoom;
       if (measureMode && measureMode !== 'off' && onCanvasClick) {
+        // Optional snap to nearest vertex (~6 screen px threshold)
+        if (snapMeasure && data) {
+          const snapPx = 6 / effectiveZoom;
+          let best = snapPx;
+          for (const p of data.paths) {
+            const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
+            if (!pts) continue;
+            for (const [vx, vy] of pts) {
+              const d = Math.hypot(vx - worldX, vy - worldY);
+              if (d < best) { best = d; worldX = vx; worldY = vy; }
+            }
+          }
+        }
         onCanvasClick(worldX, worldY);
         return;
       }

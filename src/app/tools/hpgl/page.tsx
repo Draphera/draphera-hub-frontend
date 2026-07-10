@@ -181,25 +181,10 @@ export default function HPGLViewerPage() {
     }
   }, [hpglData, ml, userSelectedCad, features, handleCorrectCad, fileName]);
 
-  const snapThreshold = 3; // user units
   const handleCanvasClick = useCallback((x: number, y: number) => {
     if (measureMode === 'off') return;
 
-    // Snap to nearest vertex
-    let sx = x, sy = y;
-    if (snapMeasure && hpglData) {
-      let bestDist = snapThreshold;
-      for (const p of hpglData.paths) {
-        const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
-        if (!pts) continue;
-        for (const [vx, vy] of pts) {
-          const d = Math.hypot(vx - x, vy - y);
-          if (d < bestDist) { bestDist = d; sx = vx; sy = vy; }
-        }
-      }
-    }
-
-    const newPt = { x: sx, y: sy };
+    const newPt = { x, y };
     const pts = [...measurePoints, newPt];
 
     if (measureMode === 'distance' && pts.length >= 2) {
@@ -223,7 +208,7 @@ export default function HPGLViewerPage() {
     } else {
       setMeasurePoints(pts);
     }
-  }, [measureMode, measurePoints, hpglData, snapMeasure]);
+  }, [measureMode, measurePoints]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -469,7 +454,7 @@ export default function HPGLViewerPage() {
         {compareMode === 'side' && secondTabId ? (
           <div className="flex gap-2" style={{ height: 'calc(100vh - 12rem)' }}>
             <div className="flex-1 min-w-0">
-              <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+              <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1} onPathSelect={(path, idx) => {
                   if (!path) { setSelectedPath(null); return; }
@@ -482,7 +467,7 @@ export default function HPGLViewerPage() {
             <div className="flex-1 min-w-0">
               {(() => {
                 const t = fileTabs.find(t => t.id === secondTabId);
-                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} /> : null;
+                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} /> : null;
               })()}
             </div>
           </div>
@@ -521,7 +506,7 @@ export default function HPGLViewerPage() {
                   },
                 },
               };
-              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds}
+              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
@@ -534,7 +519,7 @@ export default function HPGLViewerPage() {
             })()}
           </div>
         ) : (
-          <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey}
+          <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
             penVisibility={penVisibility} penColors={penColors} flattened={flattened}
             selectedPathIndex={selectedPath?.index ?? -1}
             measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}
