@@ -22,6 +22,10 @@ interface HPGLPath {
   closed?: boolean;
   text?: string;
   x?: number; y?: number;
+  rotation?: number;
+  charWidth?: number;
+  charHeight?: number;
+  slant?: number;
 }
 
 interface HPGLData {
@@ -203,6 +207,7 @@ export default function HPGLViewerPage() {
       const cleaned = text.replace(/[^\n\r\t\x1b\x03\x00\x20-\x7e\xa0-\xff]/g, '');
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false, currentPen = 0, currentLineType = 0, currentPenWidth = 0.25, currentPoly: HPGLPath | null = null;
+      let labelRotation = 0, charWidth = 0.2, charHeight = 0.4;
       const parseNums = (s: string) => s.trim().split(/[\s,;]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
       const flush = () => {
         if (currentPoly && currentPoly.points!.length >= 2) {
@@ -252,6 +257,10 @@ export default function HPGLViewerPage() {
         }
         else if (cmd === 'CI' && nums.length >= 1) { flush(); paths.push({ type: 'circle', cx, cy, radius: Math.abs(nums[0]), pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'AA' && nums.length >= 3) { flush(); paths.push({ type: 'arc', cx: nums[0], cy: nums[1], radius: Math.abs(nums[2]), startAngle: 0, endAngle: 360, pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth }); }
+        else if (cmd === 'DI' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelRotation = -Math.atan2(nums[1], nums[0]) * 180 / Math.PI; }
+        else if (cmd === 'DR' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelRotation = -Math.atan2(nums[1], nums[0]) * 180 / Math.PI; }
+        else if (cmd === 'SI' && nums.length >= 2) { charWidth = Math.abs(nums[0]); charHeight = Math.abs(nums[1]); }
+        else if (cmd === 'SR' && nums.length >= 2) { charWidth = Math.abs(nums[0]); charHeight = Math.abs(nums[1]); }
         else if (cmd === 'EA' && nums.length >= 2) { flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [nums[0], cy], [nums[0], nums[1]], [cx, nums[1]], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'ER' && nums.length >= 2) { const ex = cx + nums[0], ey = cy + nums[1]; flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [ex, cy], [ex, ey], [cx, ey], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'RA' && nums.length >= 2) { flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [nums[0], cy], [nums[0], nums[1]], [cx, nums[1]], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
@@ -267,7 +276,18 @@ export default function HPGLViewerPage() {
             labelText += ch;
           }
           labelText = labelText.trim();
-          if (labelText) paths.push({ type: 'label', x: cx, y: cy, text: labelText, pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth });
+          if (labelText) {
+            const lines = labelText.split('\n');
+            for (let li = 0; li < lines.length; li++) {
+              const line = lines[li].trim();
+              if (!line) continue;
+              paths.push({
+                type: 'label', x: cx, y: cy + li * 0.5, text: line,
+                pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth,
+                rotation: labelRotation, charWidth: charWidth, charHeight: charHeight, slant: 0,
+              });
+            }
+          }
         }
       }
       flush();

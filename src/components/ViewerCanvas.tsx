@@ -13,6 +13,10 @@ interface HPGLPath {
   closed?: boolean;
   text?: string;
   x?: number; y?: number;
+  rotation?: number;
+  charWidth?: number;
+  charHeight?: number;
+  slant?: number;
 }
 
 interface HPGLData {
@@ -168,6 +172,10 @@ function calcBounds(paths: HPGLPath[]): BBox {
       const y1 = p.cy - p.radius, y2 = p.cy + p.radius;
       if (x1 < minX) minX = x1; if (y1 < minY) minY = y1;
       if (x2 > maxX) maxX = x2; if (y2 > maxY) maxY = y2;
+    }
+    if (p.type === 'label' && p.x !== undefined && p.y !== undefined) {
+      if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+      if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
     }
   }
   if (minX === Infinity) return { minX: 0, minY: 0, maxX: 400, maxY: 300, cx: 200, cy: 150, w: 400, h: 300 };
@@ -359,7 +367,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       } else if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
         elements.push(<circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} {...dashProps} {...commonProps} />);
       } else if (path.type === 'label' && path.text) {
-        elements.push(<text key={idx} x={path.x ?? 0} y={path.y ?? 0} fill={color} fontSize={clampFontSize(6 / effectiveZoom, 5, 14)} fontFamily="monospace" {...commonProps}>{path.text}</text>);
+        const rot = path.rotation ?? 0;
+        const fs = path.charHeight ? clampFontSize(path.charHeight / effectiveZoom, 3, 40) : clampFontSize(6 / effectiveZoom, 5, 14);
+        const sw = clampFontSize(0.3 / effectiveZoom, 0.3, 2);
+        elements.push(
+          <g key={idx} transform={`translate(${path.x}, ${path.y}) rotate(${rot})`}>
+            <text x={0} y={0} fill="none" stroke={color} strokeWidth={sw} fontSize={fs} fontFamily="monospace" {...commonProps}>{path.text}</text>
+          </g>
+        );
       }
 
       return elements;
@@ -514,6 +529,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       }
       if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
         return <circle key={idx} cx={miniOffsetX + path.cx * miniScale} cy={miniOffsetY + path.cy * miniScale} r={path.radius * miniScale} fill="none" stroke={color} strokeWidth={0.5} />;
+      }
+      if (path.type === 'label' && path.text && path.x !== undefined && path.y !== undefined) {
+        return <text key={idx} x={miniOffsetX + path.x * miniScale} y={miniOffsetY + path.y * miniScale} fill={color} stroke={color} strokeWidth={0.3} fontSize={3} fontFamily="monospace">{path.text}</text>;
       }
       return null;
     });
