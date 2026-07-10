@@ -180,9 +180,25 @@ export default function HPGLViewerPage() {
     }
   }, [hpglData, ml, userSelectedCad, features, handleCorrectCad, fileName]);
 
+  const snapThreshold = 3; // user units
   const handleCanvasClick = useCallback((x: number, y: number) => {
     if (measureMode === 'off') return;
-    const newPt = { x, y };
+
+    // Snap to nearest vertex
+    let sx = x, sy = y;
+    if (hpglData) {
+      let bestDist = snapThreshold;
+      for (const p of hpglData.paths) {
+        const pts = (p.type === 'polyline' || p.type === 'rectangle') ? p.points : null;
+        if (!pts) continue;
+        for (const [vx, vy] of pts) {
+          const d = Math.hypot(vx - x, vy - y);
+          if (d < bestDist) { bestDist = d; sx = vx; sy = vy; }
+        }
+      }
+    }
+
+    const newPt = { x: sx, y: sy };
     const pts = [...measurePoints, newPt];
 
     if (measureMode === 'distance' && pts.length >= 2) {
@@ -206,7 +222,7 @@ export default function HPGLViewerPage() {
     } else {
       setMeasurePoints(pts);
     }
-  }, [measureMode, measurePoints]);
+  }, [measureMode, measurePoints, hpglData]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
