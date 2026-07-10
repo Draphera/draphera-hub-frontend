@@ -207,7 +207,9 @@ export default function HPGLViewerPage() {
       const cleaned = text.replace(/[^\n\r\t\x1b\x03\x00\x20-\x7e\xa0-\xff]/g, '');
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false, currentPen = 0, currentLineType = 0, currentPenWidth = 0.25, currentPoly: HPGLPath | null = null;
-      let labelRotation = 0, charWidth = 0.2, charHeight = 0.4;
+      let labelRotation = 0, charWidth = 0.2, charHeight = 0.4, labelSlant = 0;
+      let labelDirX = 1, labelDirY = 0;
+      let p1x = 0, p1y = 0, p2x = 10000, p2y = 10000;
       const parseNums = (s: string) => s.trim().split(/[\s,;]+/).filter(Boolean).map(Number).filter(n => !isNaN(n));
       const flush = () => {
         if (currentPoly && currentPoly.points!.length >= 2) {
@@ -222,8 +224,10 @@ export default function HPGLViewerPage() {
       for (const m of lines) {
         const cmd = m[1].toUpperCase();
         const nums = parseNums(m[2] || '');
-        if (cmd === 'IN') { flush(); cx = cy = 0; penDown = false; currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; }
-        else if (cmd === 'DF') { flush(); currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; }
+        if (cmd === 'IN') { flush(); cx = cy = 0; penDown = false; currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; labelRotation = 0; labelDirX = 1; labelDirY = 0; charWidth = 0.2; charHeight = 0.4; labelSlant = 0; p1x = 0; p1y = 0; p2x = 10000; p2y = 10000; }
+        else if (cmd === 'DF') { flush(); currentPen = 0; currentLineType = 0; currentPenWidth = 0.25; labelRotation = 0; labelDirX = 1; labelDirY = 0; charWidth = 0.2; charHeight = 0.4; labelSlant = 0; p1x = 0; p1y = 0; p2x = 10000; p2y = 10000; }
+        else if (cmd === 'IP' && nums.length >= 4) { p1x = nums[0]; p1y = nums[1]; p2x = nums[2]; p2y = nums[3]; }
+        else if (cmd === 'RO' && nums.length >= 1) { labelRotation = -nums[0] % 360; }
         else if (cmd === 'SP' && nums.length >= 1) { flush(); currentPen = Math.abs(nums[0]) % 12; }
         else if (cmd === 'LT' && nums.length >= 1) { currentLineType = Math.abs(nums[0]) % 7; }
         else if (cmd === 'PW' && nums.length >= 1) { currentPenWidth = Math.max(0.05, nums[0]); }
@@ -257,10 +261,12 @@ export default function HPGLViewerPage() {
         }
         else if (cmd === 'CI' && nums.length >= 1) { flush(); paths.push({ type: 'circle', cx, cy, radius: Math.abs(nums[0]), pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'AA' && nums.length >= 3) { flush(); paths.push({ type: 'arc', cx: nums[0], cy: nums[1], radius: Math.abs(nums[2]), startAngle: 0, endAngle: 360, pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth }); }
-        else if (cmd === 'DI' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelRotation = -Math.atan2(nums[1], nums[0]) * 180 / Math.PI; }
-        else if (cmd === 'DR' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelRotation = -Math.atan2(nums[1], nums[0]) * 180 / Math.PI; }
+        else if (cmd === 'DI' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelDirX = nums[0]/n; labelDirY = nums[1]/n; labelRotation = -Math.atan2(labelDirY, labelDirX) * 180 / Math.PI; }
+        else if (cmd === 'DR' && nums.length >= 2) { const n = Math.hypot(nums[0], nums[1]) || 1; labelDirX = nums[0]/n; labelDirY = nums[1]/n; const diag = Math.hypot(p2x-p1x, p2y-p1y) || 1; labelRotation = -Math.atan2(labelDirY*diag, labelDirX*diag) * 180 / Math.PI; }
         else if (cmd === 'SI' && nums.length >= 2) { charWidth = Math.abs(nums[0]); charHeight = Math.abs(nums[1]); }
-        else if (cmd === 'SR' && nums.length >= 2) { charWidth = Math.abs(nums[0]); charHeight = Math.abs(nums[1]); }
+        else if (cmd === 'SR' && nums.length >= 2) { const diag = Math.hypot(p2x-p1x, p2y-p1y) || 1; charWidth = Math.abs(nums[0]) * diag * 0.1; charHeight = Math.abs(nums[1]) * diag * 0.1; }
+        else if (cmd === 'SL' && nums.length >= 1) { labelSlant = nums[0]; }
+        else if (cmd === 'DT' && nums.length >= 1) { /* terminator handled inline in LB */ }
         else if (cmd === 'EA' && nums.length >= 2) { flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [nums[0], cy], [nums[0], nums[1]], [cx, nums[1]], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'ER' && nums.length >= 2) { const ex = cx + nums[0], ey = cy + nums[1]; flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [ex, cy], [ex, ey], [cx, ey], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
         else if (cmd === 'RA' && nums.length >= 2) { flush(); paths.push({ type: 'rectangle', points: [[cx, cy], [nums[0], cy], [nums[0], nums[1]], [cx, nums[1]], [cx, cy]], pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth, closed: true }); }
@@ -278,15 +284,20 @@ export default function HPGLViewerPage() {
           labelText = labelText.trim();
           if (labelText) {
             const lines = labelText.split('\n');
+            const lh = charHeight * 1.4;
+            const perpX = -labelDirY, perpY = labelDirX;
             for (let li = 0; li < lines.length; li++) {
               const line = lines[li].trim();
               if (!line) continue;
               paths.push({
-                type: 'label', x: cx, y: cy + li * 0.5, text: line,
+                type: 'label', x: cx + li * lh * perpX, y: cy + li * lh * perpY, text: line,
                 pen: currentPen, lineType: currentLineType, penWidth: currentPenWidth,
-                rotation: labelRotation, charWidth: charWidth, charHeight: charHeight, slant: 0,
+                rotation: labelRotation, charWidth: charWidth, charHeight: charHeight, slant: labelSlant,
               });
             }
+            // Advance pen along label direction (charWidth cm → HPGL units: 1 cm = 400 units)
+            cx += labelText.length * charWidth * labelDirX / 0.0025;
+            cy += labelText.length * charWidth * labelDirY / 0.0025;
           }
         }
       }
