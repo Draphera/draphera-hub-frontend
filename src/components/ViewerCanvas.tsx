@@ -369,12 +369,16 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       } else if (path.type === 'label' && path.text) {
         const rot = path.rotation ?? 0;
         const sl = path.slant ?? 0;
-        const fs = path.charHeight ? clampFontSize(path.charHeight / effectiveZoom, 3, 40) : clampFontSize(6 / effectiveZoom, 5, 14);
-        const sw = clampFontSize(0.3 / effectiveZoom, 0.3, 2);
+        // font-size in user units (cm) inside the scaled <g>, no division by zoom
+        const fs = path.charHeight ? Math.max(0.04, Math.min(3, path.charHeight)) : 0.15;
+        const sw = Math.max(0.008, Math.min(0.08, (path.charHeight ?? 0.4) * 0.015));
         const slantSkew = sl ? ` skewY(${(-Math.atan(sl) * 180 / Math.PI).toFixed(1)})` : '';
         elements.push(
           <g key={idx} transform={`translate(${path.x}, ${path.y}) rotate(${rot})${slantSkew}`}>
-            <text x={0} y={0} fill="none" stroke={color} strokeWidth={sw} fontSize={fs} fontFamily="monospace" {...commonProps}>{path.text}</text>
+            <text x={0} y={0} fill="none" stroke={color} strokeWidth={sw}
+              fontSize={fs} fontFamily="monospace" fontWeight="100"
+              strokeLinecap="round" strokeLinejoin="round"
+              {...commonProps}>{path.text}</text>
           </g>
         );
       }
