@@ -192,6 +192,15 @@ function calcFitScale(bounds: BBox): number {
 }
 
 function screenToViewbox(svg: SVGSVGElement, clientX: number, clientY: number) {
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  const ctm = svg.getScreenCTM();
+  if (ctm) {
+    const svgPt = pt.matrixTransform(ctm.inverse());
+    return { x: svgPt.x, y: svgPt.y };
+  }
+  // fallback (shouldn't happen)
   const rect = svg.getBoundingClientRect();
   return {
     x: (clientX - rect.left) * (VIEW_W / rect.width),
