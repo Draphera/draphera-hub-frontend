@@ -347,7 +347,7 @@ export default function HPGLViewerPage() {
       const hasASTM = coComments.some(c => c.toUpperCase().includes('ASTM'));
       const astmStd = coComments.map(c => c.match(/ASTM\s*([A-Z0-9\-]+)/i)).find(Boolean)?.[0]?.trim();
       let ff: string, fv: string;
-      if (labelCount > 0 && hasASTM) { ff = 'astm'; fv = 'hpgl_astm'; }
+      if (hasASTM) { ff = 'astm'; fv = 'hpgl_astm'; }
       else if (labelCount > 0) { ff = 'hpgl2'; fv = 'hpgl_2'; }
       else { ff = 'hpgl'; fv = 'hpgl_1'; }
       setHpglData({ paths, meta: { total_paths: paths.length, polylines: paths.filter(p => p.type === 'polyline').length, arcs: paths.filter(p => p.type === 'arc').length, circles: paths.filter(p => p.type === 'circle').length, rectangles: paths.filter(p => p.type === 'rectangle').length, labels: labelCount, labelChars, dimensions: { width: w, height: h }, pens }, isLectra: hasLECTRA, formatInfo: { family: ff, variant: fv, astmStandard: astmStd ?? null, comments: coComments, isLectra: hasLECTRA } });
