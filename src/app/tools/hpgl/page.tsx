@@ -8,7 +8,7 @@ import Sidebar from '@/components/Sidebar';
 import ViewerCanvas from '@/components/ViewerCanvas';
 import InfoPanel from '@/components/InfoPanel';
 import FooterActions from '@/components/FooterActions';
-import { hpglApi, correctionApi, adminCadApi } from '@/lib/api';
+import { hpglApi, correctionApi, adminCadApi, adminApi } from '@/lib/api';
 import type { Session } from '@supabase/supabase-js';
 
 interface HPGLPath {
@@ -90,6 +90,7 @@ export default function HPGLViewerPage() {
   const [showNotches, setShowNotches] = useState(false);
   const [filled, setFilled] = useState(false);
   const [showBounds, setShowBounds] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -120,6 +121,7 @@ export default function HPGLViewerPage() {
       if (!data.session) { router.push('/auth/signin?redirect=/tools/hpgl'); return; }
       setSession(data.session);
       setLoading(false);
+      adminApi.check().then(r => setIsAdmin(!!r.is_admin)).catch(() => {});
     });
   }, [router]);
 
@@ -724,6 +726,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         hasFile={!!hpglData}
         selectionActive={selectionActive}
         selectionExists={!!selectionBounds}
+        isAdmin={isAdmin}
       />
 
       {/* Measurement modal */}

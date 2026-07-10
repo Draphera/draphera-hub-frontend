@@ -22,13 +22,14 @@ interface Props {
   hasFile: boolean;
   selectionActive: boolean;
   selectionExists: boolean;
+  isAdmin: boolean;
 }
 
 export default function FooterActions({
   onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, measureMode, onMeasureModeChange,
   gridOn, onToggleGrid, onExportPng, onExportSvg,
   onCopySvg, onExportCsv, onExportPdf, onToggleSelection, onExportSelection,
-  hasFile, selectionActive, selectionExists,
+  hasFile, selectionActive, selectionExists, isAdmin,
 }: Props) {
   const { t } = useTranslation();
   const [showExport, setShowExport] = useState(false);
@@ -46,8 +47,8 @@ export default function FooterActions({
   const exportOptions = [
     { key: 'png', label: 'PNG', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' },
     { key: 'svg', label: 'SVG', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
-    { key: 'copy', label: 'Copia SVG', icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z' },
-    { key: 'csv', label: 'CSV features', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
+    ...(isAdmin ? [{ key: 'copy' as const, label: 'Copia SVG', icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z' }] : []),
+    ...(isAdmin ? [{ key: 'csv' as const, label: 'CSV features', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }] : []),
     { key: 'pdf', label: 'PDF scheda', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
     { key: 'sel', label: 'Seleziona area', icon: 'M4 5a1 1 0 011-1h4a1 1 0 010 2H6v3a1 1 0 01-2 0V5zm14 14a1 1 0 01-1 1h-4a1 1 0 010-2h3v-3a1 1 0 012 0v4zM4 19a1 1 0 001 1h4a1 1 0 000-2H6v-3a1 1 0 00-2 0v4zm14-14a1 1 0 00-1-1h-4a1 1 0 000 2h3v3a1 1 0 002 0V5z' },
   ];
