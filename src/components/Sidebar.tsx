@@ -29,6 +29,14 @@ interface SidebarProps {
   onToggleFilled?: () => void;
   showBounds?: boolean;
   onToggleBounds?: () => void;
+  rotation?: 0 | 90 | 180 | 270;
+  onRotateLeft?: () => void;
+  onRotateRight?: () => void;
+  flipX?: boolean;
+  onFlipX?: () => void;
+  flipY?: boolean;
+  onFlipY?: () => void;
+  onResetTransform?: () => void;
 }
 
 export default function Sidebar({
@@ -40,6 +48,7 @@ export default function Sidebar({
   showNotches, onToggleNotches,
   filled, onToggleFilled,
   showBounds, onToggleBounds,
+  rotation, onRotateLeft, onRotateRight, flipX, onFlipX, flipY, onFlipY, onResetTransform,
 }: SidebarProps) {
   const { t } = useTranslation();
 
@@ -166,6 +175,36 @@ export default function Sidebar({
                 <span className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${showBounds ? 'translate-x-[14px]' : 'translate-x-0.5'}`} />
               </button>
             </label>
+            <div className="pt-1.5 px-1">
+              <span className="text-[10px] text-gray-500 font-semibold block mb-1.5">Rotazione / Flip</span>
+              <div className="flex items-center gap-1">
+                <button onClick={onRotateLeft}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[10px] transition-colors ${(rotation ?? 0) !== 0 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  <span className="text-[9px]">⟲</span>
+                </button>
+                <button onClick={onRotateRight}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[10px] transition-colors ${(rotation ?? 0) !== 0 ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                  <span className="text-[9px]">⟳</span>
+                </button>
+                <button onClick={onFlipX}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[10px] transition-colors ${flipX ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                  <span className="text-[9px]">↔</span>
+                </button>
+                <button onClick={onFlipY}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[10px] transition-colors ${flipY ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'}`}>
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" /></svg>
+                  <span className="text-[9px]">↕</span>
+                </button>
+                <button onClick={onResetTransform}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded text-[10px] text-gray-500 hover:text-white hover:bg-white/5 border border-transparent">
+                  <span className="text-[9px]">↺</span>
+                  <span className="text-[8px]">reset</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

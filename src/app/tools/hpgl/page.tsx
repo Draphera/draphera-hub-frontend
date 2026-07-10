@@ -91,6 +91,9 @@ export default function HPGLViewerPage() {
   const [filled, setFilled] = useState(false);
   const [showBounds, setShowBounds] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
+  const [flipX, setFlipX] = useState(false);
+  const [flipY, setFlipY] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -287,6 +290,12 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
     win.focus();
     setMsg('Scheda tecnica aperta — usa Ctrl+P per salvare PDF');
   }, [fileName, measureResults, hpglData]);
+
+  const handleRotateLeft = useCallback(() => setRotation(r => ((r - 90 + 360) % 360) as 0 | 90 | 180 | 270), []);
+  const handleRotateRight = useCallback(() => setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270), []);
+  const handleFlipX = useCallback(() => setFlipX(v => !v), []);
+  const handleFlipY = useCallback(() => setFlipY(v => !v), []);
+  const handleResetTransform = useCallback(() => { setRotation(0); setFlipX(false); setFlipY(false); }, []);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -514,6 +523,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         onToggleFilled={() => setFilled(v => !v)}
         showBounds={showBounds}
         onToggleBounds={() => setShowBounds(v => !v)}
+        rotation={rotation} onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
+        flipX={flipX} onFlipX={handleFlipX} flipY={flipY} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
       />
       <main className="ml-[260px] mr-[260px] pt-14 p-3" style={{ minHeight: 'calc(100vh - 3.5rem)' }}>
         {/* File tabs */}
@@ -560,7 +571,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             <div className="flex-1 min-w-0">
               <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
-                selectedPathIndex={selectedPath?.index ?? -1} onPathSelect={(path, idx) => {
+                selectedPathIndex={selectedPath?.index ?? -1} rotation={rotation} flipX={flipX} flipY={flipY}
+                onPathSelect={(path, idx) => {
                   if (!path) { setSelectedPath(null); return; }
                   const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
                   let length = 0;
@@ -571,7 +583,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             <div className="flex-1 min-w-0">
               {(() => {
                 const t = fileTabs.find(t => t.id === secondTabId);
-                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} /> : null;
+                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY} /> : null;
               })()}
             </div>
           </div>
@@ -610,7 +622,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                   },
                 },
               };
-              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure}
+              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
@@ -630,6 +642,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onCanvasClick={handleCanvasClick} showNotches={showNotches} filled={filled} showBounds={showBounds}
             selectionActive={selectionActive} selectionBounds={selectionBounds}
             onSelectionChange={b => setSelectionBounds(b)}
+            rotation={rotation} flipX={flipX} flipY={flipY}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];

@@ -140,6 +140,9 @@ interface Props {
   selectionActive?: boolean;
   selectionBounds?: { minX: number; minY: number; maxX: number; maxY: number } | null;
   onSelectionChange?: (bounds: { minX: number; minY: number; maxX: number; maxY: number }) => void;
+  rotation?: 0 | 90 | 180 | 270;
+  flipX?: boolean;
+  flipY?: boolean;
 }
 
 const PAD = 40;
@@ -228,7 +231,6 @@ function simplifyPoints(pts: [number, number][], lodFactor: number): [number, nu
   return result;
 }
 
-/** Check if a path bbox intersects the visible viewport (with margin) */
 function isPathVisible(
   path: HPGLPath,
   viewLeft: number, viewTop: number, viewW: number, viewH: number
@@ -264,7 +266,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -368,6 +370,47 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
     return count;
   }, [data]);
+
+  // Rotation / flip transform center
+  const contentCenter = useMemo(() => ({
+    x: bounds ? bounds.cx : 0,
+    y: bounds ? bounds.cy : 0,
+  }), [bounds]);
+
+  const contentTransform = useMemo(() => {
+    if ((rotation ?? 0) === 0 && !flipX && !flipY) return null;
+    const cx = contentCenter.x, cy = contentCenter.y;
+    const sx = flipX ? -1 : 1, sy = flipY ? -1 : 1;
+    return `translate(${cx}, ${cy}) rotate(${rotation ?? 0}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
+  }, [rotation, flipX, flipY, contentCenter]);
+
+  // Convert coordinates between outer (user) space and inner (content) space
+  const innerToOuter = useCallback((x: number, y: number): { x: number; y: number } => {
+    if ((rotation ?? 0) === 0 && !flipX && !flipY) return { x, y };
+    const cx = contentCenter.x, cy = contentCenter.y;
+    const rot = (rotation ?? 0) * Math.PI / 180;
+    const cosA = Math.cos(rot), sinA = Math.sin(rot);
+    const sx = flipX ? -1 : 1, sy = flipY ? -1 : 1;
+    let dx = (x - cx) * sx, dy = (y - cy) * sy;
+    const rx = dx * cosA - dy * sinA;
+    const ry = dx * sinA + dy * cosA;
+    return { x: cx + rx, y: cy + ry };
+  }, [rotation, flipX, flipY, contentCenter]);
+
+  const outerToInner = useCallback((x: number, y: number): { x: number; y: number } => {
+    if ((rotation ?? 0) === 0 && !flipX && !flipY) return { x, y };
+    const cx = contentCenter.x, cy = contentCenter.y;
+    const rot = -(rotation ?? 0) * Math.PI / 180;
+    const cosA = Math.cos(rot), sinA = Math.sin(rot);
+    const sx = flipX ? -1 : 1, sy = flipY ? -1 : 1;
+    const dX = x - cx, dY = y - cy;
+    // Inverse: [u] = 1/det * [cos*sinY   sin*sinY] [dX]
+    //         [v]           [-sin*sinX  cos*sinX] [dY]
+    const det = sx * sy;
+    const u = (cosA * sy * dX + sinA * sy * dY) / det;
+    const v = (-sinA * sx * dX + cosA * sx * dY) / det;
+    return { x: cx + u, y: cy + v };
+  }, [rotation, flipX, flipY, contentCenter]);
 
   const renderPaths = () => {
     if (!data) return null;
@@ -482,7 +525,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if (!pts || pts.length < 2) return;
 
       for (let i = 0; i < pts.length; i++) {
-        const sx = pts[i][0] * z + px, sy = pts[i][1] * z + py;
+        const outer = innerToOuter(pts[i][0], pts[i][1]);
+        const sx = outer.x * z + px, sy = outer.y * z + py;
         if (i === 0 || i === pts.length - 1) {
           elements.push(
             <rect key={`c_${idx}_${i}`} x={sx - SQ / 2} y={sy - SQ / 2}
@@ -587,7 +631,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
     // Active measurement points (red unfilled squares, fixed size)
     measurePoints?.forEach((p, i) => {
-      const sx = p.x * z + px, sy = p.y * z + py;
+      const outer = innerToOuter(p.x, p.y);
+      const sx = outer.x * z + px, sy = outer.y * z + py;
       const sz = 5;
       elements.push(
         <rect key={`mp_${i}`} x={sx - sz / 2} y={sy - sz / 2}
@@ -598,7 +643,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     // Completed result points (red unfilled squares, slightly smaller)
     measureResults?.forEach((r, ri) => {
       r.points.forEach((p, pi) => {
-        const sx = p.x * z + px, sy = p.y * z + py;
+        const outer = innerToOuter(p.x, p.y);
+        const sx = outer.x * z + px, sy = outer.y * z + py;
         const sz = 4;
         elements.push(
           <rect key={`mr_${ri}_${pi}`} x={sx - sz / 2} y={sy - sz / 2}
@@ -612,7 +658,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if (!r.label) return;
       const midX = r.points.reduce((s, p) => s + p.x, 0) / r.points.length;
       const midY = r.points.reduce((s, p) => s + p.y, 0) / r.points.length;
-      const sx = midX * z + px, sy = midY * z + py;
+      const outer = innerToOuter(midX, midY);
+      const sx = outer.x * z + px, sy = outer.y * z + py;
       const fs = clampFontSize(11, 9, 13);
       elements.push(
         <text key={`rl_${ri}`} x={sx} y={sy - 4} textAnchor="middle"
@@ -633,6 +680,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const vb = screenToViewbox(svg, e.clientX, e.clientY);
       let worldX = (vb.x - pan.x) / effectiveZoom;
       let worldY = (vb.y - pan.y) / effectiveZoom;
+      // Convert to inner (content) space for rotation/flip
+      const inner = outerToInner(worldX, worldY);
+      worldX = inner.x; worldY = inner.y;
       if (measureMode && measureMode !== 'off' && onCanvasClick) {
         // Optional snap to nearest vertex (~6 screen px threshold)
         if (snapMeasure && data) {
@@ -769,8 +819,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         {data ? (
           <>
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
-            {gridLines}
-            {renderPaths()}
+            {contentTransform ? (
+              <g transform={contentTransform}>
+                {gridLines}
+                {renderPaths()}
+              </g>
+            ) : (
+              <>{gridLines}{renderPaths()}</>
+            )}
             {renderMeasurement()}
             {/* Selection rectangle during drag */}
             {dragRect && (
@@ -787,18 +843,30 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           </g>
           {renderTackMarks()}
           {renderMeasureMarkers()}
-          {placementBounds && (
-            <rect
-              x={pan.x + placementBounds.minX * effectiveZoom}
-              y={pan.y + placementBounds.minY * effectiveZoom}
-              width={(placementBounds.maxX - placementBounds.minX) * effectiveZoom}
-              height={(placementBounds.maxY - placementBounds.minY) * effectiveZoom}
-              fill="none"
-              stroke="#00E5FF"
-              strokeWidth={showBounds ? 1.5 : 0}
-              rx={1}
-              style={{ pointerEvents: 'none', transition: 'stroke-width 0.15s' }} />
-          )}
+          {placementBounds && (() => {
+            const corners = [
+              innerToOuter(placementBounds.minX, placementBounds.minY),
+              innerToOuter(placementBounds.maxX, placementBounds.minY),
+              innerToOuter(placementBounds.minX, placementBounds.maxY),
+              innerToOuter(placementBounds.maxX, placementBounds.maxY),
+            ];
+            const ox = Math.min(...corners.map(c => c.x));
+            const oy = Math.min(...corners.map(c => c.y));
+            const ox2 = Math.max(...corners.map(c => c.x));
+            const oy2 = Math.max(...corners.map(c => c.y));
+            return (
+              <rect
+                x={pan.x + ox * effectiveZoom}
+                y={pan.y + oy * effectiveZoom}
+                width={(ox2 - ox) * effectiveZoom}
+                height={(oy2 - oy) * effectiveZoom}
+                fill="none"
+                stroke="#00E5FF"
+                strokeWidth={showBounds ? 1.5 : 0}
+                rx={1}
+                style={{ pointerEvents: 'none', transition: 'stroke-width 0.15s' }} />
+            );
+          })()}
           </>
         ) : (
           <>
