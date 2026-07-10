@@ -143,6 +143,11 @@ interface Props {
   rotation?: 0 | 90 | 180 | 270;
   flipX?: boolean;
   flipY?: boolean;
+  onRotateLeft?: () => void;
+  onRotateRight?: () => void;
+  onFlipX?: () => void;
+  onFlipY?: () => void;
+  onResetTransform?: () => void;
 }
 
 const PAD = 40;
@@ -266,7 +271,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -276,6 +281,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const [hoveredPath, setHoveredPath] = useState<{ idx: number; x: number; y: number } | null>(null);
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; endX: number; endY: number }>({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 });
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
@@ -813,6 +819,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onContextMenu={e => { e.preventDefault(); if (data) setCtxMenu({ x: e.clientX, y: e.clientY }); }}
         onWheel={handleWheel}
       >
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
@@ -953,6 +960,38 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">Y: {mousePos.y.toFixed(1)}</span>
         <span className="text-[11px] text-drapera-steel-light font-mono font-medium tracking-wide">S: {Math.round(effectiveZoom * 100)}%</span>
       </div>
+
+      {/* Right-click context menu */}
+      {ctxMenu && (
+        <>
+          <div className="fixed inset-0 z-50" onClick={() => setCtxMenu(null)} onContextMenu={e => { e.preventDefault(); setCtxMenu(null); }} />
+          <div className="fixed z-50 min-w-[140px] rounded-lg border border-drapera-border bg-drapera-midnight shadow-xl py-1"
+            style={{ left: ctxMenu.x, top: ctxMenu.y, backdropFilter: 'blur(12px)' }}>
+            <button onClick={() => { onRotateLeft?.(); setCtxMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+              <span className="text-[13px]">⟲</span> Ruota sinistra
+            </button>
+            <button onClick={() => { onRotateRight?.(); setCtxMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+              <span className="text-[13px]">⟳</span> Ruota destra
+            </button>
+            <div className="h-px bg-drapera-border/60 my-1 mx-2" />
+            <button onClick={() => { onFlipX?.(); setCtxMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+              <span className="text-[13px]">↔</span> Flip X
+            </button>
+            <button onClick={() => { onFlipY?.(); setCtxMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+              <span className="text-[13px]">↕</span> Flip Y
+            </button>
+            <div className="h-px bg-drapera-border/60 my-1 mx-2" />
+            <button onClick={() => { onResetTransform?.(); setCtxMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
+              <span className="text-[13px]">↺</span> Reset vista
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

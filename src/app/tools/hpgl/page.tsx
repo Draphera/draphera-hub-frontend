@@ -643,6 +643,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             selectionActive={selectionActive} selectionBounds={selectionBounds}
             onSelectionChange={b => setSelectionBounds(b)}
             rotation={rotation} flipX={flipX} flipY={flipY}
+            onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
+            onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
