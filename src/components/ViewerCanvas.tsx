@@ -148,6 +148,9 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
+  glyphClusters?: Array<{ x: number; y: number; width: number; height: number; stroke_count: number }>;
+  onGlyphSegment?: () => void;
+  glyphLoading?: boolean;
 }
 
 const PAD = 40;
@@ -271,7 +274,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, glyphClusters, onGlyphSegment, glyphLoading }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -835,6 +838,18 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               <>{gridLines}{renderPaths()}</>
             )}
             {renderMeasurement()}
+            {/* Glyph cluster bounding boxes */}
+            {glyphClusters?.map((c, i) => {
+              const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9','#F1948A','#82E0AA'];
+              const col = colors[i % colors.length];
+              return (
+                <g key={`glyph_${i}`}>
+                  <rect x={c.x} y={c.y} width={c.width} height={c.height}
+                    fill="none" stroke={col} strokeWidth={1.5 / effectiveZoom}
+                    strokeDasharray="3 2" rx={1} />
+                </g>
+              );
+            })}
             {/* Selection rectangle during drag */}
             {dragRect && (
               <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
@@ -984,12 +999,22 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
               <span className="text-[13px]">↕</span> Flip Y
             </button>
-            {onResetTransform && (
+             {onResetTransform && (
               <>
                 <div className="h-px bg-drapera-border/60 my-1 mx-2" />
                 <button onClick={() => { onResetTransform?.(); setCtxMenu(null); }}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-300 hover:bg-white/5 hover:text-white transition-colors">
                   <span className="text-[13px]">↺</span> Reset vista
+                </button>
+              </>
+            )}
+            {onGlyphSegment && (
+              <>
+                <div className="h-px bg-drapera-border/60 my-1 mx-2" />
+                <button onClick={() => { onGlyphSegment(); setCtxMenu(null); }} disabled={glyphLoading}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-cyan-400 hover:bg-cyan-500/10 transition-colors disabled:opacity-40">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                  {glyphLoading ? 'Glifi...' : 'Segmenta glifi'}
                 </button>
               </>
             )}

@@ -94,6 +94,8 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(false);
   const [flipY, setFlipY] = useState(false);
+  const [glyphClusters, setGlyphClusters] = useState<Array<{ x: number; y: number; width: number; height: number; stroke_count: number }>>();
+  const [glyphLoading, setGlyphLoading] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -296,6 +298,17 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
   const handleFlipX = useCallback(() => setFlipX(v => !v), []);
   const handleFlipY = useCallback(() => setFlipY(v => !v), []);
   const handleResetTransform = useCallback(() => { setRotation(0); setFlipX(false); setFlipY(false); }, []);
+
+  const handleGlyphSegment = useCallback(async () => {
+    if (!rawFile) return;
+    setGlyphLoading(true);
+    try {
+      const result = await hpglApi.glyphSegment(rawFile);
+      setGlyphClusters(result.clusters ?? []);
+      setMsg(result.clusters?.length > 0 ? `${result.clusters.length} glifi candidati` : 'Nessun glifo trovato');
+    } catch { setMsg('Errore segmentazione glifi'); }
+    setGlyphLoading(false);
+  }, [rawFile]);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -645,6 +658,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             rotation={rotation} flipX={flipX} flipY={flipY}
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
+            glyphClusters={glyphClusters}
+            onGlyphSegment={handleGlyphSegment} glyphLoading={glyphLoading}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -674,7 +689,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
-        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)} />
+        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
+        glyphLoading={glyphLoading} glyphCount={glyphClusters?.length} onGlyphSegment={handleGlyphSegment} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

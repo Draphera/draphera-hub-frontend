@@ -72,11 +72,14 @@ interface Props {
   onPenColorChange?: (pen: number, color: string) => void;
   flattened?: boolean;
   onToggleFlattened?: () => void;
+  glyphLoading?: boolean;
+  glyphCount?: number;
+  onGlyphSegment?: () => void;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, glyphLoading, glyphCount, onGlyphSegment }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -237,6 +240,13 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
           </span>
           {formatInfo?.astmStandard && (
             <span className="text-[11px] text-amber-400 font-semibold">({formatInfo.astmStandard})</span>
+          )}
+          {onGlyphSegment && (
+            <button onClick={onGlyphSegment} disabled={glyphLoading}
+              className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold transition-all bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 disabled:opacity-40">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+              {glyphLoading ? '...' : glyphCount ? `Glifi (${glyphCount})` : 'Glifi'}
+            </button>
           )}
         </div>
 
