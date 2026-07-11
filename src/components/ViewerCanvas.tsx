@@ -148,7 +148,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_idx: number }>;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
 }
@@ -422,6 +422,24 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return { x: cx + u, y: cy + v };
   }, [rotation, flipX, flipY, contentCenter]);
 
+  // Map piece contour index → piece data for contour highlighting
+  const pieceContourMap = useMemo(() => {
+    const m = new Map<number, { pieceId: number; color: string; area: number; notch: number; grainline: boolean }>();
+    if (pieces) {
+      const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
+      for (const p of pieces) {
+        m.set(p.contour_idx, {
+          pieceId: p.id,
+          color: colors[p.id % colors.length],
+          area: p.area,
+          notch: p.notch_count,
+          grainline: p.has_grainline,
+        });
+      }
+    }
+    return m;
+  }, [pieces]);
+
   const renderPaths = () => {
     if (!data) return null;
     const lodFactor = effectiveZoom >= 0.7 ? 1 : effectiveZoom >= 0.5 ? 0.5 : effectiveZoom >= 0.3 ? 0.25 : 0.1;
@@ -466,6 +484,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       };
 
       const elements: JSX.Element[] = [];
+
+      // Piece contour highlight
+      const pieceData = pieceContourMap.get(idx);
+      if (pieceData && (hoveredPiece === pieceData.pieceId || selectedPieceId === pieceData.pieceId) && (path.type === 'polyline' || path.type === 'rectangle') && path.points) {
+        const lodPts = (lodFactor < 1 && path.points.length > 100) ? simplifyPoints(path.points, lodFactor) : path.points;
+        const pts = lodPts.map(p => `${p[0]},${p[1]}`).join(' ');
+        const fill = selectedPieceId === pieceData.pieceId ? `${pieceData.color}25` : `${pieceData.color}15`;
+        const sw = selectedPieceId === pieceData.pieceId ? 3 : 2;
+        elements.push(
+          <polygon key={`pc_${idx}`} points={pts} fill={fill} stroke={pieceData.color}
+            strokeWidth={sw / effectiveZoom} strokeLinejoin="round" opacity={0.8} />
+        );
+      }
 
       // Highlight for selected path (use LOD too)
       if (isSelected) {
@@ -880,25 +911,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {pieces?.map((p) => {
               const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
               const col = colors[p.id % colors.length];
-              const w = p.maxx - p.minx, h = p.maxy - p.miny;
               const isHover = hoveredPiece !== undefined && hoveredPiece === p.id;
               const isSelected = selectedPieceId === p.id;
-              const sw = isSelected ? 3 : isHover ? 2 : 1.5;
-              const fill = isSelected ? `${col}30` : isHover ? `${col}20` : `${col}10`;
+              if (!isHover && !isSelected) return null;
               return (
-                <g key={`piece_${p.id}`}>
-                  <rect x={p.minx} y={p.miny} width={w} height={h}
-                    fill={fill} stroke={col} strokeWidth={sw / effectiveZoom} rx={1}
-                    style={{ cursor: 'pointer' }} />
-                  {(isHover || isSelected) && (
-                    <text x={(p.minx + p.maxx) / 2} y={p.miny - 4}
-                      textAnchor="middle" fill={col}
-                      fontSize={Math.max(8, Math.min(12, h * 0.5))}
-                      fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
-                      #{p.id} {p.area.toFixed(0)} {p.notch_count > 0 ? `N${p.notch_count}` : ''}{p.has_grainline ? ' G' : ''}
-                    </text>
-                  )}
-                </g>
+                <text key={`pl_${p.id}`} x={(p.minx + p.maxx) / 2} y={p.miny - 4}
+                  textAnchor="middle" fill={col}
+                  fontSize={10} fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
+                  #{p.id} {p.area.toFixed(0)}{p.notch_count > 0 ? ` N${p.notch_count}` : ''}{p.has_grainline ? ' G' : ''}
+                </text>
               );
             })}
           </g>
