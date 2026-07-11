@@ -411,13 +411,4 @@ export const hpglApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.blob();
   },
-  async glyphSegment(file: File) {
-    const form = new FormData(); form.append('file', file);
-    const headers = await getHeaders();
-    const res = await fetchWithTimeout(`${API_BASE}/api/hpgl/glyph-segment`, {
-      method: 'POST', headers: { Authorization: headers.Authorization || '' }, body: form,
-    });
-    if (!res.ok) throw new Error(await res.text());
-    return res.json();
-  },
 };
