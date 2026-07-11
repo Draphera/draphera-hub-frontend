@@ -733,7 +733,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
           setViewMode(m !== 'off' ? 'measurement' : viewMode === 'measurement' ? 'outline' : viewMode);
         }}
         gridOn={gridOn} onToggleGrid={() => setGridOn(v => !v)}
-        onExportPng={handleExportPng} onExportSvg={handleExportSvg}
+        onExportPng={handleExportPng} onExportSvg={handleExportSvg} onExportZip={handleExportZip}
         onCopySvg={handleCopySvg} onExportCsv={handleExportCsv}
         onExportPdf={handleExportPdf}
         onToggleSelection={handleToggleSelection}

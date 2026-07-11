@@ -14,6 +14,7 @@ interface Props {
   onToggleGrid: () => void;
   onExportPng: () => void;
   onExportSvg: () => void;
+  onExportZip: () => void;
   onCopySvg: () => void;
   onExportCsv: () => void;
   onExportPdf: () => void;
@@ -28,7 +29,7 @@ interface Props {
 export default function FooterActions({
   onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, measureMode, onMeasureModeChange,
   gridOn, onToggleGrid, onExportPng, onExportSvg,
-  onCopySvg, onExportCsv, onExportPdf, onToggleSelection, onExportSelection,
+  onCopySvg, onExportCsv, onExportPdf, onExportZip, onToggleSelection, onExportSelection,
   hasFile, selectionActive, selectionExists, isAdmin,
 }: Props) {
   const { t } = useTranslation();
@@ -47,6 +48,7 @@ export default function FooterActions({
   const exportOptions = [
     { key: 'png', label: 'PNG', icon: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4' },
     { key: 'svg', label: 'SVG', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
+    { key: 'zip', label: 'ZIP', icon: 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4' },
     ...(isAdmin ? [{ key: 'copy' as const, label: 'Copia SVG', icon: 'M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z' }] : []),
     ...(isAdmin ? [{ key: 'csv' as const, label: 'CSV features', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }] : []),
     { key: 'pdf', label: 'PDF scheda', icon: 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z' },
@@ -56,6 +58,7 @@ export default function FooterActions({
   const exportHandlers: Record<string, () => void> = {
     png: onExportPng,
     svg: onExportSvg,
+    zip: onExportZip,
     copy: onCopySvg,
     csv: onExportCsv,
     pdf: onExportPdf,
@@ -148,7 +151,7 @@ export default function FooterActions({
               return (
                 <button key={opt.key} onClick={() => {
                   if (isSel) { onToggleSelection(); setShowExport(false); return; }
-                  if (opt.key === 'png' || opt.key === 'svg') {
+                  if (opt.key === 'png' || opt.key === 'svg' || opt.key === 'zip') {
                     if (!hasFile) return;
                   }
                   exportHandlers[opt.key]?.();
