@@ -148,7 +148,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  glyphClusters?: Array<{ x: number; y: number; width: number; height: number; stroke_count: number }>;
+  glyphClusters?: Array<{ x: number; y: number; width: number; height: number; stroke_count: number; matches?: Array<{ char: string; score: number }> }>;
   onGlyphSegment?: () => void;
   glyphLoading?: boolean;
 }
@@ -842,11 +842,21 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {glyphClusters?.map((c, i) => {
               const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9','#F1948A','#82E0AA'];
               const col = colors[i % colors.length];
+              const match = (c as any).matches?.[0];
               return (
                 <g key={`glyph_${i}`}>
                   <rect x={c.x} y={c.y} width={c.width} height={c.height}
                     fill="none" stroke={col} strokeWidth={1.5 / effectiveZoom}
                     strokeDasharray="3 2" rx={1} />
+                  {match && (
+                    <text x={c.x + c.width / 2} y={c.y - 4}
+                      textAnchor="middle" fill={col}
+                      fontSize={Math.max(8, Math.min(14, c.height * 0.6))}
+                      fontFamily="Inter" fontWeight="bold"
+                      style={{ pointerEvents: 'none' }}>
+                      {match.char} {Math.round(match.score * 100)}%
+                    </text>
+                  )}
                 </g>
               );
             })}
