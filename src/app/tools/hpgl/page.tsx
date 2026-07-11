@@ -94,8 +94,6 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(false);
   const [flipY, setFlipY] = useState(false);
-  const [ocrTexts, setOcrTexts] = useState<Array<{ text: string; x: number; y: number; width: number; height: number; confidence: number }>>();
-  const [ocrLoading, setOcrLoading] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -298,19 +296,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
   const handleFlipX = useCallback(() => setFlipX(v => !v), []);
   const handleFlipY = useCallback(() => setFlipY(v => !v), []);
   const handleResetTransform = useCallback(() => { setRotation(0); setFlipX(false); setFlipY(false); }, []);
-
-  const handleOcr = useCallback(async () => {
-    if (!rawFile) return;
-    setOcrLoading(true);
-    try {
-      const result = await hpglApi.ocr(rawFile);
-      setOcrTexts(result.texts ?? []);
-      if (result.texts?.length > 0) setMsg(`${result.texts.length} testi riconosciuti`);
-      else if (result.error) setMsg(`OCR: ${result.error}`);
-      else setMsg('Nessun testo riconosciuto');
-    } catch { setMsg('Errore OCR'); }
-    setOcrLoading(false);
-  }, [rawFile]);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -660,8 +645,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             rotation={rotation} flipX={flipX} flipY={flipY}
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
-            ocrTexts={ocrTexts} ocrLoading={ocrLoading} onOcr={handleOcr}
-            showOcr={!!hpglData}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -691,9 +674,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
-        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
-        showOcr={!!hpglData}
-        ocrLoading={ocrLoading} ocrTextsCount={ocrTexts?.length ?? 0} onOcr={handleOcr} />
+        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
