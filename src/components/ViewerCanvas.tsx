@@ -240,7 +240,7 @@ function isPathVisible(
   path: HPGLPath,
   viewLeft: number, viewTop: number, viewW: number, viewH: number
 ): boolean {
-  const margin = Math.max(viewW, viewH) * 0.5;
+  const margin = Math.max(viewW, viewH) * 2.0;
   const l = viewLeft - margin, rBound = viewLeft + viewW + margin;
   const t = viewTop - margin, b = viewTop + viewH + margin;
 
@@ -421,12 +421,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const renderPaths = () => {
     if (!data) return null;
     const lodFactor = effectiveZoom >= 0.7 ? 1 : effectiveZoom >= 0.5 ? 0.5 : effectiveZoom >= 0.3 ? 0.25 : 0.1;
-    // Disable viewport culling when rotation/flip is active (coordinates mismatch)
-    const useCulling = !rotation && !flipX && !flipY;
     return data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
-      // Viewport culling — skip if flip/rotation active (transformed coords don't match)
-      if (useCulling && !isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
+      // Viewport culling with large margin to avoid pop-in during zoom/pan
+      if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
       const isSelected = selectedPathIndex === idx;
@@ -524,10 +522,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     const CR = 3; // fixed 3px circle radius
     const elements: React.ReactNode[] = [];
     const z = effectiveZoom, px = pan.x, py = pan.y;
-    const useCulling = !rotation && !flipX && !flipY;
     data.paths.forEach((path, idx) => {
       if (idx === boundRectIdx) return;
-      if (useCulling && !isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return;
+      if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return;
       const pts = (path.type === 'polyline' || path.type === 'rectangle') ? path.points : null;
