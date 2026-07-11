@@ -783,10 +783,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
 
-    // Piece hover hit-test
+    // Piece hover hit-test (use inner coords to match piece bbox)
     if (pieces && !dragRef.current.active) {
-      const wx = (vb.x - pan.x) / effectiveZoom;
-      const wy = (vb.y - pan.y) / effectiveZoom;
+      const outer = outerToInner((vb.x - pan.x) / effectiveZoom, (vb.y - pan.y) / effectiveZoom);
+      const wx = outer.x, wy = outer.y;
       let found: number | undefined;
       for (const p of pieces) {
         if (wx >= p.minx && wx <= p.maxx && wy >= p.miny && wy <= p.maxy) {
