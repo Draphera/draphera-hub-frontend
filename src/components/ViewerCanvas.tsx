@@ -149,6 +149,8 @@ interface Props {
   onFlipY?: () => void;
   onResetTransform?: () => void;
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
+  selectedPieceId?: number;
+  onPieceSelect?: (id: number | undefined) => void;
 }
 
 const PAD = 40;
@@ -272,7 +274,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -280,6 +282,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [wheelZoom, setWheelZoom] = useState(1);
   const [hoveredPath, setHoveredPath] = useState<{ idx: number; x: number; y: number } | null>(null);
+  const [hoveredPiece, setHoveredPiece] = useState<number>();
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; endX: number; endY: number }>({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 });
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
@@ -712,6 +715,17 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         setDragRect({ x: worldX, y: worldY, w: 0, h: 0 });
         return;
       }
+      // Piece selection
+      if (onPieceSelect && pieces) {
+        let found: number | undefined;
+        for (const p of pieces) {
+          if (worldX >= p.minx && worldX <= p.maxx && worldY >= p.miny && worldY <= p.maxy) {
+            found = p.id;
+            break;
+          }
+        }
+        onPieceSelect(found);
+      }
       setIsPanning(true);
       setPanStart({ x: vb.x - pan.x, y: vb.y - pan.y });
     }
@@ -737,6 +751,20 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
 
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
+
+    // Piece hover hit-test
+    if (pieces && !dragRef.current.active) {
+      const wx = (vb.x - pan.x) / effectiveZoom;
+      const wy = (vb.y - pan.y) / effectiveZoom;
+      let found: number | undefined;
+      for (const p of pieces) {
+        if (wx >= p.minx && wx <= p.maxx && wy >= p.miny && wy <= p.maxy) {
+          found = p.id;
+          break;
+        }
+      }
+      setHoveredPiece(found);
+    }
 
     if (isPanning) {
       setPan({ x: vb.x - panStart.x, y: vb.y - panStart.y });
@@ -853,17 +881,23 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
               const col = colors[p.id % colors.length];
               const w = p.maxx - p.minx, h = p.maxy - p.miny;
+              const isHover = hoveredPiece !== undefined && hoveredPiece === p.id;
+              const isSelected = selectedPieceId === p.id;
+              const sw = isSelected ? 3 : isHover ? 2 : 1.5;
+              const fill = isSelected ? `${col}30` : isHover ? `${col}20` : `${col}10`;
               return (
                 <g key={`piece_${p.id}`}>
                   <rect x={p.minx} y={p.miny} width={w} height={h}
-                    fill={`${col}15`} stroke={col} strokeWidth={1.5 / effectiveZoom} rx={1}
+                    fill={fill} stroke={col} strokeWidth={sw / effectiveZoom} rx={1}
                     style={{ cursor: 'pointer' }} />
-                  <text x={(p.minx + p.maxx) / 2} y={p.miny - 4}
-                    textAnchor="middle" fill={col}
-                    fontSize={Math.max(8, Math.min(12, h * 0.5))}
-                    fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
-                    #{p.id} {p.area.toFixed(0)}
-                  </text>
+                  {(isHover || isSelected) && (
+                    <text x={(p.minx + p.maxx) / 2} y={p.miny - 4}
+                      textAnchor="middle" fill={col}
+                      fontSize={Math.max(8, Math.min(12, h * 0.5))}
+                      fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
+                      #{p.id} {p.area.toFixed(0)} {p.notch_count > 0 ? `N${p.notch_count}` : ''}{p.has_grainline ? ' G' : ''}
+                    </text>
+                  )}
                 </g>
               );
             })}

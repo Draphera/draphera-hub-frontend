@@ -75,11 +75,12 @@ interface Props {
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
   piecesLoading?: boolean;
   onDetectPieces?: () => void;
+  selectedPiece?: { id: number; area: number; notch_count: number; has_grainline: boolean; perimeter?: number };
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -249,6 +250,16 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 010 2H6v3a1 1 0 01-2 0V5zm14 14a1 1 0 01-1 1h-4a1 1 0 010-2h3v-3a1 1 0 012 0v4zM4 19a1 1 0 001 1h4a1 1 0 000-2H6v-3a1 1 0 00-2 0v4zm14-14a1 1 0 00-1-1h-4a1 1 0 000 2h3v3a1 1 0 002 0V5z" /></svg>
             {piecesLoading ? 'Rilevamento...' : pieces ? `${pieces.length} pezzi` : 'Rileva pezzi'}
           </button>
+        )}
+        {selectedPiece && (
+          <div className="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+            <p className="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">Pezzo #{selectedPiece.id}</p>
+            <div className="mt-1 space-y-0.5 text-[10px] text-gray-400">
+              <p>Area: <span className="text-white font-mono">{selectedPiece.area.toFixed(1)}</span></p>
+              <p>Notch: <span className="text-white font-mono">{selectedPiece.notch_count}</span></p>
+              {selectedPiece.has_grainline && <p className="text-emerald-400">Con grainline</p>}
+            </div>
+          </div>
         )}
 
         <div className="space-y-2.5">

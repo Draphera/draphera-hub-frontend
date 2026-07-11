@@ -96,6 +96,7 @@ export default function HPGLViewerPage() {
   const [flipY, setFlipY] = useState(false);
   const [pieces, setPieces] = useState<Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>>();
   const [piecesLoading, setPiecesLoading] = useState(false);
+  const [selectedPieceId, setSelectedPieceId] = useState<number>();
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -305,6 +306,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
     try {
       const result = await hpglApi.pieces(rawFile);
       setPieces(result.pieces ?? []);
+      setSelectedPieceId(undefined);
       setMsg(result.pieces?.length > 0 ? `${result.pieces.length} pezzi rilevati` : 'Nessun pezzo trovato');
     } catch { setMsg('Errore rilevamento pezzi'); }
     setPiecesLoading(false);
@@ -659,6 +661,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             pieces={pieces}
+            selectedPieceId={selectedPieceId}
+            onPieceSelect={id => setSelectedPieceId(id)}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -689,7 +693,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
         flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
-        pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces} />
+        pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces}
+        selectedPiece={selectedPieceId !== undefined && pieces ? pieces.find(p => p.id === selectedPieceId) ?? undefined : undefined} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
