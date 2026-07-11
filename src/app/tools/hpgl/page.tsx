@@ -92,8 +92,8 @@ export default function HPGLViewerPage() {
   const [showBounds, setShowBounds] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
-  const [flipX, setFlipX] = useState(false);
-  const [flipY, setFlipY] = useState(true);
+  const [flipX, setFlipX] = useState(true);
+  const [flipY, setFlipY] = useState(false);
   const [glyphClusters, setGlyphClusters] = useState<Array<{ x: number; y: number; width: number; height: number; stroke_count: number }>>();
   const [glyphLoading, setGlyphLoading] = useState(false);
 
