@@ -694,7 +694,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
         flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
         pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces}
-        selectedPiece={selectedPieceId !== undefined && pieces ? pieces.find(p => p.id === selectedPieceId) ?? undefined : undefined} />
+        selectedPiece={selectedPieceId !== undefined && pieces ? pieces.find(p => p.id === selectedPieceId) ?? undefined : undefined}
+        isAdmin={isAdmin} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
