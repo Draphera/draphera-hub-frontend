@@ -94,6 +94,8 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
+  const [pieces, setPieces] = useState<Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>>();
+  const [piecesLoading, setPiecesLoading] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -296,6 +298,17 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
   const handleFlipX = useCallback(() => setFlipX(v => !v), []);
   const handleFlipY = useCallback(() => setFlipY(v => !v), []);
   const handleResetTransform = useCallback(() => { setRotation(0); setFlipX(false); setFlipY(false); }, []);
+
+  const handleDetectPieces = useCallback(async () => {
+    if (!rawFile) return;
+    setPiecesLoading(true);
+    try {
+      const result = await hpglApi.pieces(rawFile);
+      setPieces(result.pieces ?? []);
+      setMsg(result.pieces?.length > 0 ? `${result.pieces.length} pezzi rilevati` : 'Nessun pezzo trovato');
+    } catch { setMsg('Errore rilevamento pezzi'); }
+    setPiecesLoading(false);
+  }, [rawFile]);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -645,6 +658,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             rotation={rotation} flipX={flipX} flipY={flipY}
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
+            pieces={pieces}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -674,7 +688,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
         penColors={penColors} onPenColorChange={(p, c) => setPenColors(v => ({ ...v, [p]: c }))}
-        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)} />
+        flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
+        pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

@@ -72,11 +72,14 @@ interface Props {
   onPenColorChange?: (pen: number, color: string) => void;
   flattened?: boolean;
   onToggleFlattened?: () => void;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
+  piecesLoading?: boolean;
+  onDetectPieces?: () => void;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -239,6 +242,14 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             <span className="text-[11px] text-amber-400 font-semibold">({formatInfo.astmStandard})</span>
           )}
         </div>
+
+        {onDetectPieces && (
+          <button onClick={onDetectPieces} disabled={piecesLoading}
+            className="w-full flex items-center justify-center gap-2 py-1.5 rounded text-[10px] font-semibold transition-all bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-40">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 010 2H6v3a1 1 0 01-2 0V5zm14 14a1 1 0 01-1 1h-4a1 1 0 010-2h3v-3a1 1 0 012 0v4zM4 19a1 1 0 001 1h4a1 1 0 000-2H6v-3a1 1 0 00-2 0v4zm14-14a1 1 0 00-1-1h-4a1 1 0 000 2h3v3a1 1 0 002 0V5z" /></svg>
+            {piecesLoading ? 'Rilevamento...' : pieces ? `${pieces.length} pezzi` : 'Rileva pezzi'}
+          </button>
+        )}
 
         <div className="space-y-2.5">
           {[

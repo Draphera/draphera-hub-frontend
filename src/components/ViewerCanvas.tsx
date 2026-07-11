@@ -148,6 +148,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
 }
 
 const PAD = 40;
@@ -271,7 +272,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -847,6 +848,25 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 height={selectionBounds.maxY - selectionBounds.minY}
                 fill="rgba(242,201,76,0.06)" stroke="#F2C94C" strokeWidth={1.5 / effectiveZoom} strokeDasharray="4 3" />
             )}
+            {/* Piece bounding boxes */}
+            {pieces?.map((p) => {
+              const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
+              const col = colors[p.id % colors.length];
+              const w = p.maxx - p.minx, h = p.maxy - p.miny;
+              return (
+                <g key={`piece_${p.id}`}>
+                  <rect x={p.minx} y={p.miny} width={w} height={h}
+                    fill={`${col}15`} stroke={col} strokeWidth={1.5 / effectiveZoom} rx={1}
+                    style={{ cursor: 'pointer' }} />
+                  <text x={(p.minx + p.maxx) / 2} y={p.miny - 4}
+                    textAnchor="middle" fill={col}
+                    fontSize={Math.max(8, Math.min(12, h * 0.5))}
+                    fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
+                    #{p.id} {p.area.toFixed(0)}
+                  </text>
+                </g>
+              );
+            })}
           </g>
           {renderTackMarks()}
           {renderMeasureMarkers()}
