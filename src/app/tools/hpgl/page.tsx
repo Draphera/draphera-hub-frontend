@@ -307,7 +307,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       setOcrTexts(result.texts ?? []);
       if (result.texts?.length > 0) setMsg(`${result.texts.length} testi riconosciuti`);
       else if (result.error) setMsg(`OCR: ${result.error}`);
-      else if (result.has_ocr === false) setMsg('OCR non disponibile (tesserocr mancante sul server)');
       else setMsg('Nessun testo riconosciuto');
     } catch { setMsg('Errore OCR'); }
     setOcrLoading(false);
