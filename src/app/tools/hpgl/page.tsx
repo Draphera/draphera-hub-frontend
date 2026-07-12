@@ -97,6 +97,7 @@ export default function HPGLViewerPage() {
   const [pieces, setPieces] = useState<Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
+  const [debug, setDebug] = useState(false);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -130,6 +131,15 @@ export default function HPGLViewerPage() {
       adminApi.check().then(r => setIsAdmin(!!r.is_admin)).catch(() => {});
     });
   }, [router]);
+
+  // Toggle debug overlay with Ctrl+Shift+D
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); setDebug(v => !v); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const switchTab = (tabId: number) => {
     const tab = fileTabs.find(t => t.id === tabId);
@@ -663,6 +673,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             pieces={pieces}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
+            debug={debug}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];

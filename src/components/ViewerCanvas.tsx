@@ -1,6 +1,8 @@
 'use client';
 
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { useHitTestDebug } from '@/hooks/useHitTestDebug';
+import DebugOverlay from '@/components/DebugOverlay';
 
 interface HPGLPath {
   type: 'polyline' | 'arc' | 'circle' | 'rectangle' | 'label';
@@ -117,6 +119,7 @@ interface MeasureResult {
 }
 
 interface Props {
+  debug?: boolean;
   data: HPGLData | null;
   filled?: boolean;
   showBounds?: boolean;
@@ -274,7 +277,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -286,6 +289,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const dragRef = useRef<{ active: boolean; startX: number; startY: number; endX: number; endY: number }>({ active: false, startX: 0, startY: 0, endX: 0, endY: 0 });
   const [dragRect, setDragRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+
+  const { onPointerMoveDebug } = useHitTestDebug(debug, svgRef, pieces);
 
   const bgColor = invertColors ? '#1a1a2e' : '#120A20';
   const gridColor = invertColors ? 'rgba(255,255,255,0.05)' : 'rgba(242,201,76,0.04)';
@@ -786,6 +791,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   // Piece hover via native elementsFromPoint (most reliable across SVG transforms)
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    onPointerMoveDebug(e);
     if (!pieces) { setHoveredPiece(undefined); return; }
     const els = document.elementsFromPoint(e.clientX, e.clientY);
     for (const el of els) {
@@ -796,7 +802,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       }
     }
     setHoveredPiece(undefined);
-  }, [pieces]);
+  }, [pieces, onPointerMoveDebug]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const svg = svgRef.current;
@@ -914,9 +920,12 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               <g transform={contentTransform}>
                 {gridLines}
                 {renderPaths()}
+                <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
               </g>
             ) : (
-              <>{gridLines}{renderPaths()}</>
+              <>{gridLines}{renderPaths()}
+                <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
+              </>
             )}
             {renderMeasurement()}
             {/* Selection rectangle during drag */}
