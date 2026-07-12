@@ -94,7 +94,7 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
-  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] };
+  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
@@ -799,11 +799,47 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       {pieceDetail && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPieceDetail(undefined)}>
           <div className="premium-card w-full max-w-lg mx-4 p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg text-white">
-                {pieceDetail.piece.label || `Pezzo #${pieceDetail.piece.id}`}
-              </h3>
-              <button onClick={() => setPieceDetail(undefined)} className="text-gray-500 hover:text-white transition-colors">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="font-display font-bold text-lg text-white">
+                  {pieceDetail.piece.label || `Pezzo #${pieceDetail.piece.id}`}
+                </h3>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {/* Complexity badge */}
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                    pieceDetail.piece.complexity <= 3 ? 'bg-green-500/20 text-green-400' :
+                    pieceDetail.piece.complexity <= 6 ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-red-500/20 text-red-400'
+                  }`}>
+                    {pieceDetail.piece.complexity}/10
+                  </span>
+                  {/* Quality badge */}
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                    pieceDetail.piece.contour_quality >= 90 ? 'bg-blue-500/20 text-blue-400' :
+                    pieceDetail.piece.contour_quality >= 70 ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-red-500/20 text-red-400'
+                  }`}>
+                    {pieceDetail.piece.contour_quality}%
+                  </span>
+                  {/* Segment count badge */}
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-500/20 text-gray-400">
+                    {pieceDetail.piece.segment_count} seg
+                  </span>
+                  {/* Winding badge */}
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                    pieceDetail.piece.winding === 'cw' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'
+                  }`}>
+                    {pieceDetail.piece.winding === 'cw' ? '↻ CW' : '↺ CCW'}
+                  </span>
+                  {/* Grainline badge */}
+                  {pieceDetail.piece.has_grainline && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/20 text-purple-400">
+                      fibra
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => setPieceDetail(undefined)} className="text-gray-500 hover:text-white transition-colors shrink-0">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -829,7 +865,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 {(() => {
                   const pts = pieceDetail.piece.contour_points;
                   if (pts.length < 3) return null;
-                  // Use the first 3 points to build a directional arc
                   const [ax, ay] = pts[0];
                   const [bx, by] = pts[1];
                   const [cx2, cy2] = pts[2];
@@ -837,7 +872,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                   const nx = (bx + cx2) / 2, ny = (by + cy2) / 2;
                   const dx = nx - mx, dy = ny - my;
                   const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                  // Perpendicular offset for the arc
                   const px = -dy / len * 3, py = dx / len * 3;
                   const arcPts = [
                     [mx + px * 0.3, my + py * 0.3],
@@ -855,16 +889,9 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               </svg>
             </div>
 
-            {/* Specs — 2 per line grid */}
+            {/* Geometry section */}
+            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Geometria</div>
             <div className="grid grid-cols-2 gap-1.5 text-sm mb-4">
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Etichetta</span>
-                <span className="text-white font-mono">{pieceDetail.piece.label || '—'}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Verso</span>
-                <span className="text-white font-mono">{pieceDetail.piece.winding === 'cw' ? 'CW' : 'CCW'}</span>
-              </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Area</span>
                 <span className="text-white font-mono">{pieceDetail.piece.area.toFixed(1)}</span>
@@ -874,10 +901,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 <span className="text-white font-mono">{pieceDetail.piece.perimeter.toFixed(1)}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">BBox</span>
-                <span className="text-white font-mono text-xs">
-                  {pieceDetail.piece.minx.toFixed(0)}×{pieceDetail.piece.miny.toFixed(0)} &ndash; {pieceDetail.piece.maxx.toFixed(0)}×{pieceDetail.piece.maxy.toFixed(0)}
-                </span>
+                <span className="text-gray-400">Comp. BBox</span>
+                <span className="text-white font-mono">{pieceDetail.piece.compactness.toFixed(3)}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Partenza</span>
@@ -885,28 +910,49 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                   ({pieceDetail.piece.starting_point[0].toFixed(0)},{pieceDetail.piece.starting_point[1].toFixed(0)})
                 </span>
               </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Intacchi</span>
-                <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40 col-span-2">
+                <span className="text-gray-400">BBox</span>
+                <span className="text-white font-mono text-xs">
+                  {pieceDetail.piece.minx.toFixed(0)}×{pieceDetail.piece.miny.toFixed(0)} &ndash; {pieceDetail.piece.maxx.toFixed(0)}×{pieceDetail.piece.maxy.toFixed(0)}
+                </span>
               </div>
+            </div>
+
+            {/* Topology section */}
+            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Topologia</div>
+            <div className="grid grid-cols-2 gap-1.5 text-sm mb-4">
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Segmenti</span>
                 <span className="text-white font-mono">{pieceDetail.piece.segment_count}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Complessità</span>
-                <span className="text-white font-mono">{pieceDetail.piece.complexity}/10</span>
+                <span className="text-gray-400">Lineari/Curvi</span>
+                <span className="text-white font-mono">{pieceDetail.piece.linear_segments}/{pieceDetail.piece.curved_segments}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Qualità</span>
-                <span className="text-white font-mono">{pieceDetail.piece.contour_quality}%</span>
+                <span className="text-gray-400">Intacchi</span>
+                <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
               </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Punti contorno</span>
+                <span className="text-white font-mono">{pieceDetail.piece.contour_points.length}</span>
+              </div>
+            </div>
+
+            {/* Semantica section */}
+            <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Semantica</div>
+            <div className="grid grid-cols-2 gap-1.5 text-sm mb-4">
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Fibra</span>
-                <span className="text-white font-mono">
-                  {pieceDetail.piece.has_grainline
-                    ? `${pieceDetail.piece.grainline_length?.toFixed(1) ?? '✓'} @ ${pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°`
-                    : '✗'}
+                <span className="text-white font-mono inline-flex items-center gap-1.5">
+                  {pieceDetail.piece.has_grainline ? (
+                    <>{pieceDetail.piece.grainline_length?.toFixed(1) ?? '✓'} @ {pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°
+                    <svg width="28" height="8" viewBox="0 0 28 8" className="inline-block">
+                      <line x1="0" y1="4" x2="22" y2="4" stroke="#a855f7" strokeWidth={1.5} />
+                      <polygon points="22,1 28,4 22,7" fill="#a855f7" />
+                    </svg>
+                    </>
+                  ) : '✗'}
                 </span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
@@ -914,6 +960,14 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 <span className="text-white font-mono">
                   {pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : '✗'}
                 </span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Verso</span>
+                <span className="text-white font-mono">{pieceDetail.piece.winding === 'cw' ? '↻ CW (orario)' : '↺ CCW (antiorario)'}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Etichetta</span>
+                <span className="text-white font-mono truncate max-w-[140px]" title={pieceDetail.piece.label}>{pieceDetail.piece.label || '—'}</span>
               </div>
             </div>
 
@@ -927,7 +981,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 · area {pieceDetail.piece.area.toFixed(0)}
                 · perimetro {pieceDetail.piece.perimeter.toFixed(0)}
                 · {pieceDetail.piece.notch_count > 0 ? `${pieceDetail.piece.notch_count} intacchi` : 'nessun intacco'}
-                · {pieceDetail.piece.segment_count} segmenti
+                · {pieceDetail.piece.segment_count} segmenti ({pieceDetail.piece.linear_segments}/{pieceDetail.piece.curved_segments} lin/cur)
+                · compattezza {pieceDetail.piece.compactness.toFixed(3)}
                 · complessità {pieceDetail.piece.complexity}/10
                 · qualità {pieceDetail.piece.contour_quality}%
                 · fibra {pieceDetail.piece.has_grainline ? `${pieceDetail.piece.grainline_length?.toFixed(1) ?? ''} @ ${pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°` : 'assente'}
