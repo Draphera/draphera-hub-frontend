@@ -2,7 +2,7 @@
 
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
 import { useHitTestDebug } from '@/hooks/useHitTestDebug';
-import DebugOverlay from '@/components/DebugOverlay';
+// import DebugOverlay from '@/components/DebugOverlay';
 
 interface HPGLPath {
   type: 'polyline' | 'arc' | 'circle' | 'rectangle' | 'label';
@@ -919,11 +919,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               <g transform={contentTransform}>
                 {gridLines}
                 {renderPaths()}
-                <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
               </g>
             ) : (
               <>{gridLines}{renderPaths()}
-                <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
               </>
             )}
             {renderMeasurement()}
