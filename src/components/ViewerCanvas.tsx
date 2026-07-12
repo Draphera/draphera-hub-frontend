@@ -151,7 +151,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][]; seam_lines?: number[][][] }>;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
   onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;

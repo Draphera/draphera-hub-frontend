@@ -94,7 +94,7 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
-  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][] };
+  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
@@ -811,15 +811,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               </button>
             </div>
 
-            {/* SVG preview */}
-            <div className="mb-4 rounded-lg bg-drapera-midnight/60 border border-drapera-border/40 flex items-center justify-center" style={{ minHeight: 160 }}>
-              <svg viewBox={`${pieceDetail.piece.minx - 10} ${pieceDetail.piece.miny - 10} ${pieceDetail.piece.maxx - pieceDetail.piece.minx + 20} ${pieceDetail.piece.maxy - pieceDetail.piece.miny + 20}`}
-                className="w-full h-full max-h-48" style={{ filter: 'invert(1)' }}>
-                <polygon points={pieceDetail.piece.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
-                  fill="none" stroke="#333" strokeWidth={0.5} />
-              </svg>
-            </div>
-
             {/* Specs table */}
             <div className="space-y-1.5 text-sm mb-4">
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
@@ -844,6 +835,27 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 <span className="text-gray-400">Fibra</span>
                 <span className="text-white font-mono">{pieceDetail.piece.has_grainline ? '✓ Presente' : '✗ Assente'}</span>
               </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Cucitura</span>
+                <span className="text-white font-mono">
+                  {pieceDetail.piece.seam_lines && pieceDetail.piece.seam_lines.length > 0
+                    ? `${pieceDetail.piece.seam_lines.length} linee`
+                    : '✗ Assente'}
+                </span>
+              </div>
+            </div>
+
+            {/* SVG preview with seam lines */}
+            <div className="mb-4 rounded-lg bg-drapera-midnight/60 border border-drapera-border/40 flex items-center justify-center" style={{ minHeight: 160 }}>
+              <svg viewBox={`${pieceDetail.piece.minx - 10} ${pieceDetail.piece.miny - 10} ${pieceDetail.piece.maxx - pieceDetail.piece.minx + 20} ${pieceDetail.piece.maxy - pieceDetail.piece.miny + 20}`}
+                className="w-full h-full max-h-48" style={{ filter: 'invert(1)' }}>
+                <polygon points={pieceDetail.piece.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
+                  fill="none" stroke="#333" strokeWidth={0.5} />
+                {pieceDetail.piece.seam_lines?.map((sl, si) => (
+                  <polyline key={`sl_${si}`} points={sl.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
+                    fill="none" stroke="#E53935" strokeWidth={0.3} strokeDasharray="1 1" />
+                ))}
+              </svg>
             </div>
 
             {/* HPGL source */}
