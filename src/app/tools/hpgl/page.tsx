@@ -98,7 +98,7 @@ export default function HPGLViewerPage() {
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
-  const [pieceDetailPiece, setPieceDetailPiece] = useState<Piece>();
+  const [pieceDetail, setPieceDetail] = useState<{ piece: Piece; rawText?: string }>();
   const [debug, setDebug] = useState(false);
 
   // Initialize pen visibility from data
@@ -675,7 +675,10 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             pieces={pieces}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
-            onPieceDoubleClick={p => setPieceDetailPiece(p)}
+            onPieceDoubleClick={p => {
+              setPieceDetail({ piece: p });
+              rawFile?.text().then(t => setPieceDetail(d => d ? { ...d, rawText: t } : undefined));
+            }}
             debug={debug}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
@@ -796,42 +799,64 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
 
       {/* Measurement modal */}
       {/* Piece details modal */}
-      {pieceDetailPiece && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPieceDetailPiece(undefined)}>
-          <div className="premium-card w-full max-w-sm mx-4 p-5" onClick={e => e.stopPropagation()}>
+      {pieceDetail && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPieceDetail(undefined)}>
+          <div className="premium-card w-full max-w-lg mx-4 p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg text-white">Pezzo #{pieceDetailPiece.id}</h3>
-              <button onClick={() => setPieceDetailPiece(undefined)} className="text-gray-500 hover:text-white transition-colors">
+              <h3 className="font-display font-bold text-lg text-white">Pezzo #{pieceDetail.piece.id}</h3>
+              <button onClick={() => setPieceDetail(undefined)} className="text-gray-500 hover:text-white transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+
+            {/* SVG preview */}
+            <div className="mb-4 rounded-lg bg-drapera-midnight/60 border border-drapera-border/40 flex items-center justify-center" style={{ minHeight: 160 }}>
+              <svg viewBox={`${pieceDetail.piece.minx - 10} ${pieceDetail.piece.miny - 10} ${pieceDetail.piece.maxx - pieceDetail.piece.minx + 20} ${pieceDetail.piece.maxy - pieceDetail.piece.miny + 20}`}
+                className="w-full h-full max-h-48" style={{ filter: 'invert(1)' }}>
+                <polygon points={pieceDetail.piece.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
+                  fill="none" stroke="#333" strokeWidth={0.5} />
+              </svg>
+            </div>
+
+            {/* Specs table */}
+            <div className="space-y-1.5 text-sm mb-4">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Area</span>
-                <span className="text-white font-mono">{pieceDetailPiece.area.toFixed(1)}</span>
+                <span className="text-white font-mono">{pieceDetail.piece.area.toFixed(1)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Perimetro</span>
-                <span className="text-white font-mono">{pieceDetailPiece.perimeter.toFixed(1)}</span>
+                <span className="text-white font-mono">{pieceDetail.piece.perimeter.toFixed(1)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Bounding Box</span>
                 <span className="text-white font-mono text-xs">
-                  {pieceDetailPiece.minx.toFixed(1)} × {pieceDetailPiece.miny.toFixed(1)}
-                  <br />{pieceDetailPiece.maxx.toFixed(1)} × {pieceDetailPiece.maxy.toFixed(1)}
+                  {pieceDetail.piece.minx.toFixed(1)}×{pieceDetail.piece.miny.toFixed(1)} &ndash; {pieceDetail.piece.maxx.toFixed(1)}×{pieceDetail.piece.maxy.toFixed(1)}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Intacchi</span>
-                <span className="text-white font-mono">{pieceDetailPiece.notch_count}</span>
+                <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
               </div>
-              <div className="flex justify-between py-1">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Fibra</span>
-                <span className="text-white font-mono">{pieceDetailPiece.has_grainline ? '✓ Presente' : '✗ Assente'}</span>
+                <span className="text-white font-mono">{pieceDetail.piece.has_grainline ? '✓ Presente' : '✗ Assente'}</span>
               </div>
             </div>
+
+            {/* HPGL source */}
+            {pieceDetail.rawText && (
+              <details className="group">
+                <summary className="text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none">
+                  Sorgente HPGL
+                </summary>
+                <pre className="mt-2 p-3 rounded bg-black/40 text-[10px] text-gray-300 font-mono leading-relaxed max-h-48 overflow-auto whitespace-pre-wrap break-all">
+                  {pieceDetail.rawText}
+                </pre>
+              </details>
+            )}
           </div>
         </div>
       )}
