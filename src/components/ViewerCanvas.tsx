@@ -454,18 +454,27 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         const color = PIECE_COLORS[p.id % PIECE_COLORS.length];
         const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
         pieceOverlays.push(
-          <polygon key={`piece_${p.id}`}
-            points={pts}
-            fill={isActive ? (selectedPieceId === p.id ? `${color}25` : `${color}15`) : 'transparent'}
-            stroke={isActive ? color : 'transparent'}
-            strokeWidth={isActive ? (selectedPieceId === p.id ? 3 : 2) / effectiveZoom : 0}
-            strokeLinejoin="round"
-            opacity={0.8}
-            style={{ cursor: 'pointer' }}
-            onMouseEnter={() => setHoveredPiece(p.id)}
-            onMouseLeave={() => setHoveredPiece(undefined)}
-            onClick={() => onPieceSelect?.(p.id)}
-          />
+          <g key={`piece_${p.id}`}>
+            {/* Invisible hit‑test area — always present */}
+            <polygon points={pts}
+              fill="transparent" stroke="transparent"
+              style={{ cursor: 'pointer', pointerEvents: 'all' }}
+              onMouseEnter={() => setHoveredPiece(p.id)}
+              onMouseLeave={() => setHoveredPiece(undefined)}
+              onClick={() => onPieceSelect?.(p.id)}
+            />
+            {/* Visible overlay — only on hover / select */}
+            {isActive && (
+              <polygon points={pts}
+                fill={selectedPieceId === p.id ? `${color}25` : `${color}15`}
+                stroke={color}
+                strokeWidth={(selectedPieceId === p.id ? 3 : 2) / effectiveZoom}
+                strokeLinejoin="round"
+                opacity={0.8}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
+          </g>
         );
       }
     }
