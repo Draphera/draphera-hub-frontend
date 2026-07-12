@@ -94,9 +94,11 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
-  const [pieces, setPieces] = useState<Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>>();
+  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][] };
+  const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
+  const [pieceDetailPiece, setPieceDetailPiece] = useState<Piece>();
   const [debug, setDebug] = useState(false);
 
   // Initialize pen visibility from data
@@ -673,6 +675,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             pieces={pieces}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
+            onPieceDoubleClick={p => setPieceDetailPiece(p)}
             debug={debug}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
@@ -792,6 +795,47 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       />
 
       {/* Measurement modal */}
+      {/* Piece details modal */}
+      {pieceDetailPiece && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPieceDetailPiece(undefined)}>
+          <div className="premium-card w-full max-w-sm mx-4 p-5" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-lg text-white">Pezzo #{pieceDetailPiece.id}</h3>
+              <button onClick={() => setPieceDetailPiece(undefined)} className="text-gray-500 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+                <span className="text-gray-400">Area</span>
+                <span className="text-white font-mono">{pieceDetailPiece.area.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+                <span className="text-gray-400">Perimetro</span>
+                <span className="text-white font-mono">{pieceDetailPiece.perimeter.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+                <span className="text-gray-400">Bounding Box</span>
+                <span className="text-white font-mono text-xs">
+                  {pieceDetailPiece.minx.toFixed(1)} × {pieceDetailPiece.miny.toFixed(1)}
+                  <br />{pieceDetailPiece.maxx.toFixed(1)} × {pieceDetailPiece.maxy.toFixed(1)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-drapera-border/40">
+                <span className="text-gray-400">Intacchi</span>
+                <span className="text-white font-mono">{pieceDetailPiece.notch_count}</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-gray-400">Fibra</span>
+                <span className="text-white font-mono">{pieceDetailPiece.has_grainline ? '✓ Presente' : '✗ Assente'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {measureMode !== 'off' && (
         <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 w-[360px] rounded-xl border border-drapera-border bg-drapera-midnight shadow-2xl shadow-black/40"
           style={{ backdropFilter: 'blur(12px)' }}>

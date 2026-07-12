@@ -151,9 +151,10 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
+  onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;
 }
 
 const PAD = 40;
@@ -277,7 +278,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -465,6 +466,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               fill="transparent" stroke="transparent"
               data-piece-id={p.id}
               style={{ cursor: 'pointer', pointerEvents: 'all' }}
+              onDoubleClick={() => onPieceDoubleClick?.(p)}
             />
             {/* Visible overlay — only on hover / select */}
             {isActive && (
