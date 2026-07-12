@@ -800,60 +800,14 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setPieceDetail(undefined)}>
           <div className="premium-card w-full max-w-lg mx-4 p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg text-white">Pezzo #{pieceDetail.piece.id}</h3>
+              <h3 className="font-display font-bold text-lg text-white">
+                {pieceDetail.piece.label || `Pezzo #${pieceDetail.piece.id}`}
+              </h3>
               <button onClick={() => setPieceDetail(undefined)} className="text-gray-500 hover:text-white transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-            </div>
-
-            {/* Specs table */}
-            <div className="space-y-1.5 text-sm mb-4">
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Etichetta</span>
-                <span className="text-white font-mono">{pieceDetail.piece.label || '—'}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Area</span>
-                <span className="text-white font-mono">{pieceDetail.piece.area.toFixed(1)}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Perimetro</span>
-                <span className="text-white font-mono">{pieceDetail.piece.perimeter.toFixed(1)}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Bounding Box</span>
-                <span className="text-white font-mono text-xs">
-                  {pieceDetail.piece.minx.toFixed(1)}×{pieceDetail.piece.miny.toFixed(1)} &ndash; {pieceDetail.piece.maxx.toFixed(1)}×{pieceDetail.piece.maxy.toFixed(1)}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Partenza</span>
-                <span className="text-white font-mono text-xs">
-                  ({pieceDetail.piece.starting_point[0].toFixed(1)}, {pieceDetail.piece.starting_point[1].toFixed(1)})
-                </span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Verso</span>
-                <span className="text-white font-mono">{pieceDetail.piece.winding === 'cw' ? 'CW (orario)' : 'CCW (antiorario)'}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Intacchi</span>
-                <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Fibra</span>
-                <span className="text-white font-mono">{pieceDetail.piece.has_grainline ? '✓ Presente' : '✗ Assente'}</span>
-              </div>
-              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Cucitura</span>
-                <span className="text-white font-mono">
-                  {pieceDetail.piece.seam_lines && pieceDetail.piece.seam_lines.length > 0
-                    ? `${pieceDetail.piece.seam_lines.length} linee`
-                    : '✗ Assente'}
-                </span>
-              </div>
             </div>
 
             {/* SVG preview with markers */}
@@ -868,27 +822,99 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                   <polyline key={`sl_${si}`} points={sl.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
                     fill="none" stroke="#E53935" strokeWidth={0.3} strokeDasharray="1 1" />
                 ))}
-                {/* Starting point marker */}
+                {/* Starting point */}
                 <circle cx={pieceDetail.piece.starting_point[0]} cy={pieceDetail.piece.starting_point[1]}
                   r={1.5} fill="#FF6B6B" stroke="#fff" strokeWidth={0.5} />
-                {/* Winding direction arrow (approximate midpoint of first edge) */}
+                {/* Direction arc arrow along contour */}
                 {(() => {
                   const pts = pieceDetail.piece.contour_points;
-                  if (pts.length < 2) return null;
-                  const mx = (pts[0][0] + pts[1][0]) / 2;
-                  const my = (pts[0][1] + pts[1][1]) / 2;
-                  const dx = pts[1][0] - pts[0][0];
-                  const dy = pts[1][1] - pts[0][1];
+                  if (pts.length < 3) return null;
+                  // Use the first 3 points to build a directional arc
+                  const [ax, ay] = pts[0];
+                  const [bx, by] = pts[1];
+                  const [cx2, cy2] = pts[2];
+                  const mx = (ax + bx) / 2, my = (ay + by) / 2;
+                  const nx = (bx + cx2) / 2, ny = (by + cy2) / 2;
+                  const dx = nx - mx, dy = ny - my;
                   const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                  const px = -dy / len * 2;
-                  const py = dx / len * 2;
-                  return <polygon points={`${mx},${my} ${mx + px + dx / 4},${my + py + dy / 4} ${mx + px - dx / 4},${my + py - dy / 4}`}
-                    fill={pieceDetail.piece.winding === 'cw' ? '#4ECDC4' : '#FF6B6B'} opacity={0.8} />;
+                  // Perpendicular offset for the arc
+                  const px = -dy / len * 3, py = dx / len * 3;
+                  const arcPts = [
+                    [mx + px * 0.3, my + py * 0.3],
+                    [mx + px, my + py],
+                    [nx + px * 0.3, ny + py * 0.3],
+                  ];
+                  const d = `M ${arcPts[0][0]},${arcPts[0][1]} Q ${arcPts[1][0]},${arcPts[1][1]} ${arcPts[2][0]},${arcPts[2][1]}`;
+                  return <path d={d} fill="none" stroke="#4ECDC4" strokeWidth={0.8} markerEnd="url(#cwArrow)" />;
                 })()}
+                <defs>
+                  <marker id="cwArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth={4} markerHeight={4} orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#4ECDC4" />
+                  </marker>
+                </defs>
               </svg>
             </div>
 
-            {/* HPGL source — temporarily disabled */}
+            {/* Specs — 2 per line grid */}
+            <div className="grid grid-cols-2 gap-1.5 text-sm mb-4">
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Etichetta</span>
+                <span className="text-white font-mono">{pieceDetail.piece.label || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Verso</span>
+                <span className="text-white font-mono">{pieceDetail.piece.winding === 'cw' ? 'CW' : 'CCW'}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Area</span>
+                <span className="text-white font-mono">{pieceDetail.piece.area.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Perimetro</span>
+                <span className="text-white font-mono">{pieceDetail.piece.perimeter.toFixed(1)}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">BBox</span>
+                <span className="text-white font-mono text-xs">
+                  {pieceDetail.piece.minx.toFixed(0)}×{pieceDetail.piece.miny.toFixed(0)} &ndash; {pieceDetail.piece.maxx.toFixed(0)}×{pieceDetail.piece.maxy.toFixed(0)}
+                </span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Partenza</span>
+                <span className="text-white font-mono text-xs">
+                  ({pieceDetail.piece.starting_point[0].toFixed(0)},{pieceDetail.piece.starting_point[1].toFixed(0)})
+                </span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Intacchi</span>
+                <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Fibra</span>
+                <span className="text-white font-mono">{pieceDetail.piece.has_grainline ? '✓' : '✗'}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Cucitura</span>
+                <span className="text-white font-mono">
+                  {pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : '✗'}
+                </span>
+              </div>
+            </div>
+
+            {/* Recap scheda tecnica */}
+            <div className="rounded-lg bg-drapera-midnight/40 border border-drapera-border/30 p-3">
+              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Scheda Tecnica</div>
+              <div className="text-[11px] text-gray-400 leading-relaxed">
+                {pieceDetail.piece.label ? `${pieceDetail.piece.label} — ` : ''}
+                Pezzo #{pieceDetail.piece.id}
+                {pieceDetail.piece.winding === 'cw' ? ' · taglio orario' : ' · taglio antiorario'}
+                · area {pieceDetail.piece.area.toFixed(0)}
+                · perimetro {pieceDetail.piece.perimeter.toFixed(0)}
+                · {pieceDetail.piece.notch_count > 0 ? `${pieceDetail.piece.notch_count} intacchi` : 'nessun intacco'}
+                · fibra {pieceDetail.piece.has_grainline ? 'presente' : 'assente'}
+                · cucitura {pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : 'assente'}
+              </div>
+            </div>
           </div>
         </div>
       )}
