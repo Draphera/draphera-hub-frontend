@@ -920,10 +920,33 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 {gridLines}
                 {renderPaths()}
                 <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
+                {/* ★ TEST: always-visible debug rect — shows if the content‑transform group works */}
+                {pieces && pieces.length > 0 && (() => {
+                  const p = pieces[0];
+                  const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
+                  return (
+                    <polygon points={pts}
+                      fill="none" stroke="#FF00FF" strokeWidth={8}
+                      vectorEffect="non-scaling-stroke"
+                      strokeDasharray="10 6"
+                    />
+                  );
+                })()}
               </g>
             ) : (
               <>{gridLines}{renderPaths()}
                 <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
+                {pieces && pieces.length > 0 && (() => {
+                  const p = pieces[0];
+                  const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
+                  return (
+                    <polygon points={pts}
+                      fill="none" stroke="#FF00FF" strokeWidth={8}
+                      vectorEffect="non-scaling-stroke"
+                      strokeDasharray="10 6"
+                    />
+                  );
+                })()}
               </>
             )}
             {renderMeasurement()}

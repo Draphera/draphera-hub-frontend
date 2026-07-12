@@ -68,6 +68,10 @@ export default function DebugOverlay({ debug, pieces }: Props) {
 
         return (
           <g key={`debug_${p.id}`}>
+            {/* ★ TEST: huge bright circle at centroid — must be visible */}
+            <circle cx={cx} cy={cy} r={30} fill="#00FF00" opacity={0.5} />
+            <text x={cx} y={cy} textAnchor="middle" fill="#FF0000" fontSize={20} fontWeight="bold">●</text>
+
             {/* ---- Render polygon (blue) — like the visible overlay ---- */}
             <polygon
               points={pts.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
