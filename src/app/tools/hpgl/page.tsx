@@ -98,7 +98,7 @@ export default function HPGLViewerPage() {
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
-  const [pieceDetail, setPieceDetail] = useState<{ piece: Piece; rawText?: string }>();
+  const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
   const [debug, setDebug] = useState(false);
 
   // Initialize pen visibility from data
@@ -675,10 +675,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             pieces={pieces}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
-            onPieceDoubleClick={p => {
-              setPieceDetail({ piece: p });
-              rawFile?.text().then(t => setPieceDetail(d => d ? { ...d, rawText: t } : undefined));
-            }}
+            onPieceDoubleClick={p => setPieceDetail({ piece: p })}
             debug={debug}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
@@ -858,17 +855,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               </svg>
             </div>
 
-            {/* HPGL source */}
-            {pieceDetail.rawText && (
-              <details className="group">
-                <summary className="text-xs font-semibold text-gray-400 uppercase tracking-wider cursor-pointer hover:text-white transition-colors select-none">
-                  Sorgente HPGL
-                </summary>
-                <pre className="mt-2 p-3 rounded bg-black/40 text-[10px] text-gray-300 font-mono leading-relaxed max-h-48 overflow-auto whitespace-pre-wrap break-all">
-                  {pieceDetail.rawText}
-                </pre>
-              </details>
-            )}
+            {/* HPGL source — temporarily disabled */}
           </div>
         </div>
       )}
