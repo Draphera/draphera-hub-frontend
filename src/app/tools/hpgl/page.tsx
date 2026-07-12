@@ -94,7 +94,7 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
-  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; contour_points: number[][]; seam_lines?: number[][][] };
+  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
@@ -811,6 +811,10 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             {/* Specs table */}
             <div className="space-y-1.5 text-sm mb-4">
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Etichetta</span>
+                <span className="text-white font-mono">{pieceDetail.piece.label || '—'}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Area</span>
                 <span className="text-white font-mono">{pieceDetail.piece.area.toFixed(1)}</span>
               </div>
@@ -823,6 +827,16 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 <span className="text-white font-mono text-xs">
                   {pieceDetail.piece.minx.toFixed(1)}×{pieceDetail.piece.miny.toFixed(1)} &ndash; {pieceDetail.piece.maxx.toFixed(1)}×{pieceDetail.piece.maxy.toFixed(1)}
                 </span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Partenza</span>
+                <span className="text-white font-mono text-xs">
+                  ({pieceDetail.piece.starting_point[0].toFixed(1)}, {pieceDetail.piece.starting_point[1].toFixed(1)})
+                </span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Verso</span>
+                <span className="text-white font-mono">{pieceDetail.piece.winding === 'cw' ? 'CW (orario)' : 'CCW (antiorario)'}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Intacchi</span>
@@ -842,16 +856,35 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               </div>
             </div>
 
-            {/* SVG preview with seam lines */}
+            {/* SVG preview with markers */}
             <div className="mb-4 rounded-lg bg-drapera-midnight/60 border border-drapera-border/40 flex items-center justify-center" style={{ minHeight: 160 }}>
               <svg viewBox={`${pieceDetail.piece.minx - 10} ${pieceDetail.piece.miny - 10} ${pieceDetail.piece.maxx - pieceDetail.piece.minx + 20} ${pieceDetail.piece.maxy - pieceDetail.piece.miny + 20}`}
                 className="w-full h-full max-h-48" style={{ filter: 'invert(1)' }}>
+                {/* Piece contour */}
                 <polygon points={pieceDetail.piece.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
                   fill="none" stroke="#333" strokeWidth={0.5} />
+                {/* Seam lines */}
                 {pieceDetail.piece.seam_lines?.map((sl, si) => (
                   <polyline key={`sl_${si}`} points={sl.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
                     fill="none" stroke="#E53935" strokeWidth={0.3} strokeDasharray="1 1" />
                 ))}
+                {/* Starting point marker */}
+                <circle cx={pieceDetail.piece.starting_point[0]} cy={pieceDetail.piece.starting_point[1]}
+                  r={1.5} fill="#FF6B6B" stroke="#fff" strokeWidth={0.5} />
+                {/* Winding direction arrow (approximate midpoint of first edge) */}
+                {(() => {
+                  const pts = pieceDetail.piece.contour_points;
+                  if (pts.length < 2) return null;
+                  const mx = (pts[0][0] + pts[1][0]) / 2;
+                  const my = (pts[0][1] + pts[1][1]) / 2;
+                  const dx = pts[1][0] - pts[0][0];
+                  const dy = pts[1][1] - pts[0][1];
+                  const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                  const px = -dy / len * 2;
+                  const py = dx / len * 2;
+                  return <polygon points={`${mx},${my} ${mx + px + dx / 4},${my + py + dy / 4} ${mx + px - dx / 4},${my + py - dy / 4}`}
+                    fill={pieceDetail.piece.winding === 'cw' ? '#4ECDC4' : '#FF6B6B'} opacity={0.8} />;
+                })()}
               </svg>
             </div>
 
