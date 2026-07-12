@@ -920,33 +920,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 {gridLines}
                 {renderPaths()}
                 <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
-                {/* ★ TEST: always-visible debug rect — shows if the content‑transform group works */}
-                {pieces && pieces.length > 0 && (() => {
-                  const p = pieces[0];
-                  const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
-                  return (
-                    <polygon points={pts}
-                      fill="none" stroke="#FF00FF" strokeWidth={8}
-                      vectorEffect="non-scaling-stroke"
-                      strokeDasharray="10 6"
-                    />
-                  );
-                })()}
               </g>
             ) : (
               <>{gridLines}{renderPaths()}
                 <DebugOverlay debug={debug} pieces={pieces} inContentSpace />
-                {pieces && pieces.length > 0 && (() => {
-                  const p = pieces[0];
-                  const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
-                  return (
-                    <polygon points={pts}
-                      fill="none" stroke="#FF00FF" strokeWidth={8}
-                      vectorEffect="non-scaling-stroke"
-                      strokeDasharray="10 6"
-                    />
-                  );
-                })()}
               </>
             )}
             {renderMeasurement()}
@@ -962,15 +939,17 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 height={selectionBounds.maxY - selectionBounds.minY}
                 fill="rgba(242,201,76,0.06)" stroke="#F2C94C" strokeWidth={1.5 / effectiveZoom} strokeDasharray="4 3" />
             )}
-            {/* Piece bounding boxes */}
+            {/* Piece bounding boxes — convert to outer space so they align
+                with the flipped piece overlays inside contentTransform */}
             {pieces?.map((p) => {
               const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
               const col = colors[p.id % colors.length];
               const isHover = hoveredPiece !== undefined && hoveredPiece === p.id;
               const isSelected = selectedPieceId === p.id;
               if (!isHover && !isSelected) return null;
+              const lp = innerToOuter((p.minx + p.maxx) / 2, p.miny - 4);
               return (
-                <text key={`pl_${p.id}`} x={(p.minx + p.maxx) / 2} y={p.miny - 4}
+                <text key={`pl_${p.id}`} x={lp.x} y={lp.y}
                   textAnchor="middle" fill={col}
                   fontSize={10} fontFamily="Inter" fontWeight="bold" style={{ pointerEvents: 'none' }}>
                   #{p.id} {p.area.toFixed(0)}{p.notch_count > 0 ? ` N${p.notch_count}` : ''}{p.has_grainline ? ' G' : ''}
