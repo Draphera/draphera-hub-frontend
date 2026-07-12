@@ -458,10 +458,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {/* Invisible hit‑test area — always present */}
             <polygon points={pts}
               fill="transparent" stroke="transparent"
+              data-piece-id={p.id}
               style={{ cursor: 'pointer', pointerEvents: 'all' }}
-              onMouseEnter={() => setHoveredPiece(p.id)}
-              onMouseLeave={() => setHoveredPiece(undefined)}
-              onClick={() => onPieceSelect?.(p.id)}
             />
             {/* Visible overlay — only on hover / select */}
             {isActive && (
@@ -771,14 +769,13 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         setDragRect({ x: worldX, y: worldY, w: 0, h: 0 });
         return;
       }
-      // Piece selection
+      // Piece selection (via native elementsFromPoint)
       if (onPieceSelect && pieces) {
+        const els = document.elementsFromPoint(e.clientX, e.clientY);
         let found: number | undefined;
-        for (const p of pieces) {
-          if (worldX >= p.minx && worldX <= p.maxx && worldY >= p.miny && worldY <= p.maxy) {
-            found = p.id;
-            break;
-          }
+        for (const el of els) {
+          const attr = (el as Element).getAttribute?.('data-piece-id');
+          if (attr) { found = Number(attr); break; }
         }
         onPieceSelect(found);
       }
@@ -786,6 +783,20 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       setPanStart({ x: vb.x - pan.x, y: vb.y - pan.y });
     }
   };
+
+  // Piece hover via native elementsFromPoint (most reliable across SVG transforms)
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!pieces) { setHoveredPiece(undefined); return; }
+    const els = document.elementsFromPoint(e.clientX, e.clientY);
+    for (const el of els) {
+      const attr = (el as Element).getAttribute?.('data-piece-id');
+      if (attr) {
+        const id = Number(attr);
+        if (!isNaN(id)) { setHoveredPiece(id); return; }
+      }
+    }
+    setHoveredPiece(undefined);
+  }, [pieces]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const svg = svgRef.current;
@@ -807,8 +818,6 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
 
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
-
-    // Piece hover hit-test removed — handled by polygon onMouseEnter/onMouseLeave
 
     if (isPanning) {
       setPan({ x: vb.x - panStart.x, y: vb.y - panStart.y });
@@ -889,6 +898,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         className={`w-full h-full select-none relative z-[1] ${selectionActive ? 'cursor-crosshair' : measureMode && measureMode !== 'off' ? 'cursor-crosshair' : hoveredPiece !== undefined ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
         style={svgStyle}
         onMouseMove={handleMouseMove}
+        onPointerMove={handlePointerMove}
+        onPointerLeave={() => setHoveredPiece(undefined)}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
