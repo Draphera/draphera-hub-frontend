@@ -132,10 +132,10 @@ export default function HPGLViewerPage() {
     });
   }, [router]);
 
-  // Toggle debug overlay with Ctrl+Shift+D
+  // Toggle debug overlay with Alt+D
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); setDebug(v => !v); }
+      if (e.altKey && e.key === 'd') { e.preventDefault(); setDebug(v => !v); }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -698,6 +698,21 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         )}
       </main>
       {msg && <div className="fixed top-16 right-4 z-50 px-4 py-2 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold animate-fade-in">{msg}</div>}
+      {/* Debug toggle */}
+      {pieces && pieces.length > 0 && (
+        <button onClick={() => setDebug(v => !v)}
+          className={`fixed bottom-4 right-4 z-50 px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold tracking-wider uppercase transition-all ${
+            debug ? 'bg-red-500/20 border border-red-400/40 text-red-400 shadow-lg shadow-red-500/10' : 'bg-white/5 border border-white/10 text-gray-500 hover:text-white hover:border-white/20'
+          }`}>
+          {debug ? '⚡ DEBUG ON' : 'DEBUG'}
+        </button>
+      )}
+      {/* Debug mode indicator */}
+      {debug && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-red-500/15 border border-red-400/25 text-[11px] text-red-400 font-mono font-bold tracking-wider animate-pulse">
+          DEBUG MODE — Alt+D to toggle
+        </div>
+      )}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
