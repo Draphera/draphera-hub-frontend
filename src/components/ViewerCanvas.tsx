@@ -148,7 +148,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_idx: number }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean; contour_points: number[][] }>;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
 }
@@ -422,18 +422,20 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     return { x: cx + u, y: cy + v };
   }, [rotation, flipX, flipY, contentCenter]);
 
-  // Map piece contour index → piece data for contour highlighting
-  const pieceContourMap = useMemo(() => {
-    const m = new Map<number, { pieceId: number; color: string; area: number; notch: number; grainline: boolean }>();
+  // Piece colour palette  (shared across rendering and hit‑testing)
+  const PIECE_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E8'];
+
+  // Memo‑ised piece lookup by ID
+  const pieceByIdMap = useMemo(() => {
+    const m = new Map<number, { color: string; area: number; notch: number; grainline: boolean; contour_points: number[][] }>();
     if (pieces) {
-      const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
       for (const p of pieces) {
-        m.set(p.contour_idx, {
-          pieceId: p.id,
-          color: colors[p.id % colors.length],
+        m.set(p.id, {
+          color: PIECE_COLORS[p.id % PIECE_COLORS.length],
           area: p.area,
           notch: p.notch_count,
           grainline: p.has_grainline,
+          contour_points: p.contour_points,
         });
       }
     }
@@ -443,7 +445,24 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   const renderPaths = () => {
     if (!data) return null;
     const lodFactor = effectiveZoom >= 0.7 ? 1 : effectiveZoom >= 0.5 ? 0.5 : effectiveZoom >= 0.3 ? 0.25 : 0.1;
-    return data.paths.map((path, idx) => {
+    // ---- Piece contour overlays (behind normal paths) ----
+    const pieceOverlays: JSX.Element[] = [];
+    if (pieces) {
+      for (const p of pieces) {
+        if (!p.contour_points || p.contour_points.length < 3) continue;
+        const isActive = hoveredPiece === p.id || selectedPieceId === p.id;
+        if (!isActive) continue;
+        const color = PIECE_COLORS[p.id % PIECE_COLORS.length];
+        const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
+        const fill = selectedPieceId === p.id ? `${color}25` : `${color}15`;
+        const sw = selectedPieceId === p.id ? 3 : 2;
+        pieceOverlays.push(
+          <polygon key={`piece_${p.id}`} points={pts} fill={fill} stroke={color}
+            strokeWidth={sw / effectiveZoom} strokeLinejoin="round" opacity={0.8} />
+        );
+      }
+    }
+    return <g>{pieceOverlays}{data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
       // Viewport culling with large margin to avoid pop-in during zoom/pan
       if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
@@ -485,18 +504,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
       const elements: JSX.Element[] = [];
 
-      // Piece contour highlight
-      const pieceData = pieceContourMap.get(idx);
-      if (pieceData && (hoveredPiece === pieceData.pieceId || selectedPieceId === pieceData.pieceId) && (path.type === 'polyline' || path.type === 'rectangle') && path.points) {
-        const lodPts = (lodFactor < 1 && path.points.length > 100) ? simplifyPoints(path.points, lodFactor) : path.points;
-        const pts = lodPts.map(p => `${p[0]},${p[1]}`).join(' ');
-        const fill = selectedPieceId === pieceData.pieceId ? `${pieceData.color}25` : `${pieceData.color}15`;
-        const sw = selectedPieceId === pieceData.pieceId ? 3 : 2;
-        elements.push(
-          <polygon key={`pc_${idx}`} points={pts} fill={fill} stroke={pieceData.color}
-            strokeWidth={sw / effectiveZoom} strokeLinejoin="round" opacity={0.8} />
-        );
-      }
+      // Piece contour highlight — now rendered globally from contour_points
 
       // Highlight for selected path (use LOD too)
       if (isSelected) {
@@ -548,7 +556,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       }
 
       return elements;
-    });
+    })}
+    </g>;
   };
 
   const renderTackMarks = () => {
