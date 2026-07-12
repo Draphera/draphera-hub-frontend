@@ -902,7 +902,12 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Comp. BBox</span>
-                <span className="text-white font-mono">{pieceDetail.piece.compactness.toFixed(3)}</span>
+                <span className="text-white font-mono inline-flex items-center gap-1.5">
+                  {pieceDetail.piece.compactness.toFixed(3)}
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gray-500/20 text-gray-400">
+                    {pieceDetail.piece.compactness >= 0.7 ? 'pieno' : pieceDetail.piece.compactness >= 0.4 ? 'medio' : 'vuoto'}
+                  </span>
+                </span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Partenza</span>
@@ -923,7 +928,14 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             <div className="grid grid-cols-2 gap-1.5 text-sm mb-4">
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Segmenti</span>
-                <span className="text-white font-mono">{pieceDetail.piece.segment_count}</span>
+                <span className="text-white font-mono inline-flex items-center gap-1.5">
+                  {pieceDetail.piece.segment_count}
+                  {pieceDetail.piece.segment_count > 0 && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gray-500/20 text-gray-400">
+                      curv. {Math.round(pieceDetail.piece.curved_segments / pieceDetail.piece.segment_count * 100)}%
+                    </span>
+                  )}
+                </span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Lineari/Curvi</span>
