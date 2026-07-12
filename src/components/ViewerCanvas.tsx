@@ -451,14 +451,21 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       for (const p of pieces) {
         if (!p.contour_points || p.contour_points.length < 3) continue;
         const isActive = hoveredPiece === p.id || selectedPieceId === p.id;
-        if (!isActive) continue;
         const color = PIECE_COLORS[p.id % PIECE_COLORS.length];
         const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
-        const fill = selectedPieceId === p.id ? `${color}25` : `${color}15`;
-        const sw = selectedPieceId === p.id ? 3 : 2;
         pieceOverlays.push(
-          <polygon key={`piece_${p.id}`} points={pts} fill={fill} stroke={color}
-            strokeWidth={sw / effectiveZoom} strokeLinejoin="round" opacity={0.8} />
+          <polygon key={`piece_${p.id}`}
+            points={pts}
+            fill={isActive ? (selectedPieceId === p.id ? `${color}25` : `${color}15`) : 'transparent'}
+            stroke={isActive ? color : 'transparent'}
+            strokeWidth={isActive ? (selectedPieceId === p.id ? 3 : 2) / effectiveZoom : 0}
+            strokeLinejoin="round"
+            opacity={0.8}
+            style={{ cursor: 'pointer' }}
+            onMouseEnter={() => setHoveredPiece(p.id)}
+            onMouseLeave={() => setHoveredPiece(undefined)}
+            onClick={() => onPieceSelect?.(p.id)}
+          />
         );
       }
     }
@@ -792,19 +799,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
     setMousePos({ x: (vb.x - pan.x) / effectiveZoom, y: (vb.y - pan.y) / effectiveZoom });
 
-    // Piece hover hit-test (use inner coords to match piece bbox)
-    if (pieces && !dragRef.current.active) {
-      const outer = outerToInner((vb.x - pan.x) / effectiveZoom, (vb.y - pan.y) / effectiveZoom);
-      const wx = outer.x, wy = outer.y;
-      let found: number | undefined;
-      for (const p of pieces) {
-        if (wx >= p.minx && wx <= p.maxx && wy >= p.miny && wy <= p.maxy) {
-          found = p.id;
-          break;
-        }
-      }
-      setHoveredPiece(found);
-    }
+    // Piece hover hit-test removed — handled by polygon onMouseEnter/onMouseLeave
 
     if (isPanning) {
       setPan({ x: vb.x - panStart.x, y: vb.y - panStart.y });
@@ -882,7 +877,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       <svg
         ref={svgRef}
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-        className={`w-full h-full select-none relative z-[1] ${selectionActive ? 'cursor-crosshair' : measureMode && measureMode !== 'off' ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'}`}
+        className={`w-full h-full select-none relative z-[1] ${selectionActive ? 'cursor-crosshair' : measureMode && measureMode !== 'off' ? 'cursor-crosshair' : hoveredPiece !== undefined ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'}`}
         style={svgStyle}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
