@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
-
 /* ------------------------------------------------------------------ */
-/*  Types                                                              */
+/*  Debug overlay — uses vector-effect="non-scaling-stroke" so that    */
+/*  all strokes remain the same screen‑pixel width regardless of zoom.  */
+/*  Circle radii and font sizes are large enough to stay visible.       */
 /* ------------------------------------------------------------------ */
 
 interface PieceInfo {
@@ -18,14 +18,10 @@ interface PieceInfo {
 interface Props {
   debug: boolean;
   pieces: PieceInfo[] | undefined;
-  /** Whether the overlay runs inside the content‑transform group (true)
-   *  or in outer (pan/zoom) space (false).  Default true. */
   inContentSpace?: boolean;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
+/* ---- helpers ---- */
 
 function signedAreaScreen(pts: number[][]): number {
   if (pts.length < 3) return 0;
@@ -53,11 +49,11 @@ const PIECE_DEBUG_COLORS = [
   '#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9',
 ];
 
-/* ------------------------------------------------------------------ */
-/*  Component                                                         */
-/* ------------------------------------------------------------------ */
+/* ---- component ---- */
 
-export default function DebugOverlay({ debug, pieces, inContentSpace = true }: Props) {
+const VECTOR = { vectorEffect: 'non-scaling-stroke' as const };
+
+export default function DebugOverlay({ debug, pieces }: Props) {
   if (!debug || !pieces) return null;
 
   return (
@@ -72,33 +68,35 @@ export default function DebugOverlay({ debug, pieces, inContentSpace = true }: P
 
         return (
           <g key={`debug_${p.id}`}>
-            {/* ---- Render polygon (blue) — same as visible overlay ---- */}
+            {/* ---- Render polygon (blue) — like the visible overlay ---- */}
             <polygon
               points={pts.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
-              fill="rgba(0, 120, 255, 0.06)"
+              fill="rgba(0, 120, 255, 0.08)"
               stroke="#0078FF"
-              strokeWidth={1.5}
+              strokeWidth={2}
               strokeLinejoin="round"
-              strokeDasharray="4 3"
+              strokeDasharray="6 4"
+              vectorEffect="non-scaling-stroke"
             />
 
-            {/* ---- Hit polygon overlay (red) — slightly offset for comparison ---- */}
+            {/* ---- Hit polygon outline (red) ---- */}
             <polygon
               points={pts.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
               fill="none"
               stroke="#FF0044"
-              strokeWidth={1}
+              strokeWidth={1.5}
               strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
             />
 
             {/* ---- Numbered vertices ---- */}
             {pts.map((pt, i) => (
               <g key={`v_${p.id}_${i}`}>
-                <circle cx={pt[0]} cy={pt[1]} r={4} fill={color} stroke="#fff" strokeWidth={0.8} />
+                <circle cx={pt[0]} cy={pt[1]} r={5} fill={color} stroke="#fff" strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
                 <text
-                  x={pt[0] + 6} y={pt[1] - 4}
+                  x={pt[0] + 8} y={pt[1] - 6}
                   fill={color}
-                  fontSize={8}
+                  fontSize={11}
                   fontFamily="monospace"
                   fontWeight="bold"
                 >
@@ -107,11 +105,11 @@ export default function DebugOverlay({ debug, pieces, inContentSpace = true }: P
               </g>
             ))}
 
-            {/* ---- Centroid ---- */}
+            {/* ---- Centroid cross ---- */}
             <g transform={`translate(${cx}, ${cy})`}>
-              <line x1={-6} y1={0} x2={6} y2={0} stroke={color} strokeWidth={1.2} />
-              <line x1={0} y1={-6} x2={0} y2={6} stroke={color} strokeWidth={1.2} />
-              <circle r={2} fill={color} />
+              <line x1={-8} y1={0} x2={8} y2={0} stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+              <line x1={0} y1={-8} x2={0} y2={8} stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" />
+              <circle r={3} fill={color} />
             </g>
 
             {/* ---- Bounding box (dashed) ---- */}
@@ -120,20 +118,20 @@ export default function DebugOverlay({ debug, pieces, inContentSpace = true }: P
               width={p.maxx - p.minx} height={p.maxy - p.miny}
               fill="none"
               stroke={color}
-              strokeWidth={0.8}
-              strokeDasharray="2 3"
-              opacity={0.5}
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              opacity={0.6}
+              vectorEffect="non-scaling-stroke"
             />
 
             {/* ---- Label ---- */}
             <text
-              x={cx} y={cy - 14}
+              x={cx} y={cy - 18}
               textAnchor="middle"
               fill={color}
-              fontSize={10}
+              fontSize={12}
               fontFamily="monospace"
               fontWeight="bold"
-              style={{ pointerEvents: 'none' }}
             >
               {label}
             </text>
