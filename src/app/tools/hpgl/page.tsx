@@ -94,7 +94,7 @@ export default function HPGLViewerPage() {
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
-  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; contour_points: number[][]; seam_lines?: number[][][] };
+  type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
@@ -890,8 +890,24 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 <span className="text-white font-mono">{pieceDetail.piece.notch_count}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Segmenti</span>
+                <span className="text-white font-mono">{pieceDetail.piece.segment_count}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Complessità</span>
+                <span className="text-white font-mono">{pieceDetail.piece.complexity}/10</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Qualità</span>
+                <span className="text-white font-mono">{pieceDetail.piece.contour_quality}%</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Fibra</span>
-                <span className="text-white font-mono">{pieceDetail.piece.has_grainline ? '✓' : '✗'}</span>
+                <span className="text-white font-mono">
+                  {pieceDetail.piece.has_grainline
+                    ? `${pieceDetail.piece.grainline_length?.toFixed(1) ?? '✓'} @ ${pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°`
+                    : '✗'}
+                </span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Cucitura</span>
@@ -911,7 +927,10 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 · area {pieceDetail.piece.area.toFixed(0)}
                 · perimetro {pieceDetail.piece.perimeter.toFixed(0)}
                 · {pieceDetail.piece.notch_count > 0 ? `${pieceDetail.piece.notch_count} intacchi` : 'nessun intacco'}
-                · fibra {pieceDetail.piece.has_grainline ? 'presente' : 'assente'}
+                · {pieceDetail.piece.segment_count} segmenti
+                · complessità {pieceDetail.piece.complexity}/10
+                · qualità {pieceDetail.piece.contour_quality}%
+                · fibra {pieceDetail.piece.has_grainline ? `${pieceDetail.piece.grainline_length?.toFixed(1) ?? ''} @ ${pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°` : 'assente'}
                 · cucitura {pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : 'assente'}
               </div>
             </div>
