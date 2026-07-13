@@ -89,7 +89,6 @@ export default function HPGLViewerPage() {
   const [measureResults, setMeasureResults] = useState<Array<{ type: 'distance' | 'angle'; points: Array<{ x: number; y: number }>; value: number; label?: string }>>([]);
   const [showNotches, setShowNotches] = useState(false);
   const [filled, setFilled] = useState(false);
-  const [showBounds, setShowBounds] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
@@ -552,8 +551,6 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         onToggleNotches={() => setShowNotches(v => !v)}
         filled={filled}
         onToggleFilled={() => setFilled(v => !v)}
-        showBounds={showBounds}
-        onToggleBounds={() => setShowBounds(v => !v)}
         rotation={rotation} onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
         flipX={flipX} onFlipX={handleFlipX} flipY={flipY} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
       />
@@ -614,7 +611,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             <div className="flex-1 min-w-0">
               {(() => {
                 const t = fileTabs.find(t => t.id === secondTabId);
-                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY} /> : null;
+                return t ? <ViewerCanvas data={t.data} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY} /> : null;
               })()}
             </div>
           </div>
@@ -653,7 +650,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                   },
                 },
               };
-              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} showBounds={showBounds} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY}
+              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
@@ -670,7 +667,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             penVisibility={penVisibility} penColors={penColors} flattened={flattened}
             selectedPathIndex={selectedPath?.index ?? -1}
             measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}
-            onCanvasClick={handleCanvasClick} showNotches={showNotches} filled={filled} showBounds={showBounds}
+            onCanvasClick={handleCanvasClick} showNotches={showNotches} filled={filled}
             selectionActive={selectionActive} selectionBounds={selectionBounds}
             onSelectionChange={b => setSelectionBounds(b)}
             rotation={rotation} flipX={flipX} flipY={flipY}

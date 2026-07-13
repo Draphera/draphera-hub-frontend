@@ -122,7 +122,6 @@ interface Props {
   debug?: boolean;
   data: HPGLData | null;
   filled?: boolean;
-  showBounds?: boolean;
   showNotches?: boolean;
   zoom: number;
   onZoomChange?: (z: number) => void;
@@ -279,7 +278,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -998,7 +997,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 height={(oy2 - oy) * effectiveZoom}
                 fill="none"
                 stroke="#00E5FF"
-                strokeWidth={showBounds ? 1.5 : 0}
+                strokeWidth={0}
                 rx={1}
                 style={{ pointerEvents: 'none', transition: 'stroke-width 0.15s' }} />
             );
