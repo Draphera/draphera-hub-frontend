@@ -97,6 +97,8 @@ export default function HPGLViewerPage() {
   type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
   const [filteredContours, setFilteredContours] = useState<Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>>();
+  const [showPlacementRect, setShowPlacementRect] = useState(true);
+  const [showBlockFuse, setShowBlockFuse] = useState(true);
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
   const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
@@ -675,7 +677,9 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             pieces={pieces}
-            filteredContours={filteredContours}
+            filteredContours={filteredContours?.filter(fc =>
+              fc.type === 'placement_rect' ? showPlacementRect : showBlockFuse
+            )}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
             onPieceDoubleClick={p => setPieceDetail({ piece: p })}
@@ -727,7 +731,10 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         flattened={flattened} onToggleFlattened={() => setFlattened(v => !v)}
         pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces}
         selectedPiece={selectedPieceId !== undefined && pieces ? pieces.find(p => p.id === selectedPieceId) ?? undefined : undefined}
-        isAdmin={isAdmin} />
+        isAdmin={isAdmin}
+        filteredContours={filteredContours ?? []}
+        showPlacementRect={showPlacementRect} onTogglePlacementRect={() => setShowPlacementRect(v => !v)}
+        showBlockFuse={showBlockFuse} onToggleBlockFuse={() => setShowBlockFuse(v => !v)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

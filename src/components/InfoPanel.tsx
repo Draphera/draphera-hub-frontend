@@ -77,11 +77,16 @@ interface Props {
   onDetectPieces?: () => void;
   selectedPiece?: { id: number; area: number; notch_count: number; has_grainline: boolean; perimeter?: number };
   isAdmin?: boolean;
+  filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
+  showPlacementRect?: boolean;
+  onTogglePlacementRect?: () => void;
+  showBlockFuse?: boolean;
+  onToggleBlockFuse?: () => void;
 }
 
 const APP_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -224,6 +229,38 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {filteredContours && filteredContours.length > 0 && (
+          <div className="px-3 py-2 rounded-lg bg-drapera-midnight/50 border border-drapera-border">
+            <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-2 block">Contenitori</span>
+            <div className="space-y-1">
+              {filteredContours.some(fc => fc.type === 'placement_rect') && (
+                <div className="flex items-center gap-2 py-1">
+                  <button onClick={onTogglePlacementRect}
+                    className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                      showPlacementRect ? 'bg-red-500/20 border-red-500/40' : 'bg-drapera-dark border-drapera-border'
+                    }`}>
+                    {showPlacementRect && <svg className="w-2 h-2 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </button>
+                  <div className="w-3 h-3 rounded-sm border-2 border-red-400" />
+                  <span className="text-[10px] text-gray-400">Piazzamento</span>
+                </div>
+              )}
+              {filteredContours.some(fc => fc.type === 'block_fuse') && (
+                <div className="flex items-center gap-2 py-1">
+                  <button onClick={onToggleBlockFuse}
+                    className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                      showBlockFuse ? 'bg-blue-500/20 border-blue-500/40' : 'bg-drapera-dark border-drapera-border'
+                    }`}>
+                    {showBlockFuse && <svg className="w-2 h-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                  </button>
+                  <div className="w-3 h-3 rounded-sm border-2 border-dashed border-blue-400" />
+                  <span className="text-[10px] text-gray-400">Block Fuse</span>
+                </div>
+              )}
             </div>
           </div>
         )}
