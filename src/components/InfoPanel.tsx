@@ -82,11 +82,13 @@ interface Props {
   onTogglePlacementRect?: () => void;
   showBlockFuse?: boolean;
   onToggleBlockFuse?: () => void;
+  showCutOrder?: boolean;
+  onToggleCutOrder?: () => void;
 }
 
 const APP_VERSION = '1.1.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -261,6 +263,25 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                   <span className="text-[10px] text-gray-400">Block Fuse</span>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {pieces && pieces.length >= 2 && (
+          <div className="px-3 py-2 rounded-lg bg-drapera-midnight/50 border border-drapera-border">
+            <span className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider mb-2 block">Taglio</span>
+            <div className="flex items-center gap-2 py-1">
+              <button onClick={onToggleCutOrder}
+                className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
+                  showCutOrder ? 'bg-amber-500/20 border-amber-500/40' : 'bg-drapera-dark border-drapera-border'
+                }`}>
+                {showCutOrder && <svg className="w-2 h-2 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+              </button>
+              <svg className="w-3 h-3" viewBox="0 0 20 10">
+                <line x1="1" y1="5" x2="19" y2="5" stroke="#F2C94C" strokeWidth={1.5} strokeDasharray="3,2" />
+                <polygon points="17,3 19,5 17,7" fill="#F2C94C" />
+              </svg>
+              <span className="text-[10px] text-gray-400">Ordine di taglio</span>
             </div>
           </div>
         )}
