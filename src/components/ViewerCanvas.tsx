@@ -433,7 +433,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
 
   // Memo‑ised piece lookup by ID
   const pieceByIdMap = useMemo(() => {
-    const m = new Map<number, { color: string; area: number; notch: number; grainline: boolean; contour_points: number[][] }>();
+    const m = new Map<number, { color: string; area: number; notch: number; grainline: boolean; contour_points: number[][]; starting_point: number[] }>();
     if (pieces) {
       for (const p of pieces) {
         m.set(p.id, {
@@ -442,6 +442,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           notch: p.notch_count,
           grainline: p.has_grainline,
           contour_points: p.contour_points,
+          starting_point: p.starting_point,
         });
       }
     }
@@ -468,6 +469,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               style={{ cursor: 'pointer', pointerEvents: 'all' }}
               onDoubleClick={() => onPieceDoubleClick?.(p)}
             />
+            {/* Starting point marker */}
+            {p.starting_point && p.starting_point.length >= 2 && (
+              <circle cx={p.starting_point[0]} cy={p.starting_point[1]}
+                r={2.5 / effectiveZoom}
+                fill="#FF6B6B" stroke="#fff" strokeWidth={0.5 / effectiveZoom}
+                style={{ pointerEvents: 'none' }}
+              />
+            )}
             {/* Visible overlay — only on hover / select */}
             {isActive && (
               <polygon points={pts}

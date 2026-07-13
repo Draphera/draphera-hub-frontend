@@ -84,7 +84,7 @@ interface Props {
   onToggleBlockFuse?: () => void;
 }
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse }: Props) {
   const { t } = useTranslation();
