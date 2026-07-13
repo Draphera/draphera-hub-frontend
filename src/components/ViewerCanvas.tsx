@@ -150,7 +150,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; cut_order?: number; seam_lines?: number[][][] }>;
   filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
   showCutOrder?: boolean;
   selectedPieceId?: number;
@@ -514,10 +514,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     // ---- Cut order line (dashed path through starting points) ----
     let cutOrderPolyline: JSX.Element | null = null;
     if (showCutOrder && pieces && pieces.length >= 2) {
-      const sorted = [...pieces].sort((a, b) => {
-        if (a.miny !== b.miny) return a.miny - b.miny;
-        return a.minx - b.minx;
-      });
+      const sorted = [...pieces].sort((a, b) => (a.cut_order ?? 0) - (b.cut_order ?? 0));
       const cpts = sorted.map(p => p.starting_point).filter(p => p && p.length >= 2);
       if (cpts.length >= 2) {
         cutOrderPolyline = (
