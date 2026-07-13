@@ -153,6 +153,7 @@ interface Props {
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; cut_order?: number; seam_lines?: number[][][] }>;
   filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
   showCutOrder?: boolean;
+  showStartPoints?: boolean;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
   onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;
@@ -279,7 +280,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, showCutOrder, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -471,7 +472,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               onDoubleClick={() => onPieceDoubleClick?.(p)}
             />
             {/* Starting point marker */}
-            {p.starting_point && p.starting_point.length >= 2 && (
+            {showStartPoints && p.starting_point && p.starting_point.length >= 2 && (
               <circle cx={p.starting_point[0]} cy={p.starting_point[1]}
                 r={2.5 / effectiveZoom}
                 fill="#FF6B6B" stroke="#fff" strokeWidth={0.5 / effectiveZoom}
@@ -517,15 +518,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const sorted = [...pieces].sort((a, b) => (a.cut_order ?? 0) - (b.cut_order ?? 0));
       const cpts = sorted.map(p => p.starting_point).filter(p => p && p.length >= 2);
       if (cpts.length >= 2) {
-        const radius = 3.5 / effectiveZoom;
-        const fontSize = `${Math.max(6, Math.round(10 / effectiveZoom))}px`;
-        const offset = 4 / effectiveZoom;
+        const radius = 2.5 / effectiveZoom;
+        const fontSize = `${Math.max(5, Math.round(7 / effectiveZoom))}px`;
+        const offset = 3 / effectiveZoom;
         cutOrderPolyline = (
           <g key="cut-order">
-            <polyline
-              points={cpts.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
-              fill="none" stroke="#F2C94C"
-              strokeWidth={1.8 / effectiveZoom}
+              <polyline
+                points={cpts.map(pt => `${pt[0]},${pt[1]}`).join(' ')}
+                fill="none" stroke="#F2C94C"
+                strokeWidth={1.0 / effectiveZoom}
               strokeDasharray="6,4"
               strokeLinecap="round"
               markerMid="url(#coArrow)"
@@ -534,10 +535,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {cpts.map((pt, i) => (
               <g key={`con_${i}`}>
                 <circle cx={pt[0]} cy={pt[1]} r={radius}
-                  fill="#1a1a2e" stroke="#F2C94C" strokeWidth={0.8 / effectiveZoom}
+                  fill="#1a1a2e" stroke="#F2C94C" strokeWidth={0.5 / effectiveZoom}
                   style={{ pointerEvents: 'none' }} />
                 <text x={pt[0]} y={pt[1] + offset} textAnchor="middle"
-                  fill="#F2C94C" fontSize={fontSize} fontFamily="Inter" fontWeight="bold"
+                  fill="#F2C94C" fontSize={fontSize} fontFamily="Inter" fontWeight="600"
                   style={{ pointerEvents: 'none' }}>
                   {i + 1}
                 </text>
@@ -980,8 +981,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       >
         <rect width={VIEW_W} height={VIEW_H} fill={bgColor} />
         <defs>
-          <marker id="coArrow" viewBox="0 0 16 12" refX="14" refY="6" markerWidth={8} markerHeight={6} orient="auto">
-            <path d="M 0 0 L 16 6 L 0 12 L 4 6 z" fill="#F2C94C" />
+          <marker id="coArrow" viewBox="0 0 12 10" refX="10" refY="5" markerWidth={5} markerHeight={4} orient="auto">
+            <path d="M 1 0 L 12 5 L 1 10 L 3 5 z" fill="#F2C94C" />
           </marker>
         </defs>
         {data ? (

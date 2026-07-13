@@ -99,6 +99,7 @@ export default function HPGLViewerPage() {
   const [showPlacementRect, setShowPlacementRect] = useState(true);
   const [showBlockFuse, setShowBlockFuse] = useState(true);
   const [showCutOrder, setShowCutOrder] = useState(true);
+  const [showStartPoints, setShowStartPoints] = useState(true);
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
   const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
@@ -679,6 +680,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
               fc.type === 'placement_rect' ? showPlacementRect : showBlockFuse
             )}
             showCutOrder={showCutOrder}
+            showStartPoints={showStartPoints}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
             onPieceDoubleClick={p => setPieceDetail({ piece: p })}
@@ -734,7 +736,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         filteredContours={filteredContours ?? []}
         showPlacementRect={showPlacementRect} onTogglePlacementRect={() => setShowPlacementRect(v => !v)}
         showBlockFuse={showBlockFuse} onToggleBlockFuse={() => setShowBlockFuse(v => !v)}
-        showCutOrder={showCutOrder} onToggleCutOrder={() => setShowCutOrder(v => !v)} />
+        showCutOrder={showCutOrder} onToggleCutOrder={() => setShowCutOrder(v => !v)}
+        showStartPoints={showStartPoints} onToggleStartPoints={() => setShowStartPoints(v => !v)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
