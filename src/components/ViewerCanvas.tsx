@@ -152,6 +152,7 @@ interface Props {
   onFlipY?: () => void;
   onResetTransform?: () => void;
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] }>;
+  filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
   onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;
@@ -278,7 +279,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, showBounds, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -482,7 +483,26 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         );
       }
     }
-    return <g>{pieceOverlays}{data.paths.map((path, idx) => {
+    // ---- Filtered contour overlays (placement rect / block fuse) ----
+    const filteredOverlays: JSX.Element[] = [];
+    if (filteredContours) {
+      for (let fi = 0; fi < filteredContours.length; fi++) {
+        const fc = filteredContours[fi];
+        if (!fc.contour_points || fc.contour_points.length < 2) continue;
+        const pts = fc.contour_points.map((pt: number[]) => `${pt[0]},${pt[1]}`).join(' ');
+        const isPlac = fc.type === 'placement_rect';
+        filteredOverlays.push(
+          <polygon key={`fc_${fi}`} points={pts}
+            fill={isPlac ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)'}
+            stroke={isPlac ? '#EF4444' : '#3B82F6'}
+            strokeWidth={1.2 / effectiveZoom}
+            strokeDasharray={isPlac ? '8,4' : '4,4'}
+            style={{ pointerEvents: 'none' }}
+          />
+        );
+      }
+    }
+    return <g>{pieceOverlays}{filteredOverlays}{data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
       // Viewport culling with large margin to avoid pop-in during zoom/pan
       if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;

@@ -96,6 +96,7 @@ export default function HPGLViewerPage() {
   const [flipY, setFlipY] = useState(false);
   type Piece = { id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; seam_lines?: number[][][] };
   const [pieces, setPieces] = useState<Piece[]>();
+  const [filteredContours, setFilteredContours] = useState<Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>>();
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
   const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
@@ -318,6 +319,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
     try {
       const result = await hpglApi.pieces(rawFile);
       setPieces(result.pieces ?? []);
+      setFilteredContours(result.filtered_contours ?? []);
       setSelectedPieceId(undefined);
       setMsg(result.pieces?.length > 0 ? `${result.pieces.length} pezzi rilevati` : 'Nessun pezzo trovato');
     } catch { setMsg('Errore rilevamento pezzi'); }
@@ -673,6 +675,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onRotateLeft={handleRotateLeft} onRotateRight={handleRotateRight}
             onFlipX={handleFlipX} onFlipY={handleFlipY} onResetTransform={handleResetTransform}
             pieces={pieces}
+            filteredContours={filteredContours}
             selectedPieceId={selectedPieceId}
             onPieceSelect={id => setSelectedPieceId(id)}
             onPieceDoubleClick={p => setPieceDetail({ piece: p })}
