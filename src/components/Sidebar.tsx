@@ -199,6 +199,19 @@ export default function Sidebar({
           </div>
         </div>
 
+        <div className="h-px bg-drapera-border" />
+
+        <div>
+          <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em] text-drapera-steel-light mb-2.5">Segnala un campione</h3>
+          <p className="text-[10px] text-gray-500 mb-2 leading-relaxed">
+            Hai un file CAD non riconosciuto? Inviaci i metadata per un'analisi in quarantena privata.
+          </p>
+          <a href="https://vision.draphera.com/contact" target="_blank" rel="noopener noreferrer"
+            className="block w-full text-center py-2 rounded-lg text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+            Apri modulo intake
+          </a>
+        </div>
+
       </div>
     </aside>
   );
