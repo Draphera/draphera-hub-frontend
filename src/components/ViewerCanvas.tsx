@@ -480,17 +480,15 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
                 style={{ pointerEvents: 'none' }}
               />
             )}
-            {/* Visible overlay — only on hover / select */}
-            {isActive && (
-              <polygon points={pts}
-                fill={cleanView ? 'rgba(0,174,239,0.08)' : (selectedPieceId === p.id ? `${color}40` : `${color}30`)}
-                stroke={color}
-                strokeWidth={(cleanView ? 1.5 : (selectedPieceId === p.id ? 3 : 2)) / effectiveZoom}
-                strokeOpacity={cleanView ? 0.6 : 1}
-                strokeLinejoin="round"
-                style={{ pointerEvents: 'none' }}
-              />
-            )}
+            {/* Visible overlay — controlled by filled toggle */}
+            <polygon points={pts}
+              fill={cleanView ? 'rgba(0,174,239,0.08)' : (filled ? `${color}30` : (isActive ? (selectedPieceId === p.id ? `${color}40` : `${color}30`) : 'transparent'))}
+              stroke={color}
+              strokeWidth={(cleanView ? 1.5 : (selectedPieceId === p.id ? 3 : 2)) / effectiveZoom}
+              strokeOpacity={cleanView ? 0.6 : 1}
+              strokeLinejoin="round"
+              style={{ pointerEvents: 'none' }}
+            />
           </g>
         );
       }
