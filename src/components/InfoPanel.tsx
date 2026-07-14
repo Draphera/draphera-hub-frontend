@@ -93,6 +93,7 @@ interface Props {
 }
 
 const APP_VERSION = '1.1.1';
+const VE_VERSION = '1.0.0';
 
 export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView }: Props) {
   const { t } = useTranslation();
@@ -239,7 +240,7 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             </div>
 
             <div className="pt-1">
-              <p className="text-[9px] text-gray-600 text-center">Draphera Hub HPGL Viewer v{APP_VERSION}</p>
+              <p className="text-[9px] text-gray-600 text-center">Draphera Hub HPGL Viewer v{APP_VERSION} + VectorEngine v{VE_VERSION}</p>
             </div>
           </div>
         )}
