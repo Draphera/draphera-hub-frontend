@@ -24,13 +24,15 @@ interface Props {
   selectionActive: boolean;
   selectionExists: boolean;
   isAdmin: boolean;
+  cleanView?: boolean;
+  onToggleCleanView?: () => void;
 }
 
 export default function FooterActions({
   onZoomIn, onZoomOut, onFitToScreen, onToggleMeasure, measureMode, onMeasureModeChange,
   gridOn, onToggleGrid, onExportPng, onExportSvg,
   onCopySvg, onExportCsv, onExportPdf, onExportZip, onToggleSelection, onExportSelection,
-  hasFile, selectionActive, selectionExists, isAdmin,
+  hasFile, selectionActive, selectionExists, isAdmin, cleanView, onToggleCleanView,
 }: Props) {
   const { t } = useTranslation();
   const [showExport, setShowExport] = useState(false);
@@ -68,6 +70,21 @@ export default function FooterActions({
   return (
     <footer className="fixed bottom-0 left-[260px] right-[260px] h-12 bg-drapera-dark border-t border-drapera-border flex items-center justify-center gap-0.5 px-3 z-40">
       {/* Main actions */}
+      {/* Vista pulita toggle */}
+      {onToggleCleanView && (
+        <button onClick={onToggleCleanView}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] transition-all ${
+            cleanView
+              ? 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30'
+              : 'text-gray-500 hover:text-white hover:bg-white/5 border border-transparent'
+          }`} title="Vista pulita">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={cleanView ? 'M3 3l18 18M9 9a3 3 0 015.12 2.12M15 9.34V5a3 3 0 00-5.68-1.33M9 12v4a3 3 0 005.12 2.12M12 20v2' : 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'} />
+          </svg>
+          <span className="hidden lg:inline">Pulita</span>
+        </button>
+      )}
+
       {actions.map(a => {
         if (a.key === 'measure') {
           return (

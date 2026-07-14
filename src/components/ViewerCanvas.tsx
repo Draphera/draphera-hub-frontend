@@ -152,6 +152,7 @@ interface Props {
   onResetTransform?: () => void;
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; cut_order?: number; seam_lines?: number[][][] }>;
   filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
+  cleanView?: boolean;
   showCutOrder?: boolean;
   showStartPoints?: boolean;
   selectedPieceId?: number;
@@ -280,7 +281,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -460,7 +461,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       for (const p of pieces) {
         if (!p.contour_points || p.contour_points.length < 3) continue;
         const isActive = hoveredPiece === p.id || selectedPieceId === p.id;
-        const color = PIECE_COLORS[p.id % PIECE_COLORS.length];
+        const color = cleanView ? '#00AEEF' : PIECE_COLORS[p.id % PIECE_COLORS.length];
         const pts = p.contour_points.map(pt => `${pt[0]},${pt[1]}`).join(' ');
         pieceOverlays.push(
           <g key={`piece_${p.id}`}>
@@ -475,16 +476,17 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             {showStartPoints && p.starting_point && p.starting_point.length >= 2 && (
               <circle cx={p.starting_point[0]} cy={p.starting_point[1]}
                 r={2.5 / effectiveZoom}
-                fill="#FF6B6B" stroke="#fff" strokeWidth={0.5 / effectiveZoom}
+                fill={cleanView ? '#4A90D9' : '#FF6B6B'} stroke="#fff" strokeWidth={0.5 / effectiveZoom}
                 style={{ pointerEvents: 'none' }}
               />
             )}
             {/* Visible overlay — only on hover / select */}
             {isActive && (
               <polygon points={pts}
-                fill={selectedPieceId === p.id ? `${color}40` : `${color}30`}
+                fill={cleanView ? 'rgba(0,174,239,0.08)' : (selectedPieceId === p.id ? `${color}40` : `${color}30`)}
                 stroke={color}
-                strokeWidth={(selectedPieceId === p.id ? 3 : 2) / effectiveZoom}
+                strokeWidth={(cleanView ? 1.5 : (selectedPieceId === p.id ? 3 : 2)) / effectiveZoom}
+                strokeOpacity={cleanView ? 0.6 : 1}
                 strokeLinejoin="round"
                 style={{ pointerEvents: 'none' }}
               />
@@ -503,9 +505,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         const isPlac = fc.type === 'placement_rect';
         filteredOverlays.push(
           <polygon key={`fc_${fi}`} points={pts}
-            fill={isPlac ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)'}
-            stroke={isPlac ? '#EF4444' : '#3B82F6'}
-            strokeWidth={1.2 / effectiveZoom}
+            fill={cleanView ? 'rgba(204,204,204,0.03)' : (isPlac ? 'rgba(239,68,68,0.06)' : 'rgba(59,130,246,0.06)')}
+            stroke={cleanView ? '#CCCCCC' : (isPlac ? '#EF4444' : '#3B82F6')}
+            strokeWidth={cleanView ? 0.8 / effectiveZoom : 1.2 / effectiveZoom}
+            strokeOpacity={cleanView ? 0.4 : 1}
             strokeDasharray={isPlac ? '8,4' : '4,4'}
             style={{ pointerEvents: 'none' }}
           />
@@ -550,14 +553,17 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
     return <g>{pieceOverlays}{filteredOverlays}{cutOrderPolyline}{data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
+      if (cleanView && path.type === 'label') return null;
       // Viewport culling with large margin to avoid pop-in during zoom/pan
       if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
       const isSelected = selectedPathIndex === idx;
-      const color = flattened
-        ? (invertColors ? '#00e5ff' : '#F2C94C')
-        : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
+      const color = cleanView
+        ? '#00AEEF'
+        : flattened
+          ? (invertColors ? '#00e5ff' : '#F2C94C')
+          : (penColors?.[pen] ?? (invertColors ? '#00e5ff' : PEN_COLORS[pen % PEN_COLORS.length]));
       // Auto-thickness: closed paths and long paths are thicker (likely contours)
       const ptsLen = (path.type === 'polyline' || path.type === 'rectangle') ? (path.points?.length ?? 0) : 0;
       let ptDiag = 0;
@@ -575,7 +581,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       const sw = ((path.penWidth ?? 0.25) * thick) / effectiveZoom;
       const highlightSw = sw * 3;
       // Text and contour: solid line. Others: respect LT
-      const dash = (isContour || isText) ? '' : (LT_PATTERNS[path.lineType ?? 0] || '');
+      const dash = cleanView ? '' : ((isContour || isText) ? '' : (LT_PATTERNS[path.lineType ?? 0] || ''));
       const dashProps = dash ? { strokeDasharray: dash } : {};
 
       const commonProps = {
@@ -610,9 +616,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         const lodPts = (lodFactor < 1 && path.points.length > 100) ? simplifyPoints(path.points, lodFactor) : path.points;
         const pts = lodPts.map(p => `${p[0]},${p[1]}`).join(' ');
         if (path.closed) {
-          elements.push(<polygon key={idx} points={pts} fill={filled ? 'rgba(242,201,76,0.1)' : 'none'} stroke={color} strokeWidth={sw} strokeLinejoin="round" {...dashProps} {...commonProps} />);
+          elements.push(<polygon key={idx} points={pts} fill={cleanView ? 'none' : (filled ? 'rgba(242,201,76,0.1)' : 'none')} stroke={color} strokeWidth={sw} strokeOpacity={cleanView ? 0.6 : 1} strokeLinejoin="round" {...dashProps} {...commonProps} />);
         } else {
-          elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
+          elements.push(<polyline key={idx} points={pts} fill="none" stroke={color} strokeWidth={sw} strokeOpacity={cleanView ? 0.6 : 1} strokeLinejoin="round" strokeLinecap="round" {...dashProps} {...commonProps} />);
         }
       } else if (path.type === 'arc' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
         const cx = path.cx, cy = path.cy, r = path.radius;
@@ -621,9 +627,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         const x1 = cx + r * Math.cos(sa), y1 = cy + r * Math.sin(sa);
         const x2 = cx + r * Math.cos(ea), y2 = cy + r * Math.sin(ea);
         const large = (ea - sa) > Math.PI ? 1 : 0;
-        elements.push(<path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} {...dashProps} {...commonProps} />);
+        elements.push(<path key={idx} d={`M${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2}`} fill="none" stroke={color} strokeWidth={sw} strokeOpacity={cleanView ? 0.6 : 1} {...dashProps} {...commonProps} />);
       } else if (path.type === 'circle' && path.cx !== undefined && path.cy !== undefined && path.radius !== undefined) {
-        elements.push(<circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} {...dashProps} {...commonProps} />);
+        elements.push(<circle key={idx} cx={path.cx} cy={path.cy} r={path.radius} fill="none" stroke={color} strokeWidth={sw} strokeOpacity={cleanView ? 0.6 : 1} {...dashProps} {...commonProps} />);
       } else if (path.type === 'label' && path.text) {
         const rot = path.rotation ?? 0;
         const sl = path.slant ?? 0;
@@ -990,14 +996,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
             {contentTransform ? (
               <g transform={contentTransform}>
-                {gridLines}
+                {!cleanView && gridLines}
                 {renderPaths()}
               </g>
             ) : (
-              <>{gridLines}{renderPaths()}
+              <>{!cleanView && gridLines}{renderPaths()}
               </>
             )}
-            {renderMeasurement()}
+            {!cleanView && renderMeasurement()}
             {/* Selection rectangle during drag */}
             {dragRect && (
               <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
@@ -1012,7 +1018,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             )}
             {/* Piece bounding boxes — convert to outer space so they align
                 with the flipped piece overlays inside contentTransform */}
-            {pieces?.map((p) => {
+            {!cleanView && pieces?.map((p) => {
               const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#FFA07A','#98D8C8','#F7DC6F','#BB8FCE','#85C1E9'];
               const col = colors[p.id % colors.length];
               const isHover = hoveredPiece !== undefined && hoveredPiece === p.id;
@@ -1028,8 +1034,8 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               );
             })}
           </g>
-          {renderTackMarks()}
-          {renderMeasureMarkers()}
+          {!cleanView && renderTackMarks()}
+          {!cleanView && renderMeasureMarkers()}
           {placementBounds && (() => {
             const corners = [
               innerToOuter(placementBounds.minX, placementBounds.minY),
@@ -1066,7 +1072,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       </svg>
 
       {/* Notch overlay — subtle markers */}
-      {showNotches && notches.length > 0 && (
+      {!cleanView && showNotches && notches.length > 0 && (
         <div className="absolute inset-0 pointer-events-none z-[5]">
           <svg className="w-full h-full" viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}>
             <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>

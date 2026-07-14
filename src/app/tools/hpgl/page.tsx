@@ -51,7 +51,7 @@ interface HPGLData {
   };
 }
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.1.1';
 
 export default function HPGLViewerPage() {
   const router = useRouter();
@@ -100,6 +100,7 @@ export default function HPGLViewerPage() {
   const [showBlockFuse, setShowBlockFuse] = useState(true);
   const [showCutOrder, setShowCutOrder] = useState(true);
   const [showStartPoints, setShowStartPoints] = useState(true);
+  const [cleanView, setCleanView] = useState(false);
   const [piecesLoading, setPiecesLoading] = useState(false);
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
   const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
@@ -679,6 +680,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             filteredContours={filteredContours?.filter(fc =>
               fc.type === 'placement_rect' ? showPlacementRect : showBlockFuse
             )}
+            cleanView={cleanView}
             showCutOrder={showCutOrder}
             showStartPoints={showStartPoints}
             selectedPieceId={selectedPieceId}
@@ -737,7 +739,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         showPlacementRect={showPlacementRect} onTogglePlacementRect={() => setShowPlacementRect(v => !v)}
         showBlockFuse={showBlockFuse} onToggleBlockFuse={() => setShowBlockFuse(v => !v)}
         showCutOrder={showCutOrder} onToggleCutOrder={() => setShowCutOrder(v => !v)}
-        showStartPoints={showStartPoints} onToggleStartPoints={() => setShowStartPoints(v => !v)} />
+        showStartPoints={showStartPoints} onToggleStartPoints={() => setShowStartPoints(v => !v)}
+        cleanView={cleanView} onToggleCleanView={() => setCleanView(v => !v)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
@@ -805,6 +808,8 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
         selectionActive={selectionActive}
         selectionExists={!!selectionBounds}
         isAdmin={isAdmin}
+        cleanView={cleanView}
+        onToggleCleanView={() => setCleanView(v => !v)}
       />
 
       {/* Measurement modal */}
