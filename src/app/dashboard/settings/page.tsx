@@ -52,9 +52,13 @@ export default function SettingsPage() {
     setSaving(true); setMsg('');
     try {
       const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'cad_system_other', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url', 'public_profile']) {
+      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'cad_system_other', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
         const v = profile[key];
         if (v !== undefined && v !== null) updates[key] = v;
+      }
+      const pp = profile['public_profile'];
+      if (pp !== undefined && pp !== null) {
+        (updates as Record<string, unknown>)['public_profile'] = pp === 'true';
       }
       await profileApi.update(updates);
       setMsg(t('profile.saved'));
@@ -230,7 +234,14 @@ export default function SettingsPage() {
               <p className="text-xs text-gray-400 font-medium">Mostrami nella community</p>
               <p className="text-[10px] text-gray-600 mt-0.5">Il tuo nome sarà visibile nella pagina Community di Draphera Hub.</p>
             </div>
-            <button onClick={() => set('public_profile', profile.public_profile === 'true' ? 'false' : 'true')}
+            <button onClick={async () => {
+              const next = profile.public_profile === 'true' ? 'false' : 'true';
+              set('public_profile', next);
+              try {
+                await profileApi.update({ public_profile: next === 'true' });
+                setMsg(t('profile.saved'));
+              } catch { setMsg(t('profile.error')); }
+            }}
               className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${profile.public_profile === 'true' ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
               <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${profile.public_profile === 'true' ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
             </button>

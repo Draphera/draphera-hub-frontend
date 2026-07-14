@@ -43,7 +43,7 @@ export const profileApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
-  async update(data: Record<string, string>) {
+  async update(data: Record<string, unknown>) {
     const headers = await getHeaders();
     headers['Content-Type'] = 'application/json';
     const res = await fetchWithTimeout(`${API_BASE}/api/profile`, {

@@ -327,6 +327,7 @@ export default function HomePage() {
               Suggerisci il prossimo tool
             </Link>
           </div>
+        </div>
 
           <div className="max-w-3xl mx-auto mt-16">
             <div className="premium-card p-6">
