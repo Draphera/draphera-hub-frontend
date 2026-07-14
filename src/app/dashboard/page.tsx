@@ -143,6 +143,10 @@ export default function DashboardPage() {
                 <p className="text-2xl font-bold text-white">8</p>
                 <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.dev_count')}</p>
               </div>
+              <Link href="/dashboard/community" className="premium-card p-4 text-center block hover:border-drapera-gold/40 transition-colors">
+                <p className="text-2xl font-bold text-drapera-gold">Community</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">Scopri chi c'è</p>
+              </Link>
               <div className="premium-card p-4 text-center">
                 <p className="text-2xl font-bold text-drapera-gold">{uploadCount}</p>
                 <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.files_uploaded')}</p>

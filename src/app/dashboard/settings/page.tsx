@@ -52,7 +52,7 @@ export default function SettingsPage() {
     setSaving(true); setMsg('');
     try {
       const updates: Record<string, string> = {};
-      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'cad_system_other', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url']) {
+      for (const key of ['full_name', 'company_name', 'phone', 'address', 'website', 'vat_number', 'cad_system', 'cad_system_other', 'office', 'linkedin_url', 'facebook_url', 'instagram_url', 'github_url', 'public_profile']) {
         const v = profile[key];
         if (v !== undefined && v !== null) updates[key] = v;
       }
@@ -224,6 +224,16 @@ export default function SettingsPage() {
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
+          </div>
+          <div className="flex items-center justify-between py-3 px-1">
+            <div>
+              <p className="text-xs text-gray-400 font-medium">Mostrami nella community</p>
+              <p className="text-[10px] text-gray-600 mt-0.5">Il tuo nome sarà visibile nella pagina Community di Draphera Hub.</p>
+            </div>
+            <button onClick={() => set('public_profile', profile.public_profile === 'true' ? 'false' : 'true')}
+              className={`w-9 h-5 rounded-full transition-colors relative shrink-0 ${profile.public_profile === 'true' ? 'bg-drapera-gold' : 'bg-drapera-border'}`}>
+              <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${profile.public_profile === 'true' ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+            </button>
           </div>
           <div className="h-px bg-drapera-border/40 my-2" />
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">{t('profile.social_title')}</p>
