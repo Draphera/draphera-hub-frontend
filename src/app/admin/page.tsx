@@ -891,9 +891,9 @@ export default function AdminPage() {
             )}
 
             <div className="premium-card mt-6">
-              <h3 className="font-display font-bold text-base text-white mb-3">ML Model — Riconoscimento CAD</h3>
+              <h3 className="font-display font-bold text-base text-white mb-3">VectorEngine — Riconoscimento CAD</h3>
               <p className="text-xs text-gray-500 mb-4">
-                Addestra un classificatore RandomForest sui {trainingCount} campioni raccolti dal trainer.
+                Addestra un classificatore sui {trainingCount} campioni raccolti dal trainer.
                 Serve almeno 10 campioni e 2 classi CAD diverse.
               </p>
               <div className="flex items-center gap-3">
@@ -1591,7 +1591,7 @@ export default function AdminPage() {
               </div>
 
               <div className="premium-card p-5">
-                <h3 className="font-display font-bold text-base text-white mb-4">ML Model</h3>
+                <h3 className="font-display font-bold text-base text-white mb-4">VectorEngine</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.exists ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
                     <p className={`text-sm font-bold ${systemHealth.ml_model.exists ? 'text-green-400' : 'text-red-400'}`}>

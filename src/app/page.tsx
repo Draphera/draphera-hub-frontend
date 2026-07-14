@@ -97,7 +97,7 @@ export default function HomePage() {
                 Early Access — {isOpen ? `${remaining} posti disponibili` : 'Completato'}
               </span>
               <span className="px-3 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium">
-                ML CAD Recognition v1.0
+                Draphera VectorEngine™
               </span>
             </div>
 
@@ -106,7 +106,7 @@ export default function HomePage() {
               <span className="gradient-text">per la modellistica e il CAD</span>
             </h1>
             <p className="section-subtitle mb-6">
-              HPGL Viewer, ISO Viewer, DXF Viewer e ML CAD Recognition.
+               HPGL Viewer, ISO Viewer, DXF Viewer con Draphera VectorEngine™.
               Il primo sistema che riconosce automaticamente il CAD di origine dei tuoi file.
             </p>
 
@@ -220,8 +220,8 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { step: '1', icon: 'M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12', title: 'Carica il file', desc: 'HPGL, PLT, ISO o DXF. Il sistema analizza struttura, comandi e coordinate.' },
-                { step: '2', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7', title: '113 feature', desc: 'Firme HPGL, angoli, intagli, pattern penna, comandi vendor.' },
-                { step: '3', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', title: 'ML + Regole', desc: 'RandomForest + rule-based voting. Confidence smoothing al 65%.' },
+                { step: '2', icon: 'M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7', title: 'Analisi vettoriale', desc: 'Firme HPGL, angoli, intagli, pattern penna.' },
+                { step: '3', icon: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', title: 'Classificazione', desc: 'Sistema a voti con analisi geometrica e confidence smoothing.' },
                 { step: '4', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Report CAD', desc: 'CAD riconosciuto, confidence, feature scores e suggerimenti.' },
               ].map(s => (
                 <div key={s.step} className="premium-card text-center py-6 px-4 relative overflow-hidden">
@@ -352,9 +352,9 @@ export default function HomePage() {
                     e inviandolo come campione per il training. I file vengono controllati prima di entrare nel dataset.
                   </p>
                   <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Dataset: 20 campioni minimo per CAD</span>
-                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Feature: 113</span>
-                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Modello: RandomForest</span>
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Dataset: verifica manuale</span>
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Analisi: vettoriale</span>
+                    <span className="px-2 py-1 rounded bg-white/5 font-mono text-[10px]">Engine: Draphera VectorEngine™</span>
                   </div>
                 </div>
               </div>

@@ -139,7 +139,6 @@ export default function HPGLViewerPage() {
     });
   }, [router]);
 
-  // Toggle debug overlay with Alt+D
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.altKey && e.key === 'd') { e.preventDefault(); setDebug(v => !v); }
@@ -188,7 +187,6 @@ export default function HPGLViewerPage() {
     } catch { setMsg('Errore salvataggio correzione'); }
   }, [features, uploadId]);
 
-  // Auto-show modal when ML is uncertain or no_model; auto-assign Lectra if detected
   const ml = hpglData?.ml;
   useEffect(() => {
     if (!hpglData) return;
@@ -723,7 +721,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       {/* Debug mode indicator */}
       {debug && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-red-500/15 border border-red-400/25 text-[11px] text-red-400 font-mono font-bold tracking-wider animate-pulse">
-          DEBUG MODE — Alt+D to toggle
+          DEBUG MODE
         </div>
       )}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
