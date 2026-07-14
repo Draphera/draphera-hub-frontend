@@ -202,13 +202,12 @@ export default function HomePage() {
               {[
                 { value: stats?.total ?? 0, label: 'File elaborati', color: 'text-drapera-gold' },
                 { value: totalVendors, label: 'CAD supportati', color: 'text-cyan-400' },
-                { value: '20', label: 'Feature ML', color: 'text-green-400' },
-                { value: 'RandomForest', label: 'Modello', color: 'text-purple-400', small: true },
+                { value: '113', label: t('home.stats_analysis'), color: 'text-green-400' },
+                { value: 'Server', label: t('home.stats_engine'), color: 'text-purple-400' },
               ].map(s => (
                 <div key={s.label} className="premium-card text-center py-6">
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                   <p className="text-[10px] text-gray-500 mt-1">{s.label}</p>
-                  {s.small && <p className="text-[9px] text-gray-600 mt-0.5">+ Rule-based Voting</p>}
                 </div>
               ))}
             </div>
