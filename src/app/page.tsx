@@ -202,14 +202,16 @@ export default function HomePage() {
               {[
                 { value: stats?.total ?? 0, label: 'File elaborati', color: 'text-drapera-gold' },
                 { value: totalVendors, label: 'CAD supportati', color: 'text-cyan-400' },
-                { value: '113', label: t('home.stats_analysis'), color: 'text-green-400' },
-                { value: 'Server', label: t('home.stats_engine'), color: 'text-purple-400' },
               ].map(s => (
                 <div key={s.label} className="premium-card text-center py-6">
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
                   <p className="text-[10px] text-gray-500 mt-1">{s.label}</p>
                 </div>
               ))}
+              <div className="premium-card text-center py-5 col-span-2 flex flex-col items-center justify-center">
+                <p className="text-lg font-bold text-purple-400">Draphera VectorEngine<sup>™</sup></p>
+                <p className="text-[10px] text-gray-500 mt-0.5">Geometric Analysis &amp; Deterministic Voting</p>
+              </div>
             </div>
           </div>
 
