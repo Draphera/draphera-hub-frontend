@@ -60,7 +60,7 @@ export default function SondaggioPage() {
             <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Grazie per il feedback!</h1>
-          <p className="text-gray-500 mb-6">I primi 100 utenti guideranno la roadmap di Draphera Hub.</p>
+          <p className="text-gray-500 mb-6">{t('sondaggio.thanks_desc')}</p>
           <Link href="/dashboard" className="btn-gold text-sm px-6 py-2.5">Vai alla dashboard</Link>
         </div>
       </div>
