@@ -122,6 +122,9 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
         <Link href="/dashboard" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
           {t('nav.dashboard')}
         </Link>
+        <Link href="/dashboard/community" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard/community' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
+          Community
+        </Link>
         <span className="text-drapera-border mx-1">|</span>
         <div className="relative" ref={ufficiRef}>
           <button onClick={() => setUfficiOpen(!ufficiOpen)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ufficiOpen ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
@@ -202,6 +205,10 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7m-9 2v6m4-6v6" /></svg>
                   {t('nav.dashboard')}
                 </Link>
+                <Link href="/dashboard/community" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12.75c1.63 0 3.07.39 4.24.9 1.08.48 1.76 1.56 1.76 2.73V18H6v-1.61c0-1.18.68-2.26 1.76-2.73 1.17-.52 2.61-.91 4.24-.91zM4 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm1.13 1.1c-.37-.06-.74-.1-1.13-.1-.99 0-1.93.21-2.78.58A2.01 2.01 0 000 16.43V18h4.5v-1.61c0-.83.23-1.61.63-2.29zM20 13c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-1.13 1.1c.37-.06.74-.1 1.13-.1.99 0 1.93.21 2.78.58A2.01 2.01 0 0124 16.43V18h-4.5v-1.61c0-.83-.23-1.61-.63-2.29zM12 6c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z" /></svg>
+                  Community
+                </Link>
                 <Link href="/dashboard/settings" onClick={() => setUserMenu(false)} className="flex items-center gap-2 px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   {t('profile.title')}
@@ -243,6 +250,7 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
             )}
             <Link href="/" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.home')}</Link>
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.dashboard')}</Link>
+            <Link href="/dashboard/community" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">Community</Link>
             <div className="h-px bg-drapera-border/50 my-2" />
             <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">{t('nav.uffici')}</p>
             {uffici.map(u => (

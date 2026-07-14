@@ -312,7 +312,12 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className="premium-card p-6 text-center max-w-lg mx-auto">
+          <div className="grid sm:grid-cols-2 gap-4 max-w-lg mx-auto mt-6">
+            <Link href="/dashboard/community" className="premium-card p-4 text-center hover:border-drapera-gold/40 transition-colors block">
+              <p className="text-lg font-bold text-drapera-gold">Community</p>
+              <p className="text-[11px] text-gray-500 mt-0.5">Scopri chi c'è</p>
+            </Link>
+            <div className="premium-card p-4 text-center">
             <h3 className="text-base font-semibold text-white mb-2">Laboratorio Draphera</h3>
             <p className="text-xs text-gray-500 mb-4">
               Stiamo sviluppando nuovi strumenti. I nostri 50 membri (20 Founder + 30 Beta) guideranno la roadmap.
