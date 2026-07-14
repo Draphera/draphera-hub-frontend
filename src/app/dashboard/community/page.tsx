@@ -62,25 +62,46 @@ export default function CommunityPage() {
             {msg && (
               <div className="mt-4 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-400">{msg}</div>
             )}
-            <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {members.map(m => (
-                <div key={m.id} className="premium-card p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0">
-                    {(m.full_name?.[0] || '?').toUpperCase()}
+                <div key={m.id} className="group premium-card p-5 flex items-center gap-4 hover:border-drapera-gold/30 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-drapera-gold/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-lg shadow-drapera-gold/20">
+                      {(m.full_name?.[0] || '?').toUpperCase()}
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-2 border-drapera-midnight flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm text-white font-medium truncate">{m.full_name || 'Anonimo'}</p>
-                    {(m.company_name || m.office) && (
-                      <p className="text-[10px] text-gray-500 truncate">
-                        {[m.company_name, m.office].filter(Boolean).join(' · ')}
-                      </p>
-                    )}
+                  <div className="min-w-0 relative">
+                    <p className="text-sm text-white font-semibold truncate group-hover:text-drapera-gold transition-colors">{m.full_name || 'Anonimo'}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      {m.company_name && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-gray-400">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                          {m.company_name}
+                        </span>
+                      )}
+                      {m.office && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          {m.office === 'modellistica' ? 'Modellista' :
+                           m.office === 'produzione' ? 'Produzione' :
+                           m.office === 'fornitore' ? 'Fornitore' :
+                           m.office === 'freelance' ? 'Freelance' : m.office}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
               {members.length === 0 && !msg && (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-sm text-gray-500">Nessun membro nella community. Attiva la visibilità nelle impostazioni del profilo per essere il primo!</p>
+                <div className="col-span-full text-center py-16">
+                  <div className="w-16 h-16 rounded-full bg-drapera-gold/5 border border-drapera-gold/10 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-drapera-gold/40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  </div>
+                  <p className="text-sm text-gray-500">Nessun membro nella community.</p>
+                  <p className="text-xs text-gray-600 mt-1">Attiva la visibilità nelle impostazioni del profilo per essere il primo!</p>
                 </div>
               )}
             </div>
