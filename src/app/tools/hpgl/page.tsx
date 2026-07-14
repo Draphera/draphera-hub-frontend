@@ -124,7 +124,7 @@ export default function HPGLViewerPage() {
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
 
   useEffect(() => {
-    fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/profile/cad-systems`)
+    fetch('/api/profile/cad-systems')
       .then(r => r.json())
       .then(d => setCadSystems(d.cad_systems ?? []))
       .catch(() => {});

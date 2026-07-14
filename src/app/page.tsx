@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE = '';
 
 function AnimatedCounter({ value, label, color }: { value: number; label: string; color: string }) {
   const [display, setDisplay] = useState(0);

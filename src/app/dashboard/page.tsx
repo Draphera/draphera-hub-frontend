@@ -9,7 +9,7 @@ import CardTool from '@/components/CardTool';
 import { useTranslation } from '@/lib/i18n';
 import { profileApi, userApi } from '@/lib/api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE = '';
 import type { Session } from '@supabase/supabase-js';
 
 const LEVELS = [

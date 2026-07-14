@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE = '';
 
 const SUGGESTED_TOOLS = [
   { id: 'iso-viewer-full', label: 'ISO Viewer completo (salvataggio, CAD detection)' },

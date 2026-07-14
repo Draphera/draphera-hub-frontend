@@ -24,7 +24,7 @@ export default function DataDeletionPage() {
         headers['Authorization'] = `Bearer ${session.session.access_token}`;
       }
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+      const API_BASE = '';
       const res = await fetch(`${API_BASE}/api/profile/delete-request`, {
         method: 'POST',
         headers,
