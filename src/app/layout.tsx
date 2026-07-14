@@ -8,24 +8,24 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap', preload: true });
 
 export const metadata: Metadata = {
-  title: 'HPGL Viewer Online Gratuito — Draphera Hub | Visualizzatore CAD per Moda',
-  description: 'Visualizzatore HPGL online gratuito per file CAD di moda (.hpgl, .plt, .hpg). Supporta Lectra, Gerber, Investronica e altri. Anteprima, export PNG/SVG/ZIP, misurazioni e griglia snap. Portale tecnico per uffici stile, modellistica e produzione.',
-  keywords: ['HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub'],
+  title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
+  description: 'Draphera Hub è il modulo operativo dell\'Ecosistema Draphera, parte dello Standard Draphera per modellistica, dati vettoriali e preservazione industriale. Visualizzatore HPGL, VectorEngine™ e strumenti CAD.',
+  keywords: ['HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub', 'VectorEngine', 'Standard Draphera'],
   openGraph: {
-    title: 'HPGL Viewer Online — Draphera Hub',
-    description: 'Visualizzatore HPGL professionale per file CAD moda. Gratuito, veloce, senza installazione.',
-    url: 'https://draphera.com',
+    title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
+    description: 'Modulo operativo dell\'Ecosistema Draphera per modellistica, dati vettoriali e preservazione industriale.',
+    url: 'https://hub.draphera.com',
     siteName: 'Draphera Hub',
     type: 'website',
     locale: 'it_IT',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'HPGL Viewer Online — Draphera Hub',
-    description: 'Visualizzatore HPGL professionale per file CAD moda.',
+    title: 'Draphera Hub — Ecosistema Tecnico',
+    description: 'Modulo operativo dell\'Ecosistema Draphera per modellistica e dati vettoriali.',
   },
   alternates: {
-    canonical: 'https://draphera.com',
+    canonical: 'https://hub.draphera.com',
   },
   robots: {
     index: true,
