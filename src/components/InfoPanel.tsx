@@ -62,6 +62,7 @@ interface Props {
   ml?: MLInfo | null;
   features?: Record<string, unknown>;
   onCorrectCad?: (correctedCadId: string) => void;
+  onOpenCadModal?: () => void;
   userSelectedCad?: string | null;
   selectedPath?: SelectedPathInfo | null;
   measureResults?: MeasureResultInfo[];
@@ -93,7 +94,7 @@ interface Props {
 
 const APP_VERSION = '1.1.1';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView }: Props) {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'info' | 'analysis'>('info');
@@ -182,10 +183,18 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                 {userSelectedCad ? (
                   <p>Questo file è stato assegnato a <strong className="text-white">{userSelectedCad}</strong>.</p>
                 ) : ml?.source === 'no_model' ? (
-                  <p>Modello non addestrato per questo CAD. Usa il menu per correggere.</p>
+                  <div>
+                    <p>Modello non addestrato per questo CAD.</p>
+                    {onOpenCadModal && (
+                      <button onClick={onOpenCadModal}
+                        className="mt-1.5 w-full py-1.5 rounded text-[10px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+                        Seleziona CAD
+                      </button>
+                    )}
+                  </div>
                 ) : ml?.final_cad ? (
                   <p>Rilevato: <strong className="text-white">{ml.final_cad}</strong> con confidence <strong className="text-white">{((ml.final_confidence ?? 0) * 100).toFixed(0)}%</strong>.
-                  {ml.final_confidence && ml.final_confidence < 0.65 && <> Se non è corretto, seleziona il CAD dal menu.</>}
+                  {ml.final_confidence && ml.final_confidence < 0.65 && <> Se non è corretto, <button onClick={onOpenCadModal} className="text-amber-400 underline">seleziona il CAD</button>.</>}
                   </p>
                 ) : null}
               </div>

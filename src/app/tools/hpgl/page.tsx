@@ -724,7 +724,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
           DEBUG MODE
         </div>
       )}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} onOpenCadModal={() => setShowCadModal(true)} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
