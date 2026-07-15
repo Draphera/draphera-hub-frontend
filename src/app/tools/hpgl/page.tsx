@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Header from '@/components/Header';
@@ -66,7 +66,7 @@ export default function HPGLViewerPage() {
   const [showCadModal, setShowCadModal] = useState(false);
   const [userSelectedCad, setUserSelectedCad] = useState<string | null>(null);
   // Multi-file tabs
-  const [fileTabs, setFileTabs] = useState<Array<{ id: number; name: string; data: HPGLData; raw: File; feats?: Record<string, unknown>; upId?: string }>>([]);
+  const [fileTabs, setFileTabs] = useState<Array<{ id: number; name: string; data: HPGLData; raw: File; rawText?: string; feats?: Record<string, unknown>; upId?: string }>>([]);
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
   const [compareMode, setCompareMode] = useState<'single' | 'side' | 'cascade'>('single');
   const [secondTabId, setSecondTabId] = useState<number | null>(null);
@@ -108,6 +108,8 @@ export default function HPGLViewerPage() {
   const [simulating, setSimulating] = useState(false);
   const [simSpeed, setSimSpeed] = useState(50);
   const [simPathIndex, setSimPathIndex] = useState(-1);
+  const [rawHpglText, setRawHpglText] = useState('');
+  const termRef = useRef<HTMLDivElement>(null);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -144,6 +146,12 @@ export default function HPGLViewerPage() {
     const timer = setTimeout(() => setSimPathIndex(i => i + 1), interval);
     return () => clearTimeout(timer);
   }, [simulating, simPathIndex, simSpeed, hpglData]);
+
+  useEffect(() => {
+    if (termRef.current) {
+      termRef.current.scrollTop = termRef.current.scrollHeight;
+    }
+  }, [simPathIndex]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -187,6 +195,7 @@ export default function HPGLViewerPage() {
     setSelectionActive(false);
     setUserSelectedCad(null);
     setShowCadModal(false);
+    setRawHpglText(tab.rawText ?? '');
     setMsg('');
   };
 
@@ -220,6 +229,7 @@ export default function HPGLViewerPage() {
         setUserSelectedCad(null);
         setShowCadModal(false);
         setPenColors({});
+        setRawHpglText('');
         setMsg('');
       }
     }
@@ -404,7 +414,14 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
     setRawFile(file);
+    setRawHpglText('');
     setParsing(true);
+    file.text().then(t => {
+      setRawHpglText(t);
+      setFileTabs(prev => prev.map(tb =>
+        tb.id === activeTabId ? { ...tb, rawText: t } : tb
+      ));
+    }).catch(() => {});
     try {
       const result = await hpglApi.parse(file);
       const tabId = Date.now();
@@ -417,6 +434,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
     } catch {
       try {
         const text = await file.text();
+        setRawHpglText(text);
       const cleaned = text.replace(/[^\n\r\t\x1b\x03\x00\x20-\x7e\xa0-\xff]/g, '');
       const paths: HPGLPath[] = [];
       let cx = 0, cy = 0, penDown = false, currentPen = 0, currentLineType = 0, currentPenWidth = 0.25, currentPoly: HPGLPath | null = null;
@@ -796,6 +814,35 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
                 className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-400/20 text-xs text-red-400 hover:bg-red-500/20 transition-colors">
                 Stop
               </button>
+            </div>
+          )}
+          {/* Terminal HPGL during simulation */}
+          {simulating && rawHpglText && (
+            <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-2xl">
+              <div className="bg-black/90 border border-drapera-border rounded-xl p-3 backdrop-blur-sm shadow-xl max-h-40 overflow-hidden">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-[9px] text-green-400 font-mono font-bold uppercase tracking-wider">HPGL Terminal</span>
+                  <span className="text-[8px] text-gray-600 font-mono ml-auto">
+                    {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length}
+                  </span>
+                </div>
+                <div ref={termRef} className="overflow-y-auto max-h-28 font-mono text-[9px] leading-relaxed space-y-0.5"
+                  style={{ scrollBehavior: 'smooth' }}>
+                  {rawHpglText.split('\n').slice(0, 200).map((line, i) => {
+                    const totalLines = Math.min(rawHpglText.split('\n').length, 200);
+                    const highlightPos = Math.floor((simPathIndex + 1) / hpglData.paths.length * totalLines);
+                    const isPast = i <= highlightPos;
+                    return (
+                      <div key={i}
+                        className={`${isPast ? 'text-green-300' : 'text-gray-700'} ${i === highlightPos ? 'bg-green-500/10 border-l-2 border-green-400 pl-1' : 'pl-2'}`}
+                        style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
+                        {line || '\u00A0'}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
         </div>
