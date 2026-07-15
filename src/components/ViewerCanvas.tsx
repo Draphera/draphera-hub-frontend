@@ -158,6 +158,8 @@ interface Props {
   selectedPieceId?: number;
   onPieceSelect?: (id: number | undefined) => void;
   onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;
+  simulating?: boolean;
+  simPathIndex?: number;
 }
 
 const PAD = 40;
@@ -281,7 +283,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false, simulating, simPathIndex }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -457,7 +459,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     const lodFactor = effectiveZoom >= 0.7 ? 1 : effectiveZoom >= 0.5 ? 0.5 : effectiveZoom >= 0.3 ? 0.25 : 0.1;
     // ---- Piece contour overlays (behind normal paths) ----
     const pieceOverlays: JSX.Element[] = [];
-    if (pieces) {
+    if (pieces && !simulating) {
       for (const p of pieces) {
         if (!p.contour_points || p.contour_points.length < 3) continue;
         const isActive = hoveredPiece === p.id || selectedPieceId === p.id;
@@ -495,7 +497,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
     // ---- Filtered contour overlays (placement rect / block fuse) ----
     const filteredOverlays: JSX.Element[] = [];
-    if (filteredContours) {
+    if (filteredContours && !simulating) {
       for (let fi = 0; fi < filteredContours.length; fi++) {
         const fc = filteredContours[fi];
         if (!fc.contour_points || fc.contour_points.length < 2) continue;
@@ -515,7 +517,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
     // ---- Cut order line (dashed path through starting points) ----
     let cutOrderPolyline: JSX.Element | null = null;
-    if (showCutOrder && pieces && pieces.length >= 2) {
+    if (showCutOrder && pieces && pieces.length >= 2 && !simulating) {
       const sorted = [...pieces].sort((a, b) => (a.cut_order ?? 0) - (b.cut_order ?? 0));
       const cpts = sorted.map(p => p.starting_point).filter(p => p && p.length >= 2);
       if (cpts.length >= 2) {
@@ -556,8 +558,14 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
       if (!isPathVisible(path, viewLeft, viewTop, viewW, viewH)) return null;
       const pen = path.pen ?? 0;
       if (penVisibility && !penVisibility[pen]) return null;
-      const isSelected = selectedPathIndex === idx;
-      const color = cleanView
+      if (simulating) {
+        if (idx > (simPathIndex ?? -1)) return null;
+      }
+      const isSimCurrent = simulating && idx === simPathIndex;
+      const isSelected = isSimCurrent || selectedPathIndex === idx;
+      const color = isSimCurrent
+        ? '#00FF88'
+        : cleanView
         ? '#00AEEF'
         : flattened
           ? (invertColors ? '#00e5ff' : '#F2C94C')

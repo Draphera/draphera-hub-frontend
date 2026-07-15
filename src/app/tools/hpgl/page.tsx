@@ -105,6 +105,9 @@ export default function HPGLViewerPage() {
   const [selectedPieceId, setSelectedPieceId] = useState<number>();
   const [pieceDetail, setPieceDetail] = useState<{ piece: Piece }>();
   const [debug, setDebug] = useState(false);
+  const [simulating, setSimulating] = useState(false);
+  const [simSpeed, setSimSpeed] = useState(50);
+  const [simPathIndex, setSimPathIndex] = useState(-1);
 
   // Initialize pen visibility from data
   useEffect(() => {
@@ -131,6 +134,18 @@ export default function HPGLViewerPage() {
   }, []);
 
   useEffect(() => {
+    if (!simulating || !hpglData) return;
+    if (simPathIndex >= hpglData.paths.length) {
+      setSimulating(false);
+      setSimPathIndex(-1);
+      return;
+    }
+    const interval = Math.max(30, 520 - simSpeed * 5);
+    const timer = setTimeout(() => setSimPathIndex(i => i + 1), interval);
+    return () => clearTimeout(timer);
+  }, [simulating, simPathIndex, simSpeed, hpglData]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) { router.push('/auth/signin?redirect=/tools/hpgl'); return; }
       setSession(data.session);
@@ -150,6 +165,8 @@ export default function HPGLViewerPage() {
   const switchTab = (tabId: number) => {
     const tab = fileTabs.find(t => t.id === tabId);
     if (!tab) return;
+    setSimulating(false);
+    setSimPathIndex(-1);
     setActiveTabId(tabId);
     setFileName(tab.name);
     setRawFile(tab.raw);
@@ -159,6 +176,18 @@ export default function HPGLViewerPage() {
     setSelectedPath(null);
     setMeasurePoints([]);
     setPenVisibility({});
+    setPieces(undefined);
+    setFilteredContours(undefined);
+    setSelectedPieceId(undefined);
+    setPieceDetail(undefined);
+    setPiecesLoading(false);
+    setMeasureResults([]);
+    setMeasureMode('off');
+    setSelectionBounds(null);
+    setSelectionActive(false);
+    setUserSelectedCad(null);
+    setShowCadModal(false);
+    setMsg('');
   };
 
   const closeTab = (tabId: number) => {
@@ -168,12 +197,30 @@ export default function HPGLViewerPage() {
       if (remaining.length > 0) {
         switchTab(remaining[remaining.length - 1].id);
       } else {
+        setSimulating(false);
+        setSimPathIndex(-1);
         setActiveTabId(null);
         setHpglData(null);
         setFileName('');
         setRawFile(null);
         setFeatures(null);
         setUploadId('');
+        setSelectedPath(null);
+        setMeasurePoints([]);
+        setPenVisibility({});
+        setPieces(undefined);
+        setFilteredContours(undefined);
+        setSelectedPieceId(undefined);
+        setPieceDetail(undefined);
+        setPiecesLoading(false);
+        setMeasureResults([]);
+        setMeasureMode('off');
+        setSelectionBounds(null);
+        setSelectionActive(false);
+        setUserSelectedCad(null);
+        setShowCadModal(false);
+        setPenColors({});
+        setMsg('');
       }
     }
   };
@@ -685,6 +732,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
             onPieceSelect={id => setSelectedPieceId(id)}
             onPieceDoubleClick={p => setPieceDetail({ piece: p })}
             debug={debug}
+            simulating={simulating} simPathIndex={simPathIndex}
             onPathSelect={(path, idx) => {
               if (!path) { setSelectedPath(null); return; }
               const pts = (path.type === 'polyline' || path.type === 'rectangle') && path.points ? path.points : [];
@@ -722,6 +770,34 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       {debug && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-red-500/15 border border-red-400/25 text-[11px] text-red-400 font-mono font-bold tracking-wider animate-pulse">
           DEBUG MODE
+        </div>
+      )}
+      {/* Simulation controls (admin only) */}
+      {isAdmin && hpglData && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+          {!simulating ? (
+            <button onClick={() => { setSimPathIndex(0); setSimulating(true); }}
+              className="px-4 py-2 rounded-xl bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold font-semibold hover:bg-drapera-gold/20 transition-all shadow-lg">
+              ▶ Simula Disegno
+            </button>
+          ) : (
+            <div className="flex items-center gap-3 bg-drapera-midnight/95 border border-drapera-border rounded-xl px-4 py-2.5 backdrop-blur-sm shadow-xl">
+              <span className="text-[10px] text-gray-500">Velocità</span>
+              <input type="range" min={1} max={100} value={simSpeed} onChange={e => setSimSpeed(Number(e.target.value))}
+                className="w-20 h-1 accent-drapera-gold" />
+              <span className="text-[10px] text-gray-400 w-4">{simSpeed}</span>
+              <div className="text-[10px] text-gray-500 font-mono">
+                {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length}
+              </div>
+              <div className="w-16 h-1 rounded-full bg-drapera-border overflow-hidden">
+                <div className="h-full bg-drapera-gold transition-all" style={{ width: `${(simPathIndex + 1) / hpglData.paths.length * 100}%` }} />
+              </div>
+              <button onClick={() => { setSimulating(false); setSimPathIndex(-1); }}
+                className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-400/20 text-xs text-red-400 hover:bg-red-500/20 transition-colors">
+                Stop
+              </button>
+            </div>
+          )}
         </div>
       )}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} onOpenCadModal={() => setShowCadModal(true)} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
