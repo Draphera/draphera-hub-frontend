@@ -11,8 +11,9 @@ const API_BASE = '';
 
 function AnimatedCounter({ value, label, color }: { value: number; label: string; color: string }) {
   const [display, setDisplay] = useState(0);
+  const isComing = label === 'Coming Soon' || label === 'Preview';
   useEffect(() => {
-    if (value === 0) { setDisplay(0); return; }
+    if (isComing || value === 0) { setDisplay(0); return; }
     const duration = 1200;
     const start = performance.now();
     const raf = () => {
@@ -23,10 +24,12 @@ function AnimatedCounter({ value, label, color }: { value: number; label: string
       if (progress < 1) requestAnimationFrame(raf);
     };
     requestAnimationFrame(raf);
-  }, [value]);
+  }, [value, isComing]);
   return (
     <div className="text-center">
-      <p className={`text-3xl font-bold ${color}`}>{display.toLocaleString()}</p>
+      <p className={`text-3xl font-bold ${isComing ? 'text-gray-600' : color}`}>
+        {isComing ? '—' : display.toLocaleString()}
+      </p>
       <p className="text-[11px] text-gray-500 mt-1">{label}</p>
     </div>
   );
@@ -72,6 +75,7 @@ export default function HomePage() {
   };
 
   const coreTools = [
+    { title: 'VectorEngine™', description: 'Analizza. Identifica. Comprende. Visualizza.', href: '/tools/hpgl', premium: true, active: true },
     { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
     { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
     { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
@@ -97,17 +101,21 @@ export default function HomePage() {
                 Early Access — {isOpen ? `${remaining} posti disponibili` : 'Completato'}
               </span>
               <span className="px-3 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium">
-                Draphera VectorEngine™
+                Powered by <strong>Draphera VectorEngine™</strong>
+                <a href="#vector-engine" className="ml-1 underline decoration-dotted underline-offset-2 hover:text-cyan-300">Cos'è?</a>
               </span>
             </div>
 
             <h1 className="section-title text-white mb-6 leading-tight">
-              Il viewer intelligente<br />
-              <span className="gradient-text">per la modellistica e il CAD</span>
+              La piattaforma intelligente<br />
+              <span className="gradient-text">per la modellistica digitale</span>
             </h1>
+            <p className="text-lg md:text-2xl font-bold text-white/90 mb-3 leading-relaxed">
+              Il primo sistema che riconosce automaticamente<br className="hidden sm:block" />
+              il CAD di origine dei tuoi file.
+            </p>
             <p className="section-subtitle mb-6">
-               HPGL Viewer, ISO Viewer, DXF Viewer con Draphera VectorEngine™.
-              Il primo sistema che riconosce automaticamente il CAD di origine dei tuoi file.
+              VectorEngine<sup>™</sup> — Analizza. Identifica. Comprende. Visualizza.
             </p>
 
             <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/5 border border-drapera-border mb-8">
@@ -121,10 +129,13 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap gap-4">
+              <Link href="/tools/hpgl" className="btn-gold text-lg px-8 py-4">
+                Apri HPGL Viewer
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+              </Link>
               {isOpen ? (
-                <Link href="/auth/signup" className="btn-gold text-lg px-8 py-4">
-                  Registrati ora — {remaining} posti
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                <Link href="/auth/signup" className="btn-ghost text-lg px-8 py-4">
+                  Registrati — {remaining} posti
                 </Link>
               ) : (
                 <form onSubmit={handleWaitlist} className="flex flex-wrap items-end gap-3">
@@ -136,9 +147,6 @@ export default function HomePage() {
                   <button type="submit" className="btn-gold text-sm px-6 py-2.5">Entra in waitlist</button>
                 </form>
               )}
-              <Link href="/tools/hpgl" className="btn-ghost text-lg px-8 py-4">
-                {t('home.cta_hpgl')}
-              </Link>
             </div>
             {wlMsg && <p className="text-xs text-drapera-gold mt-3">{wlMsg}</p>}
           </div>
@@ -148,8 +156,8 @@ export default function HomePage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 <AnimatedCounter value={stats.total} label={t('stats.total')} color="text-drapera-gold" />
                 <AnimatedCounter value={stats.hpgl} label="HPGL" color="text-cyan-400" />
-                <AnimatedCounter value={stats.iso} label="ISO" color="text-green-400" />
-                <AnimatedCounter value={stats.dxf} label="DXF" color="text-purple-400" />
+                <AnimatedCounter value={stats.iso} label={'Coming Soon'} color="text-green-400" />
+                <AnimatedCounter value={stats.dxf} label={'Coming Soon'} color="text-purple-400" />
               </div>
               {totalVendors > 0 && (
                 <div className="flex flex-wrap gap-x-6 gap-y-2">
@@ -168,6 +176,24 @@ export default function HomePage() {
           )}
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-drapera-gold/20 to-transparent" />
+      </section>
+
+      <section className="relative py-16 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-drapera-violet/10 via-drapera-gold/5 to-transparent" />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <p className="text-xs uppercase tracking-[0.3em] text-gray-600 mb-3">Mission</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-white font-display leading-tight">
+            <span className="text-drapera-gold">Shape Before the File</span>
+            <br />
+            <span className="text-lg md:text-xl text-gray-400 font-normal mt-2 block">
+              Industrial Geometry Intelligence
+            </span>
+          </h2>
+          <p className="text-sm text-gray-500 mt-4 max-w-2xl mx-auto">
+            Draphera Hub è il sistema operativo per la geometria industriale.
+            I formati sono solo contenitori — l'intelligenza è nella forma.
+          </p>
+        </div>
       </section>
 
       <section className="relative py-20 overflow-hidden">
@@ -211,6 +237,38 @@ export default function HomePage() {
               <div className="premium-card text-center py-5 col-span-2 flex flex-col items-center justify-center">
                 <p className="text-lg font-bold text-purple-400">Draphera VectorEngine<sup>™</sup></p>
                 <p className="text-[10px] text-gray-500 mt-0.5">Geometric Analysis &amp; Deterministic Voting</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="vector-engine" className="max-w-4xl mx-auto mb-20 scroll-mt-20">
+            <div className="premium-card p-8 text-center">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+              </div>
+              <h2 className="text-2xl font-bold text-white font-display mb-2">
+                Draphera <span className="text-cyan-400">VectorEngine</span><sup>™</sup>
+              </h2>
+              <p className="text-sm text-gray-400 mb-6 max-w-xl mx-auto">
+                Un motore di analisi geometrica che identifica il CAD di origine, rileva pezzi,
+                riconosce intagli, drittofilo e strutture di piazzamento — tutto prima ancora
+                di mostrare il file.
+              </p>
+              <div className="grid sm:grid-cols-4 gap-4 text-center">
+                {[
+                  { icon: 'M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z', label: 'Analisi', desc: 'Firme vettoriali, pattern penna, strutture CAD' },
+                  { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Identifica', desc: 'CAD, formato, famiglia, versione protocollo' },
+                  { icon: 'M13 10V3L4 14h7v7l9-11h-7z', label: 'Comprende', desc: 'Pezzi, intagli, drittofilo, piazzamento, blocchi' },
+                  { icon: 'M15 12a3 3 0 11-6 0 3 3 0 016 0z', label: 'Visualizza', desc: 'Render SVG/PNG, export tecnico, scheda PDF' },
+                ].map(item => (
+                  <div key={item.label} className="text-center">
+                    <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center mx-auto mb-2">
+                      <svg className="w-5 h-5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={item.icon} /></svg>
+                    </div>
+                    <h3 className="text-sm text-white font-semibold mb-0.5">{item.label}</h3>
+                    <p className="text-[10px] text-gray-500">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -265,13 +323,13 @@ export default function HomePage() {
 
           <div className="text-center mb-16">
             <h2 className="section-title text-white mb-4">{t('home.section_title')}</h2>
-            <p className="section-subtitle mx-auto">{t('home.section_sub')}</p>
+            <p className="section-subtitle mx-auto">Strumenti alimentati da Draphera VectorEngine™</p>
           </div>
           <div className="mb-16">
             <h3 className="text-sm font-semibold text-drapera-gold uppercase tracking-wider mb-4 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
-              Modellistica &amp; CAD
+              Piattaforma
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
               {coreTools.map(tool => <CardTool key={tool.href} {...tool} />)}
