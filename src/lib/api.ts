@@ -167,9 +167,15 @@ export const adminApi = {
     return res.json() as Promise<{
       status: string; supabase_url: string; python_version: string;
       fastapi_version: string; admin_emails: number;
-      ml_model: { loaded: boolean; exists: boolean };
+      ml_model: { loaded: boolean; exists: boolean; in_supabase: boolean };
       tables: Array<{ table: string; reachable: boolean; count: number; error?: string }>;
     }>;
+  },
+  async loadModel() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/system/load-model`, { method: 'POST', headers });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json() as Promise<{ loaded: boolean; source: string; classes?: string[] }>;
   },
 };
 
