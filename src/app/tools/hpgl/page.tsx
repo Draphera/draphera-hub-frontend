@@ -188,6 +188,7 @@ export default function HPGLViewerPage() {
     { id: 'optitex', name: 'Optitex', country: 'Israele' },
     { id: 'tukatech', name: 'Tukatech', country: 'India' },
     { id: 'pro2cad', name: 'PRO2CAD', country: 'Italia' },
+    { id: 'gerber_technology', name: 'Gerber Technology', country: 'USA' },
     { id: 'audaces', name: 'Audaces', country: 'Brasile' },
     { id: 'richpeace', name: 'Richpeace', country: 'Cina' },
     { id: 'gemini', name: 'Gemini', country: 'Italia' },
