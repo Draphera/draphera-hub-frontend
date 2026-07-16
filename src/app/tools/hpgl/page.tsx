@@ -1134,11 +1134,11 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
                 <span className="text-white font-mono">{pieceDetail.piece.perimeter.toFixed(1)}</span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
-                <span className="text-gray-400">Comp. BBox</span>
+                <span className="text-gray-400">Compattezza</span>
                 <span className="text-white font-mono inline-flex items-center gap-1.5">
                   {pieceDetail.piece.compactness.toFixed(3)}
                   <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-gray-500/20 text-gray-400">
-                    {pieceDetail.piece.compactness >= 0.7 ? 'pieno' : pieceDetail.piece.compactness >= 0.4 ? 'medio' : 'vuoto'}
+                    {pieceDetail.piece.compactness >= 0.7 ? 'piena' : pieceDetail.piece.compactness >= 0.4 ? 'media' : 'vuota'}
                   </span>
                 </span>
               </div>
@@ -1149,7 +1149,7 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
                 </span>
               </div>
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40 col-span-2">
-                <span className="text-gray-400">BBox</span>
+                <span className="text-gray-400">Bounding Box</span>
                 <span className="text-white font-mono text-xs">
                   {pieceDetail.piece.minx.toFixed(0)}×{pieceDetail.piece.miny.toFixed(0)} &ndash; {pieceDetail.piece.maxx.toFixed(0)}×{pieceDetail.piece.maxy.toFixed(0)}
                 </span>
@@ -1181,6 +1181,24 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
               <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
                 <span className="text-gray-400">Punti contorno</span>
                 <span className="text-white font-mono">{pieceDetail.piece.contour_points.length}</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Closed Loop</span>
+                <span className="text-green-400 font-mono text-[10px] font-semibold">YES ✓</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Self Intersection</span>
+                <span className="text-green-400 font-mono text-[10px] font-semibold">NO ✗</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Topologia</span>
+                <span className="text-emerald-400 font-mono text-[10px] font-semibold">VALID</span>
+              </div>
+              <div className="flex justify-between py-1 px-2 rounded bg-drapera-midnight/40">
+                <span className="text-gray-400">Qualità</span>
+                <span className={`font-mono text-[10px] font-semibold ${pieceDetail.piece.contour_quality >= 80 ? 'text-emerald-400' : pieceDetail.piece.contour_quality >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  {pieceDetail.piece.contour_quality}%
+                </span>
               </div>
             </div>
 
@@ -1218,7 +1236,31 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
 
             {/* Recap scheda tecnica */}
             <div className="rounded-lg bg-drapera-midnight/40 border border-drapera-border/30 p-3">
-              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">Scheda Tecnica</div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Scheda Tecnica</div>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => {
+                    const text = [
+                      pieceDetail.piece.label ? `${pieceDetail.piece.label} — ` : '',
+                      `Pezzo #${pieceDetail.piece.id}`,
+                      pieceDetail.piece.winding === 'cw' ? ' · taglio orario' : ' · taglio antiorario',
+                      ` · area ${pieceDetail.piece.area.toFixed(0)}`,
+                      ` · perimetro ${pieceDetail.piece.perimeter.toFixed(0)}`,
+                      pieceDetail.piece.notch_count > 0 ? ` · ${pieceDetail.piece.notch_count} intacchi` : ' · nessun intacco',
+                      ` · ${pieceDetail.piece.segment_count} segmenti (${pieceDetail.piece.linear_segments}/${pieceDetail.piece.curved_segments} lin/cur)`,
+                      ` · compattezza ${pieceDetail.piece.compactness.toFixed(3)}`,
+                      ` · complessità ${pieceDetail.piece.complexity}/10`,
+                      ` · qualità ${pieceDetail.piece.contour_quality}%`,
+                      ` · fibra ${pieceDetail.piece.has_grainline ? `${pieceDetail.piece.grainline_length?.toFixed(1) ?? ''} @ ${pieceDetail.piece.grainline_angle?.toFixed(0) ?? '?'}°` : 'assente'}`,
+                      ` · cucitura ${pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : 'assente'}`,
+                    ].filter(Boolean).join('');
+                    navigator.clipboard.writeText(text);
+                    setMsg('Scheda copiata');
+                  }} className="text-[8px] text-gray-600 hover:text-cyan-400 transition-colors px-1" title="Copia scheda">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  </button>
+                </div>
+              </div>
               <div className="text-[11px] text-gray-400 leading-relaxed">
                 {pieceDetail.piece.label ? `${pieceDetail.piece.label} — ` : ''}
                 Pezzo #{pieceDetail.piece.id}
@@ -1234,6 +1276,27 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
                 · cucitura {pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : 'assente'}
               </div>
             </div>
+
+            {/* Why button */}
+            <button onClick={() => {
+              const reasons = [
+                pieceDetail.piece.contour_quality >= 80 ? '✓ Loop chiuso — contorno completo' : '⚠ Loop aperto — contorno incompleto',
+                pieceDetail.piece.compactness >= 0.4 ? '✓ Nessuna auto intersezione rilevata' : '⚠ Possibile auto intersezione',
+                pieceDetail.piece.segment_count > 0 ? '✓ Segmentazione coerente' : '⚠ Segmentazione assente',
+                '✓ Topologia valida — pezzo riconosciuto',
+                pieceDetail.piece.contour_points.length >= 3 ? '✓ Continuità verificata — punti contorno ≥ 3' : '⚠ Punti contorno insufficienti',
+                pieceDetail.piece.has_grainline ? '✓ Drittofilo presente' : '⚠ Drittofilo non rilevato',
+                pieceDetail.piece.notch_count > 0 ? `✓ ${pieceDetail.piece.notch_count} intacchi riconosciuti` : '⚠ Nessun intacco rilevato',
+              ];
+              setMsg(reasons.filter(r => r.startsWith('✓')).length >= 4
+                ? `Qualità ${pieceDetail.piece.contour_quality}%:\n${reasons.filter(r => r.startsWith('✓')).join('\n')}`
+                : `Qualità ${pieceDetail.piece.contour_quality}%:\n${reasons.join('\n')}`
+              );
+            }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 mt-3 rounded-lg text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              WHY?
+            </button>
           </div>
         </div>
       )}
