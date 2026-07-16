@@ -792,56 +792,75 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
       )}
       {/* Simulation controls (admin only) */}
       {isAdmin && hpglData && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
           {!simulating ? (
             <button onClick={() => { setSimPathIndex(0); setSimulating(true); }}
-              className="px-4 py-2 rounded-xl bg-drapera-gold/10 border border-drapera-gold/20 text-xs text-drapera-gold font-semibold hover:bg-drapera-gold/20 transition-all shadow-lg">
-              ▶ Simula Disegno
+              className="group relative px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-green-500/10 border border-emerald-400/30 text-xs text-emerald-300 font-semibold tracking-wider
+                hover:from-emerald-400/30 hover:to-green-400/20 hover:border-emerald-300/40 hover:text-emerald-200 hover:shadow-lg hover:shadow-emerald-500/20
+                transition-all duration-300">
+              <span className="flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Simula Disegno
+              </span>
             </button>
           ) : (
-            <div className="flex items-center gap-3 bg-drapera-midnight/95 border border-drapera-border rounded-xl px-4 py-2.5 backdrop-blur-sm shadow-xl">
-              <span className="text-[10px] text-gray-500">Velocità</span>
-              <input type="range" min={1} max={100} value={simSpeed} onChange={e => setSimSpeed(Number(e.target.value))}
-                className="w-20 h-1 accent-drapera-gold" />
-              <span className="text-[10px] text-gray-400 w-4">{simSpeed}</span>
-              <div className="text-[10px] text-gray-500 font-mono">
-                {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length}
-              </div>
-              <div className="w-16 h-1 rounded-full bg-drapera-border overflow-hidden">
-                <div className="h-full bg-drapera-gold transition-all" style={{ width: `${(simPathIndex + 1) / hpglData.paths.length * 100}%` }} />
-              </div>
-              <button onClick={() => { setSimulating(false); setSimPathIndex(-1); }}
-                className="px-3 py-1 rounded-lg bg-red-500/10 border border-red-400/20 text-xs text-red-400 hover:bg-red-500/20 transition-colors">
-                Stop
-              </button>
-            </div>
-          )}
-          {/* Terminal HPGL during simulation */}
-          {simulating && rawHpglText && (
-            <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-2xl">
-              <div className="bg-black/90 border border-drapera-border rounded-xl p-3 backdrop-blur-sm shadow-xl max-h-40 overflow-hidden">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-[9px] text-green-400 font-mono font-bold uppercase tracking-wider">HPGL Terminal</span>
-                  <span className="text-[8px] text-gray-600 font-mono ml-auto">
-                    {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length}
+            <div className="flex flex-col items-center gap-2 w-[92vw] max-w-3xl">
+              {/* Terminal */}
+              {rawHpglText && (
+                <div className="w-full bg-black/95 border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl shadow-emerald-900/30 backdrop-blur-sm">
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-emerald-950/30 border-b border-emerald-500/10">
+                    <div className="flex gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                    </div>
+                    <span className="text-[9px] text-emerald-400/70 font-mono font-bold tracking-[0.2em] uppercase">HPGL Terminal</span>
+                    <span className="text-[8px] text-emerald-600/50 font-mono ml-auto">
+                      {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length} paths
+                    </span>
+                  </div>
+                  <div ref={termRef} className="overflow-y-auto max-h-36 p-3 font-mono text-[10px] leading-relaxed"
+                    style={{ scrollBehavior: 'smooth', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,0,0.02) 1px, rgba(0,255,0,0.02) 2px)' }}>
+                    {rawHpglText.split('\n').slice(0, 300).map((line, i) => {
+                      const totalLines = Math.min(rawHpglText.split('\n').length, 300);
+                      const pos = totalLines > 0 ? (simPathIndex + 1) / hpglData.paths.length * totalLines : 0;
+                      const isPast = i < Math.floor(pos);
+                      const isCurrent = i === Math.floor(pos);
+                      return (
+                        <div key={i}
+                          className={`${isPast ? 'text-emerald-300/90' : isCurrent ? 'text-emerald-200' : 'text-gray-800'}
+                            ${isCurrent ? 'bg-emerald-400/10 border-l-2 border-emerald-400 -ml-1 pl-2' : ''}`}
+                          style={{ whiteSpace: 'pre', fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}>
+                          {isCurrent && <span className="text-emerald-400 mr-1.5">›</span>}
+                          {line || '\u00A0'}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Controls bar */}
+              <div className="flex items-center gap-3 bg-drapera-midnight/95 border border-drapera-border rounded-2xl px-5 py-3 backdrop-blur-sm shadow-xl w-full max-w-xl">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[9px] text-gray-500 uppercase tracking-wider font-semibold">Vel</span>
+                  <input type="range" min={1} max={100} value={simSpeed} onChange={e => setSimSpeed(Number(e.target.value))}
+                    className="w-16 h-1 accent-emerald-400" />
+                  <span className="text-[9px] text-emerald-400 font-mono w-5 text-right">{simSpeed}</span>
+                </div>
+                <div className="flex-1 flex items-center gap-2">
+                  <div className="flex-1 h-1 rounded-full bg-drapera-border/50 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-150"
+                      style={{ width: `${hpglData.paths.length > 0 ? (simPathIndex + 1) / hpglData.paths.length * 100 : 0}%` }} />
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">
+                    {Math.min(simPathIndex + 1, hpglData.paths.length)}<span className="text-gray-600">/{hpglData.paths.length}</span>
                   </span>
                 </div>
-                <div ref={termRef} className="overflow-y-auto max-h-28 font-mono text-[9px] leading-relaxed space-y-0.5"
-                  style={{ scrollBehavior: 'smooth' }}>
-                  {rawHpglText.split('\n').slice(0, 200).map((line, i) => {
-                    const totalLines = Math.min(rawHpglText.split('\n').length, 200);
-                    const highlightPos = Math.floor((simPathIndex + 1) / hpglData.paths.length * totalLines);
-                    const isPast = i <= highlightPos;
-                    return (
-                      <div key={i}
-                        className={`${isPast ? 'text-green-300' : 'text-gray-700'} ${i === highlightPos ? 'bg-green-500/10 border-l-2 border-green-400 pl-1' : 'pl-2'}`}
-                        style={{ whiteSpace: 'pre', fontFamily: 'monospace' }}>
-                        {line || '\u00A0'}
-                      </div>
-                    );
-                  })}
-                </div>
+                <button onClick={() => { setSimulating(false); setSimPathIndex(-1); }}
+                  className="px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-400/20 text-[10px] text-red-400 font-semibold
+                    hover:bg-red-500/20 hover:border-red-400/30 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200">
+                  Stop
+                </button>
               </div>
             </div>
           )}
