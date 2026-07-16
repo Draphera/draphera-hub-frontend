@@ -234,7 +234,7 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {coreTools.map(tool => <CardTool key={tool.href} {...tool} />)}
+              {coreTools.map(tool => <CardTool key={tool.href} {...tool} changelog={tool.href === '/tools/hpgl' ? '/changelog' : undefined} />)}
             </div>
 
             {labTools.filter(t => tools.includes(t)).length > 0 && (

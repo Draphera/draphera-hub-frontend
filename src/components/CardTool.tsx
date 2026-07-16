@@ -9,9 +9,10 @@ interface CardToolProps {
   premium?: boolean;
   active?: boolean;
   comingSoon?: boolean;
+  changelog?: string;
 }
 
-export default function CardTool({ title, description, href, icon, premium, active, comingSoon }: CardToolProps) {
+export default function CardTool({ title, description, href, icon, premium, active, comingSoon, changelog }: CardToolProps) {
   const { t } = useTranslation();
   const Wrapper = comingSoon ? 'div' : Link;
 
@@ -52,11 +53,18 @@ export default function CardTool({ title, description, href, icon, premium, acti
         </div>
 
         {!comingSoon && (
-          <div className="mt-auto pt-4 flex items-center text-sm text-drapera-gold font-medium">
-            <span>{t('cardtool.start')}</span>
-            <svg className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
+          <div className="mt-auto pt-4 flex items-center gap-3">
+            <span className="flex items-center text-sm text-drapera-gold font-medium group/link">
+              <span>{t('cardtool.start')}</span>
+              <svg className="w-4 h-4 ml-2 transition-transform group-hover/link:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+            {changelog && (
+              <Link href={changelog} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors underline decoration-dotted underline-offset-2">
+                Changelog
+              </Link>
+            )}
           </div>
         )}
 
