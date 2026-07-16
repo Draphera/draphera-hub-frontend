@@ -127,6 +127,7 @@ export default function HPGLViewerPage() {
   }, [hpglData]);
   const [msg, setMsg] = useState('');
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
+  const [cadSearch, setCadSearch] = useState('');
 
   useEffect(() => {
     fetch('/api/profile/cad-systems')
@@ -260,6 +261,7 @@ export default function HPGLViewerPage() {
 
     if (ml && !userSelectedCad && features && (ml.source === 'no_model' || (ml.ml_confidence ?? 0) < 0.5)) {
       setShowCadModal(true);
+      setCadSearch('');
     }
   }, [hpglData, ml, userSelectedCad, features, handleCorrectCad, fileName]);
 
@@ -941,7 +943,7 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
           )}
         </div>
       )}
-      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad} onOpenCadModal={() => setShowCadModal(true)} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
+      <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad}                       onOpenCadModal={() => { setShowCadModal(true); setCadSearch(''); }} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
         penVisibility={penVisibility} onPenToggle={p => setPenVisibility(v => ({ ...v, [p]: !v[p] }))}
@@ -968,26 +970,49 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
               </button>
             </div>
             {ml && (
-              <div className="mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300">
-                Modello non addestrato
+              <div className="mb-4 px-3 py-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-1">
+                <p>CAD non riconosciuto con sufficiente confidenza.</p>
+                <p className="text-gray-400">Puoi aiutarci a classificarlo — seleziona il CAD corretto qui sotto.</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-[9px] text-amber-400">✓ migliori VectorEngine</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-[9px] text-amber-400">✓ il campione verrà verificato manualmente</span>
+                </div>
               </div>
             )}
+            {/* Search */}
+            <div className="relative mb-3">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input type="text" value={cadSearch} onChange={e => setCadSearch(e.target.value)} placeholder="Cerca CAD..."
+                className="w-full bg-drapera-dark border border-drapera-border rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-gray-600 outline-none focus:border-amber-400/40" />
+            </div>
             <div className="grid grid-cols-2 gap-2">
-              {cadSystems.map(cad => (
+              {cadSystems.filter(cad => !cadSearch || cad.name.toLowerCase().includes(cadSearch.toLowerCase())).map(cad => (
                 <button
                   key={cad.id}
                   onClick={() => handleCorrectCad(cad.id)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-drapera-border hover:border-drapera-gold/40 hover:bg-drapera-gold/5 transition-all text-left"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg border border-drapera-border hover:border-drapera-gold/40 hover:bg-drapera-gold/5 transition-all text-left group"
                 >
-                  <div className="w-6 h-6 rounded-full bg-drapera-gold/10 flex items-center justify-center shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-drapera-gold/10 flex items-center justify-center shrink-0 group-hover:bg-drapera-gold/20 transition-colors">
                     <span className="text-[9px] font-bold text-drapera-gold">{cad.name[0]}</span>
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs text-white truncate">{cad.name}</p>
                     {cad.country && <p className="text-[9px] text-gray-500">{cad.country}</p>}
                   </div>
                 </button>
               ))}
+            </div>
+            {cadSystems.filter(cad => !cadSearch || cad.name.toLowerCase().includes(cadSearch.toLowerCase())).length === 0 && (
+              <p className="text-xs text-gray-500 text-center py-4">Nessun CAD corrispondente a "{cadSearch}"</p>
+            )}
+            {/* Badge contributo */}
+            <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
+              <span className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                <svg className="w-3 h-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </span>
+              <span className="text-[10px] text-emerald-400 font-medium">Verified by Human</span>
+              <span className="text-[9px] text-gray-600">·</span>
+              <span className="text-[9px] text-gray-500">Ogni correzione migliora VectorEngine</span>
             </div>
           </div>
         </div>
