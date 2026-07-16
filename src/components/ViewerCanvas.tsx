@@ -1072,7 +1072,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
           <>
             {gridLines}
             <text x={VIEW_W / 2} y={VIEW_H / 2} textAnchor="middle" fill="#4A4A6A" fontSize={13} fontFamily="Inter">
-              Carica un file HPGL per visualizzare il rendering
+              Carica un file per visualizzare il rendering
             </text>
           </>
         )}

@@ -956,7 +956,7 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
                 transition-all duration-300">
               <span className="flex items-center gap-2">
                 <svg className="w-3.5 h-3.5 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>▶ HPGL Replay</span>
+                <span>▶ Replay Plotter</span>
                 <span className="text-[8px] text-gray-500 font-normal ml-1">Plotter</span>
               </span>
             </button>
@@ -971,7 +971,7 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
                       <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
                       <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
                     </div>
-                    <span className="text-[9px] text-emerald-400/70 font-mono font-bold tracking-[0.2em] uppercase">HPGL Terminal</span>
+                    <span className="text-[9px] text-emerald-400/70 font-mono font-bold tracking-[0.2em] uppercase">Plotter Terminal</span>
                     <span className="text-[8px] text-emerald-600/50 font-mono ml-auto">
                       {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length} paths
                     </span>

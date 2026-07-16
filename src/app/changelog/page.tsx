@@ -21,7 +21,7 @@ const VERSIONS = [
         'Autenticazione: solo Google + GitHub',
       ]},
       { type: 'fixed' as const, items: [
-        'HPGL viewer: pan bloccato, dimensioni reali, parsing indicator',
+        'VectorEngine: pan bloccato, dimensioni reali, parsing indicator',
         'Sidebar: validazione estensioni file',
         'InfoPanel: gestione safe Infinity/NaN',
         'Pulsante Measure ora funzionante',

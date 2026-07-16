@@ -8,8 +8,8 @@ import { useTranslation } from '@/lib/i18n';
 const API_BASE = '';
 
 const SUGGESTED_TOOLS = [
-  { id: 'iso-viewer-full', label: 'ISO Viewer completo (salvataggio, CAD detection)' },
-  { id: 'dxf-viewer-full', label: 'DXF Viewer completo' },
+  { id: 'iso-viewer-full', label: 'VectorEngine ISO completo (salvataggio, CAD detection)' },
+  { id: 'dxf-viewer-full', label: 'VectorEngine DXF completo' },
   { id: 'techsheet', label: 'TechSheet (scheda tecnica modello)' },
   { id: 'material-normalizer', label: 'Normalizzatore materiali ERP' },
   { id: 'bom-generator', label: 'Generatore distinte base (BOM)' },

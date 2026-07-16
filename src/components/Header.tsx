@@ -73,9 +73,9 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
   }, [ufficiOpen]);
 
   const navTools = [
-    { label: 'HPGL Viewer', href: '/tools/hpgl', active: true, group: 'viewers' },
-    { label: 'ISO Viewer', href: '/tools/iso', comingSoon: true, group: 'viewers' },
-    { label: 'DXF Viewer', href: '/tools/dxf', comingSoon: true, group: 'viewers' },
+    { label: 'VectorEngine', href: '/tools/hpgl', active: true, group: 'viewers' },
+    { label: 'VectorEngine ISO', href: '/tools/iso', comingSoon: true, group: 'viewers' },
+    { label: 'VectorEngine DXF', href: '/tools/dxf', comingSoon: true, group: 'viewers' },
     { label: 'TechSheet Light', href: '/tools/techsheet-light', comingSoon: true, group: 'generators' },
     { label: 'BOM Generator', href: '/tools/bom-generator', comingSoon: true, group: 'generators' },
     { label: t('header.label_generator'), href: '/tools/generatore-etichette', comingSoon: true, group: 'generators' },

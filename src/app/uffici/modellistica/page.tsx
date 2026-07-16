@@ -5,9 +5,9 @@ import Header from '@/components/Header';
 import CardTool from '@/components/CardTool';
 
 const tools = [
-  { title: 'HPGL Viewer', description: 'Visualizza, analizza ed esporta file HPGL/PLT/HPG. Riconoscimento CAD con Draphera VectorEngine™.', href: '/tools/hpgl', premium: true, active: true },
-  { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO per taglie e gradazione.', href: '/tools/iso', comingSoon: true },
-  { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici e particolari costruttivi.', href: '/tools/dxf', comingSoon: true },
+  { title: 'VectorEngine', description: 'Visualizza, analizza ed esporta file HPGL/PLT/HPG. Riconoscimento CAD con Draphera VectorEngine™.', href: '/tools/hpgl', premium: true, active: true },
+  { title: 'VectorEngine ISO', description: 'Analisi di modelli ISO per taglie e gradazione.', href: '/tools/iso', comingSoon: true },
+  { title: 'VectorEngine DXF', description: 'Analisi DXF per componenti tecnici e particolari costruttivi.', href: '/tools/dxf', comingSoon: true },
 ];
 
 export default function ModellisticaPage() {

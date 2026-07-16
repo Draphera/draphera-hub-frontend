@@ -76,9 +76,8 @@ export default function HomePage() {
 
   const coreTools = [
     { title: 'VectorEngine™', description: 'Analizza. Identifica. Comprende. Visualizza.', href: '/tools/hpgl', premium: true, active: true },
-    { title: 'HPGL Viewer', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
-    { title: 'ISO Viewer', description: 'Anteprima e analisi di modelli ISO.', href: '/tools/iso', comingSoon: true },
-    { title: 'DXF Viewer', description: 'Visualizzatore DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    { title: 'VectorEngine ISO', description: 'Analisi di modelli ISO per calzatura.', href: '/tools/iso', comingSoon: true },
+    { title: 'VectorEngine DXF', description: 'Analisi DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
   ];
 
   const isOpen = regState?.open ?? true;
@@ -130,7 +129,7 @@ export default function HomePage() {
 
             <div className="flex flex-wrap gap-4">
               <Link href="/tools/hpgl" className="btn-gold text-lg px-8 py-4">
-                Apri HPGL Viewer
+                Apri VectorEngine
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
               {isOpen ? (
@@ -211,7 +210,7 @@ export default function HomePage() {
                 <span className="text-cyan-400 font-bold">30 posti Beta Tester</span> — gli analisti di produzione.
               </p>
               <p className="text-sm text-gray-500">
-                Abbiamo limitato l&apos;accesso per garantire la massima integrità del Viewer HPGL.
+                Abbiamo limitato l&apos;accesso per garantire la massima integrità della piattaforma.
                 La scarsità di posti riflette la necessità di mantenere un feedback loop di alta qualità con i nostri tester.
               </p>
               <div className="mt-6 inline-flex items-center gap-3 px-4 py-3 rounded-xl bg-drapera-gold/5 border border-drapera-gold/15">
@@ -412,7 +411,7 @@ export default function HomePage() {
                   <h3 className="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-3">Come contribuire al training</h3>
                   <p className="text-xs text-gray-500 mb-3">
                     Il modello ML viene addestrato esclusivamente su un dataset Draphera verificato manualmente.
-                    Puoi contribuire scaricando il tuo file dall&apos;HPGL Viewer, verificando il CAD di origine
+                    Puoi contribuire scaricando il tuo file da VectorEngine, verificando il CAD di origine
                     e inviandolo come campione per il training. I file vengono controllati prima di entrare nel dataset.
                   </p>
                   <div className="flex items-center gap-2 text-xs text-gray-600">

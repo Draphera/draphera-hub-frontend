@@ -78,7 +78,7 @@ export default function Sidebar({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l3 3h7a2 2 0 012 2v7a2 2 0 01-2 2H5z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11v5m0 0l-2-2m2 2l2-2" />
             </svg>
-            <p className="text-sm font-bold text-drapera-steel-light group-hover:text-white transition-colors">UPLOAD HPGL FILE</p>
+            <p className="text-sm font-bold text-drapera-steel-light group-hover:text-white transition-colors">UPLOAD FILE</p>
             <p className="text-[10px] text-gray-600 mt-0.5">Trascina o clicca per caricare</p>
           </div>
           <input id="hpgl-upload" type="file" onChange={handleInput} className="hidden" />

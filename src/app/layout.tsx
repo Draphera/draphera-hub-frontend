@@ -9,8 +9,8 @@ const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', displa
 
 export const metadata: Metadata = {
   title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
-  description: 'Draphera Hub è il modulo operativo dell\'Ecosistema Draphera, parte dello Standard Draphera per modellistica, dati vettoriali e preservazione industriale. Visualizzatore HPGL, VectorEngine™ e strumenti CAD.',
-  keywords: ['HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub', 'VectorEngine', 'Standard Draphera'],
+  description: 'Draphera Hub è il modulo operativo dell\'Ecosistema Draphera, parte dello Standard Draphera per modellistica, dati vettoriali e preservazione industriale. VectorEngine™ HPGL, ISO, DXF e strumenti CAD.',
+  keywords: ['VectorEngine', 'HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub', 'VectorEngine', 'Standard Draphera'],
   openGraph: {
     title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
     description: 'Modulo operativo dell\'Ecosistema Draphera per modellistica, dati vettoriali e preservazione industriale.',
