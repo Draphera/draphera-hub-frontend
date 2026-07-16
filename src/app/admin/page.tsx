@@ -122,7 +122,7 @@ export default function AdminPage() {
   const [systemHealth, setSystemHealth] = useState<{
     status: string; supabase_url: string; python_version: string;
     fastapi_version: string; admin_emails: number;
-    ml_model: { loaded: boolean; exists: boolean; in_supabase: boolean };
+    ml_model: { loaded: boolean; exists: boolean; in_memory: boolean; in_supabase: boolean };
     tables: Array<{ table: string; reachable: boolean; count: number; error?: string }>;
   } | null>(null);
 
@@ -1605,14 +1605,14 @@ export default function AdminPage() {
                     </p>
                     <p className="text-[10px] text-gray-500 mt-0.5">Database</p>
                   </div>
-                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.loaded ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
-                    <p className={`text-sm font-bold ${systemHealth.ml_model.loaded ? 'text-green-400' : 'text-yellow-400'}`}>
-                      {systemHealth.ml_model.loaded ? 'Caricato' : 'Non caricato'}
+                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                    <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : 'text-yellow-400'}`}>
+                      {systemHealth.ml_model.in_memory ? 'Caricato' : 'Non caricato'}
                     </p>
                     <p className="text-[10px] text-gray-500 mt-0.5">Stato in memoria</p>
                   </div>
                 </div>
-                {!systemHealth.ml_model.loaded && systemHealth.ml_model.in_supabase && (
+                {!systemHealth.ml_model.in_memory && systemHealth.ml_model.in_supabase && (
                   <button
                     onClick={async () => {
                       try {

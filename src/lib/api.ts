@@ -167,7 +167,7 @@ export const adminApi = {
     return res.json() as Promise<{
       status: string; supabase_url: string; python_version: string;
       fastapi_version: string; admin_emails: number;
-      ml_model: { loaded: boolean; exists: boolean; in_supabase: boolean };
+      ml_model: { loaded: boolean; exists: boolean; in_memory: boolean; in_supabase: boolean };
       tables: Array<{ table: string; reachable: boolean; count: number; error?: string }>;
     }>;
   },
