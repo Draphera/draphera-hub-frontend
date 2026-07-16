@@ -1593,11 +1593,11 @@ export default function AdminPage() {
               <div className="premium-card p-5">
                 <h3 className="font-display font-bold text-base text-white mb-4">VectorEngine</h3>
                 <div className="grid grid-cols-3 gap-3">
-                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.exists ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                    <p className={`text-sm font-bold ${systemHealth.ml_model.exists ? 'text-green-400' : 'text-red-400'}`}>
-                      {systemHealth.ml_model.exists ? 'Presente' : 'Assente'}
+                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-red-500/10'}`}>
+                    <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-red-400'}`}>
+                      {systemHealth.ml_model.in_memory ? 'Caricato (Supabase)' : systemHealth.ml_model.in_supabase ? 'In Supabase' : 'Assente'}
                     </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">File modello</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">Modello</p>
                   </div>
                   <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-gray-500/10'}`}>
                     <p className={`text-sm font-bold ${systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-gray-400'}`}>
