@@ -316,7 +316,7 @@ export default function HPGLViewerPage() {
     downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), fileName.replace(/\.[^.]+$/, '') + '_features.csv');
   }, [features, fileName]);
 
-  const handleExportPdf = useCallback(() => {
+  const handleExportPdf = useCallback(async () => {
     const base = fileName.replace(/\.[^.]+$/, '');
     const now = new Date().toLocaleDateString('it-IT');
     const misure = measureResults.map((r, i) =>
@@ -325,6 +325,23 @@ export default function HPGLViewerPage() {
     const cadName = hpglData?.cad?.cad ?? '-';
     const formatInfo = hpglData?.formatInfo;
     const formatName = formatInfo ? `${formatInfo.family} / ${formatInfo.variant}` : (hpglData?.meta?.labels ?? 0) > 0 ? 'HPGL/2' : 'HPGL/1';
+    const dims = hpglData?.meta?.dimensions;
+    const dimStr = dims ? `${dims.width.toFixed(1)} x ${dims.height.toFixed(1)}` : '-';
+
+    // Fetch enhanced SVG with pieces/placement
+    let svgPreview = '';
+    if (rawFile) {
+      try {
+        svgPreview = await hpglApi.exportSvg(rawFile);
+      } catch { /* fallback: no preview */ }
+    }
+
+    const piecesHtml = pieces && pieces.length > 0 ? `
+<div class="section"><h2>Pezzi Rilevati (${pieces.length})</h2>
+<table><thead><tr><th>#</th><th>Area</th><th>Perimetro</th><th>Intagli</th><th>Drittofilo</th></tr></thead><tbody>
+${pieces.slice(0, 30).map(p => `<tr><td>${p.label || p.id}</td><td>${p.area.toFixed(0)}</td><td>${p.perimeter.toFixed(0)}</td><td>${p.notch_count}</td><td>${p.has_grainline ? 'Si' : 'No'}</td></tr>`).join('')}
+${pieces.length > 30 ? `<tr><td colspan="5" style="color:#999">... e altri ${pieces.length - 30} pezzi</td></tr>` : ''}
+</tbody></table></div>` : '';
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Scheda Tecnica - ${base}</title>
 <style>
@@ -340,7 +357,9 @@ export default function HPGLViewerPage() {
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
   .grid .lbl{color:#888;font-size:10px}
   .grid .val{font-size:12px}
-  @media print{body{padding:20px}}
+  .preview{background:#120A20;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center}
+  .preview svg{max-width:100%;height:auto;max-height:400px}
+  @media print{body{padding:20px}.preview svg{max-height:none}}
 </style></head><body>
 <h1>Scheda Tecnica</h1>
 <div class="sub">${base} &mdash; ${now}</div>
@@ -349,13 +368,13 @@ export default function HPGLViewerPage() {
   <span class="lbl">Nome</span><span class="val">${fileName}</span>
   <span class="lbl">Formato</span><span class="val">${formatName}</span>
   <span class="lbl">CAD</span><span class="val">${cadName}</span>
-</div></div>
-${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><table><thead><tr><th>Descrizione</th><th>Valore</th></tr></thead><tbody>${misure}</tbody></table></div>` : ''}
-<div class="section"><h2>Contenuto</h2><div class="grid">
+  <span class="lbl">Dimensioni</span><span class="val">${dimStr}</span>
   <span class="lbl">Path</span><span class="val">${hpglData?.meta?.total_paths ?? '-'}</span>
-  <span class="lbl">Dimensioni</span><span class="val">${hpglData?.meta?.dimensions ? `${hpglData.meta.dimensions.width.toFixed(1)} × ${hpglData.meta.dimensions.height.toFixed(1)}` : '-'}</span>
 </div></div>
-${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aaa">Generato da Draphera Hub</p>' : ''}
+${svgPreview ? `<div class="section"><h2>Anteprima Piazzamento</h2><div class="preview">${svgPreview.replace('<?xml version="1.0" encoding="UTF-8"?>', '').replace('<svg', '<svg style="max-width:100%;height:auto"')}</div></div>` : ''}
+${piecesHtml}
+${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><table><thead><tr><th>Descrizione</th><th>Valore</th></tr></thead><tbody>${misure}</tbody></table></div>` : ''}
+<p style="margin-top:32px;font-size:9px;color:#aaa">Generato da Draphera Hub</p>
 </body></html>`;
 
     const win = window.open('', '_blank');
@@ -364,7 +383,7 @@ ${measureResults.length > 0 ? '<p style="margin-top:32px;font-size:9px;color:#aa
     win.document.close();
     win.focus();
     setMsg('Scheda tecnica aperta — usa Ctrl+P per salvare PDF');
-  }, [fileName, measureResults, hpglData]);
+  }, [fileName, measureResults, hpglData, rawFile, pieces]);
 
   const handleRotateLeft = useCallback(() => setRotation(r => ((r - 90 + 360) % 360) as 0 | 90 | 180 | 270), []);
   const handleRotateRight = useCallback(() => setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270), []);
