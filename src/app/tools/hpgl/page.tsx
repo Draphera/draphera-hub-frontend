@@ -180,11 +180,36 @@ export default function HPGLViewerPage() {
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; country?: string }>>([]);
   const [cadSearch, setCadSearch] = useState('');
 
+  const FALLBACK_CAD_SYSTEMS = [
+    { id: 'lectra', name: 'Lectra', country: 'Francia' },
+    { id: 'gerber', name: 'Gerber', country: 'USA' },
+    { id: 'investronica', name: 'Investronica', country: 'Spagna' },
+    { id: 'assyst', name: 'Assyst / Humantec', country: 'Germania' },
+    { id: 'optitex', name: 'Optitex', country: 'Israele' },
+    { id: 'tukatech', name: 'Tukatech', country: 'India' },
+    { id: 'pro2cad', name: 'PRO2CAD', country: 'Italia' },
+    { id: 'audaces', name: 'Audaces', country: 'Brasile' },
+    { id: 'richpeace', name: 'Richpeace', country: 'Cina' },
+    { id: 'gemini', name: 'Gemini', country: 'Italia' },
+    { id: 'pad_system', name: 'PAD System', country: 'Canada' },
+    { id: 'nedgraphics', name: 'NedGraphics', country: 'Olanda' },
+    { id: 'scanvec', name: 'Scanvec', country: 'Israele' },
+    { id: 'polygon', name: 'Polygon', country: 'Francia' },
+    { id: 'stylecad', name: 'StyleCAD', country: 'Sri Lanka' },
+    { id: 'clo3d', name: 'CLO 3D', country: 'Corea del Sud' },
+    { id: 'browzwear', name: 'Browzwear', country: 'Singapore' },
+    { id: 'confelmod', name: 'Confelmod', country: 'Italia' },
+    { id: 'morgan', name: 'Morgan', country: 'Italia' },
+    { id: 'texwincad', name: 'TexwinCAD', country: 'Cina' },
+    { id: 'eurostaff', name: 'Eurostaff', country: 'Italia' },
+    { id: 'cad4fashion', name: 'CAD4Fashion', country: 'Italia' },
+  ];
+
   useEffect(() => {
     fetch('/api/profile/cad-systems')
       .then(r => r.json())
-      .then(d => setCadSystems(d.cad_systems ?? []))
-      .catch(() => {});
+      .then(d => setCadSystems(d.cad_systems?.length ? d.cad_systems : FALLBACK_CAD_SYSTEMS))
+      .catch(() => setCadSystems(FALLBACK_CAD_SYSTEMS));
   }, []);
 
   useEffect(() => {
