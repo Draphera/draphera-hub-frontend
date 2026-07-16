@@ -409,7 +409,7 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                       <span className="text-white font-mono">{selectedPiece.perimeter.toFixed(1)}</span>
                     </div>
                   )}
-                  {selectedPiece.minx !== undefined && (
+                  {selectedPiece.minx !== undefined && selectedPiece.miny !== undefined && selectedPiece.maxx !== undefined && selectedPiece.maxy !== undefined && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Bounding Box</span>
                       <span className="text-white font-mono text-[8px]">({selectedPiece.minx.toFixed(0)},{selectedPiece.miny.toFixed(0)}) &ndash; ({selectedPiece.maxx.toFixed(0)},{selectedPiece.maxy.toFixed(0)})</span>
