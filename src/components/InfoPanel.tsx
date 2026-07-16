@@ -127,27 +127,33 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
           <div className="space-y-3">
             {/* Main CAD result: prefer user selection, then ML, then rule-based */}
             <div className={`px-2.5 py-1.5 rounded-lg border ${
-              userSelectedCad
-                ? 'bg-amber-500/10 border-amber-500/20'
-                : !ml
-                  ? 'bg-drapera-gold/5 border-drapera-gold/15'
-                  : ml.source === 'no_model'
-                    ? 'bg-gray-500/5 border-gray-500/15'
-                    : ml.source === 'ml_rule_agreement'
-                      ? 'bg-green-500/5 border-green-500/15'
-                      : 'bg-cyan-500/5 border-cyan-500/15'
+              ml?.source === 'user_correction'
+                ? 'bg-emerald-500/10 border-emerald-500/20'
+                : userSelectedCad
+                  ? 'bg-amber-500/10 border-amber-500/20'
+                  : !ml
+                    ? 'bg-drapera-gold/5 border-drapera-gold/15'
+                    : ml.source === 'no_model'
+                      ? 'bg-gray-500/5 border-gray-500/15'
+                      : ml.source === 'ml_rule_agreement'
+                        ? 'bg-green-500/5 border-green-500/15'
+                        : 'bg-cyan-500/5 border-cyan-500/15'
             }`}>
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-[9px] font-semibold uppercase tracking-wider"
-                  style={{ color: userSelectedCad ? '#FBBF24' : !ml ? '#F2C94C' : ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
-                  {userSelectedCad ? 'Modello non addestrato' :
+                  style={{ color: ml?.source === 'user_correction' ? '#34D399' : userSelectedCad ? '#FBBF24' : !ml ? '#F2C94C' : ml.source === 'no_model' ? '#9CA3AF' : '#22D3EE' }}>
+                  {ml?.source === 'user_correction' ? 'Verified by Human' :
+                   userSelectedCad ? 'Modello non addestrato' :
                    !ml ? t('cad.detected') :
                    ml.source === 'no_model' ? 'Modello non addestrato' :
                    ml.source === 'ml_rule_agreement' ? t('info.ml_agreement') :
                    ml.source === 'rule_based_fallback' ? t('info.ml_fallback') :
                    t('info.ml_only')}
                 </span>
-                {!userSelectedCad && ml && (
+                {ml?.source === 'user_correction' && (
+                  <span className="text-[10px] font-bold text-emerald-400">100%</span>
+                )}
+                {!userSelectedCad && ml && ml.source !== 'user_correction' && (
                   <span className={`text-[10px] font-bold ${(ml.final_confidence ?? ml.ml_confidence) > 0.8 ? 'text-green-400' : (ml.final_confidence ?? ml.ml_confidence) > 0.5 ? 'text-yellow-400' : 'text-gray-500'}`}>
                     {ml.source === 'no_model' ? '—' : `${((ml.final_confidence ?? ml.ml_confidence) * 100).toFixed(0)}%`}
                   </span>
@@ -181,7 +187,14 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             {/* CAD status message */}
             {(ml || userSelectedCad) && (
               <div className="px-2.5 py-1.5 rounded-lg bg-drapera-gold/5 border border-drapera-gold/10 text-[9px] text-gray-400 leading-relaxed">
-                {userSelectedCad ? (
+                {ml?.source === 'user_correction' ? (
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full bg-emerald-500/15 flex items-center justify-center shrink-0">
+                      <svg className="w-2.5 h-2.5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </span>
+                    <p>Corretto manualmente come <strong className="text-white">{ml.ml_cad}</strong>. Il campione verrà verificato e utilizato per migliorare VectorEngine.</p>
+                  </div>
+                ) : userSelectedCad ? (
                   <p>Questo file è stato assegnato a <strong className="text-white">{userSelectedCad}</strong>.</p>
                 ) : ml?.source === 'no_model' ? (
                   <div>

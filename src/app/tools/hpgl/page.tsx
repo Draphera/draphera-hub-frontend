@@ -37,6 +37,7 @@ interface HPGLData {
     pens: number[];
   };
   upload?: { saved: boolean; id?: string; existing?: boolean; error?: string };
+  user_cad_correction?: string;
   cad?: { cad: string; confidence: string; score: number };
   ml?: { ml_cad: string; ml_confidence: number; ml_scores: Record<string, number>; final_cad?: string; final_confidence?: number; source?: string };
   features?: Record<string, unknown>;
@@ -501,6 +502,7 @@ ${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><tabl
       setFileTabs(prev => [...prev, { id: tabId, name: file.name, data: result, raw: file, feats: result.features ?? undefined, upId: result.upload?.id ?? '' }]);
       setActiveTabId(tabId);
       setHpglData(result);
+      if (result.user_cad_correction) setUserSelectedCad(result.user_cad_correction);
       setFeatures(result.features ?? null);
       setUploadId(result.upload?.id ?? '');
       setParsing(false);
