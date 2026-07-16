@@ -142,7 +142,7 @@ export default function HPGLViewerPage() {
       setSimPathIndex(-1);
       return;
     }
-    const interval = Math.max(30, 520 - simSpeed * 5);
+    const interval = Math.max(3, 1000 / (simSpeed + 5));
     const timer = setTimeout(() => setSimPathIndex(i => i + 1), interval);
     return () => clearTimeout(timer);
   }, [simulating, simPathIndex, simSpeed, hpglData]);
