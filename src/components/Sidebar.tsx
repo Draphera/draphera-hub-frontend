@@ -74,11 +74,12 @@ export default function Sidebar({
           <div onDragOver={e => e.preventDefault()} onDrop={handleDrop}
             className="border-2 border-dashed border-drapera-border rounded-xl p-5 text-center hover:border-drapera-gold/40 transition-colors cursor-pointer group"
             onClick={() => document.getElementById('hpgl-upload')?.click()}>
-            <svg className="w-7 h-7 mx-auto text-drapera-steel-light mb-2 group-hover:text-drapera-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-8 h-8 mx-auto text-drapera-steel-light mb-2 group-hover:text-drapera-gold transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l3 3h7a2 2 0 012 2v7a2 2 0 01-2 2H5z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 11v5m0 0l-2-2m2 2l2-2" />
             </svg>
-            <p className="text-[11px] text-drapera-steel-light group-hover:text-gray-300 transition-colors">{t('sidebar.upload_hint')}</p>
+            <p className="text-sm font-bold text-drapera-steel-light group-hover:text-white transition-colors">UPLOAD HPGL FILE</p>
+            <p className="text-[10px] text-gray-600 mt-0.5">Trascina o clicca per caricare</p>
           </div>
           <input id="hpgl-upload" type="file" onChange={handleInput} className="hidden" />
         </div>

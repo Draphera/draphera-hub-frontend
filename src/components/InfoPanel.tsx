@@ -77,7 +77,7 @@ interface Props {
   pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; notch_count: number; has_grainline: boolean }>;
   piecesLoading?: boolean;
   onDetectPieces?: () => void;
-  selectedPiece?: { id: number; area: number; notch_count: number; has_grainline: boolean; perimeter?: number };
+  selectedPiece?: { id: number; area: number; perimeter?: number; notch_count: number; has_grainline: boolean; minx?: number; miny?: number; maxx?: number; maxy?: number; cut_order?: number; complexity?: number; contour_quality?: number };
   isAdmin?: boolean;
   filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
   showPlacementRect?: boolean;
@@ -92,7 +92,7 @@ interface Props {
   onToggleCleanView?: () => void;
 }
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.2.0';
 const VE_VERSION = '1.0.0';
 
 export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView }: Props) {
@@ -390,11 +390,53 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             )}
             {selectedPiece && (
               <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <p className="text-[9px] text-emerald-400 font-semibold uppercase tracking-wider">Pezzo #{selectedPiece.id}</p>
-                <div className="mt-1 space-y-0.5 text-[9px] text-gray-400">
-                  <p>Area: <span className="text-white font-mono">{selectedPiece.area.toFixed(1)}</span></p>
-                  <p>Notch: <span className="text-white font-mono">{selectedPiece.notch_count}</span></p>
-                  {selectedPiece.has_grainline && <p className="text-emerald-400">Con grainline</p>}
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[9px] text-emerald-400 font-semibold uppercase tracking-wider">Pezzo #{selectedPiece.id}</p>
+                  {selectedPiece.contour_quality !== undefined && (
+                    <span className={`text-[8px] font-mono ${selectedPiece.contour_quality > 80 ? 'text-green-400' : selectedPiece.contour_quality > 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                      Qualità: {selectedPiece.contour_quality}%
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-0.5 text-[9px]">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Area</span>
+                    <span className="text-white font-mono">{selectedPiece.area.toFixed(1)}</span>
+                  </div>
+                  {selectedPiece.perimeter !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Perimetro</span>
+                      <span className="text-white font-mono">{selectedPiece.perimeter.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {selectedPiece.minx !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Bounding Box</span>
+                      <span className="text-white font-mono text-[8px]">({selectedPiece.minx.toFixed(0)},{selectedPiece.miny.toFixed(0)}) &ndash; ({selectedPiece.maxx.toFixed(0)},{selectedPiece.maxy.toFixed(0)})</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Intagli (Notch)</span>
+                    <span className="text-white font-mono">{selectedPiece.notch_count}</span>
+                  </div>
+                  {selectedPiece.has_grainline && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Drittofilo</span>
+                      <span className="text-emerald-400 font-mono">Presente</span>
+                    </div>
+                  )}
+                  {selectedPiece.cut_order !== undefined && selectedPiece.cut_order > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Ordine taglio</span>
+                      <span className="text-amber-400 font-mono">#{selectedPiece.cut_order}</span>
+                    </div>
+                  )}
+                  {selectedPiece.complexity !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Complessità</span>
+                      <span className="text-white font-mono">{selectedPiece.complexity}/10</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
