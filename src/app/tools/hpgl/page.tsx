@@ -297,6 +297,7 @@ export default function HPGLViewerPage() {
   }, [features, uploadId]);
 
   const ml = hpglData?.ml;
+  useEffect(() => { setUserSelectedCad(null); }, [hpglData]);
   useEffect(() => {
     if (!hpglData) return;
 
