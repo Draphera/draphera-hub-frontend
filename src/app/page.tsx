@@ -227,7 +227,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-4">
               {[
                 { value: stats?.total ?? 0, label: 'File elaborati', color: 'text-drapera-gold' },
-                { value: totalVendors, label: 'CAD supportati', color: 'text-cyan-400' },
+                { value: trainedCadCount, label: 'CAD supportati', color: 'text-cyan-400' },
               ].map(s => (
                 <div key={s.label} className="premium-card text-center py-6">
                   <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
