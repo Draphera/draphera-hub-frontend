@@ -109,7 +109,7 @@ export default function AdminPage() {
   const [waitlistSearch, setWaitlistSearch] = useState('');
   const [waitlistStats, setWaitlistStats] = useState<{ total: number; pending: number; approved: number; avg_wait_days: number } | null>(null);
   const [regConfig, setRegConfig] = useState<{ max_users: number; current_users: number; registration_open: boolean } | null>(null);
-  const [regMaxInput, setRegMaxInput] = useState('20');
+  const [regMaxInput, setRegMaxInput] = useState('10');
 
   const [profiles, setProfiles] = useState<Array<Record<string, unknown>>>([]);
   const [profilesSearch, setProfilesSearch] = useState('');
@@ -143,7 +143,7 @@ export default function AdminPage() {
       setWaitlistTotal(w.total ?? 0);
       setWaitlistOffset(append ? waitlistOffset + 50 : 50);
       setRegConfig(r);
-      setRegMaxInput(String(r.max_users ?? 20));
+      setRegMaxInput(String(r.max_users ?? 10));
       setWaitlistStats(s);
     } catch {}
   };
@@ -168,7 +168,7 @@ export default function AdminPage() {
 
   const handleUpdateRegConfig = async () => {
     try {
-      await waitlistApi.updateRegState({ max_users: parseInt(regMaxInput) || 20 });
+      await waitlistApi.updateRegState({ max_users: parseInt(regMaxInput) || 10 });
       setMsg('Config aggiornata');
       await loadWaitlist();
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
@@ -1260,7 +1260,7 @@ export default function AdminPage() {
                   className={`text-xs px-3 py-1.5 rounded-lg font-medium border transition-colors ${regConfig?.registration_open ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                   {regConfig?.registration_open ? t('admin.waitlist.open') : t('admin.waitlist.closed')}
                 </button>
-                <span className="text-xs text-gray-500">{regConfig?.current_users ?? 0} / {regConfig?.max_users ?? 20} {t('admin.waitlist.user_count')}</span>
+                <span className="text-xs text-gray-500">{regConfig?.current_users ?? 0} / {regConfig?.max_users ?? 10} {t('admin.waitlist.user_count')}</span>
               </div>
             </div>
 

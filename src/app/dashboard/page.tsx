@@ -133,8 +133,8 @@ export default function DashboardPage() {
                 )}
                 {founder?.is_founder && (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">{founder.position && founder.position <= 20 ? 'F' : 'B'}</div>
-                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position} {founder.position && founder.position <= 20 ? 'Founder' : 'Beta'}</span>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">{founder.position && founder.position <= 10 ? 'F' : 'B'}</div>
+                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
                   </div>
                 )}
               </div>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="mt-6 premium-card p-5 text-center">
                   <p className="text-sm text-white font-medium mb-2">Cosa vorresti vedere in Draphera Hub?</p>
-                  <p className="text-xs text-gray-500 mb-4">I nostri 50 membri (20 Founder + 30 Beta) guideranno la roadmap del prodotto.</p>
+                  <p className="text-xs text-gray-500 mb-4">I nostri 10 Founder e 20 Beta Tester mensili guideranno la roadmap del prodotto.</p>
                   <Link href="/sondaggio" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
                     Partecipa al sondaggio

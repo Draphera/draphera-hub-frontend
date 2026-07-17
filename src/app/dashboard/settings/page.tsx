@@ -175,11 +175,11 @@ export default function SettingsPage() {
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
             <div className="flex items-center gap-4 relative z-10">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                {founder.position && founder.position <= 20 ? 'F' : 'B'}
+                {founder.position && founder.position <= 10 ? 'F' : 'B'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-base text-white font-bold">{founder.position && founder.position <= 20 ? t('settings.founder_badge') : 'Beta Tester'}</p>
+                  <p className="text-base text-white font-bold">{founder.position && founder.position <= 10 ? t('settings.founder_badge') : 'Beta Tester'}</p>
                   <span className="text-sm font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
                 </div>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
