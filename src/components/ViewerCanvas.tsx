@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n';
 import { useHitTestDebug } from '@/hooks/useHitTestDebug';
 // import DebugOverlay from '@/components/DebugOverlay';
 
@@ -284,6 +285,7 @@ function isPathVisible(
 }
 
 export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false, simulating, simPathIndex }: Props) {
+  const { t } = useTranslation();
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -1071,9 +1073,9 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         ) : (
           <>
             {gridLines}
-            <text x={VIEW_W / 2} y={VIEW_H / 2} textAnchor="middle" fill="#4A4A6A" fontSize={13} fontFamily="Inter">
-              Carica un file per visualizzare il rendering
-            </text>
+              <text x={VIEW_W / 2} y={VIEW_H / 2} textAnchor="middle" fill="#4A4A6A" fontSize={13} fontFamily="Inter">
+                {t('viewer.hint')}
+              </text>
           </>
         )}
       </svg>

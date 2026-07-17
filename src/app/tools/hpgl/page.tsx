@@ -57,6 +57,7 @@ const APP_VERSION = '1.1.1';
 
 export default function HPGLViewerPage() {
   const { lang } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -322,8 +323,8 @@ export default function HPGLViewerPage() {
       await correctionApi.submitCorrection(correctedCadId, features, uploadId, uploadId);
       setUserSelectedCad(correctedCadId);
       setShowCadModal(false);
-    } catch { setMsg('Errore salvataggio correzione'); }
-  }, [features, uploadId]);
+    } catch { setMsg(_("Errore salvataggio correzione", "Error saving correction")); }
+  }, [features, uploadId, _]);
 
   const ml = hpglData?.ml;
   useEffect(() => { setUserSelectedCad(null); }, [hpglData]);
@@ -384,9 +385,9 @@ export default function HPGLViewerPage() {
     try {
       const svg = await hpglApi.exportSvg(rawFile);
       await navigator.clipboard.writeText(svg);
-      setMsg('SVG copiato negli appunti');
-    } catch { setMsg('Errore copia SVG'); }
-  }, [rawFile]);
+      setMsg(_('SVG copiato negli appunti', 'SVG copied to clipboard'));
+    } catch { setMsg(_('Errore copia SVG', 'Error copying SVG')); }
+  }, [rawFile, _]);
 
   const handleExportCsv = useCallback(() => {
     if (!features) return;
@@ -401,7 +402,6 @@ export default function HPGLViewerPage() {
 
   const handleExportPdf = useCallback(async () => {
     const isEn = lang === 'en';
-    const _ = (itKey: string, enKey: string) => isEn ? enKey : itKey;
     const base = fileName.replace(/\.[^.]+$/, '');
     const now = new Date().toLocaleDateString(isEn ? 'en-US' : 'it-IT');
     const misure = measureResults.map((r, i) =>
@@ -543,10 +543,12 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
       setPieces(result.pieces ?? []);
       setFilteredContours(result.filtered_contours ?? []);
       setSelectedPieceId(undefined);
-      setMsg(result.pieces?.length > 0 ? `${result.pieces.length} pezzi rilevati` : 'Nessun pezzo trovato');
-    } catch { setMsg('Errore rilevamento pezzi'); }
+      setMsg(result.pieces?.length > 0
+        ? _(`${result.pieces.length} pezzi rilevati`, `${result.pieces.length} pieces detected`)
+        : _('Nessun pezzo trovato', 'No pieces found'));
+    } catch { setMsg(_('Errore rilevamento pezzi', 'Piece detection error')); }
     setPiecesLoading(false);
-  }, [rawFile]);
+  }, [rawFile, _]);
 
   const handleToggleSelection = useCallback(() => {
     setSelectionActive(v => {
@@ -570,9 +572,9 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
       const modified = svg.replace(/viewBox="[^"]*"/, `viewBox="${minX} ${minY} ${w} ${h}"`);
       const blob = new Blob([modified], { type: 'image/svg+xml;charset=utf-8' });
       downloadBlob(blob, fileName.replace(/\.[^.]+$/, '') + '_selection.svg');
-      setMsg('Sezione esportata come SVG');
-    } catch { setMsg('Errore export sezione'); }
-  }, [rawFile, selectionBounds, fileName]);
+      setMsg(_('Sezione esportata come SVG', 'Section exported as SVG'));
+    } catch { setMsg(_('Errore export sezione', 'Section export error')); }
+  }, [rawFile, selectionBounds, fileName, _]);
 
   const handleFileUpload = useCallback(async (file: File) => {
     setFileName(file.name);
@@ -734,20 +736,20 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
   const handleExportPng = useCallback(async () => {
     if (!rawFile) return;
     try { const blob = await hpglApi.exportPng(rawFile); downloadBlob(blob, fileName.replace(/\.[^.]+$/, '') + '.png'); }
-    catch { alert('Export PNG disponibile solo via backend.'); }
-  }, [rawFile, fileName]);
+    catch { alert(_('Export PNG disponibile solo via backend.', 'Export PNG available via backend only.')); }
+  }, [rawFile, fileName, _]);
 
   const handleExportSvg = useCallback(async () => {
     if (!rawFile) return;
     try { const svg = await hpglApi.exportSvg(rawFile); downloadBlob(new Blob([svg], { type: 'image/svg+xml' }), fileName.replace(/\.[^.]+$/, '') + '.svg'); }
-    catch { alert('Export SVG disponibile solo via backend.'); }
-  }, [rawFile, fileName]);
+    catch { alert(_('Export SVG disponibile solo via backend.', 'Export SVG available via backend only.')); }
+  }, [rawFile, fileName, _]);
 
   const handleExportZip = useCallback(async () => {
     if (!rawFile) return;
     try { const blob = await hpglApi.exportZip(rawFile); downloadBlob(blob, fileName.replace(/\.[^.]+$/, '') + '.zip'); }
-    catch { alert('Export ZIP disponibile solo via backend.'); }
-  }, [rawFile, fileName]);
+    catch { alert(_('Export ZIP disponibile solo via backend.', 'Export ZIP available via backend only.')); }
+  }, [rawFile, fileName, _]);
 
   const downloadBlob = (blob: Blob, name: string) => {
     const url = URL.createObjectURL(blob);
@@ -1460,7 +1462,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
                       ` · cucitura ${pieceDetail.piece.seam_lines?.length ? `${pieceDetail.piece.seam_lines.length} linee` : 'assente'}`,
                     ].filter(Boolean).join('');
                     navigator.clipboard.writeText(text);
-                    setMsg('Scheda copiata');
+                    setMsg(_('Scheda copiata', 'Sheet copied'));
                   }} className="text-[8px] text-gray-600 hover:text-cyan-400 transition-colors px-1" title="Copia scheda">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
                   </button>
