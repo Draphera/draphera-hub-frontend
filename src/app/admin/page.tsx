@@ -49,7 +49,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'analytics' | 'system';
+type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'beta' | 'analytics' | 'system';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -119,6 +119,8 @@ export default function AdminPage() {
 
   const [founders, setFounders] = useState<Array<Record<string, unknown>>>([]);
   const [founderAddUserId, setFounderAddUserId] = useState('');
+  const [betaApplications, setBetaApplications] = useState<Array<Record<string, unknown>>>([]);
+  const [betaFilter, setBetaFilter] = useState('');
   const [systemHealth, setSystemHealth] = useState<{
     status: string; supabase_url: string; python_version: string;
     fastapi_version: string; admin_emails: number;
@@ -237,6 +239,29 @@ export default function AdminPage() {
       setMsg('Founder rimosso');
       await loadFounders();
       setStats(await adminApi.stats());
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const loadBetaApplications = async (status?: string) => {
+    try {
+      const data = await adminApi.listBetaApplications(status || undefined);
+      setBetaApplications(data.applications ?? []);
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleApproveBeta = async (appId: string) => {
+    try {
+      await adminApi.approveBetaApplication(appId);
+      setMsg('Beta approvato');
+      await loadBetaApplications(betaFilter);
+    } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const handleRejectBeta = async (appId: string) => {
+    try {
+      await adminApi.rejectBetaApplication(appId);
+      setMsg('Beta respinto');
+      await loadBetaApplications(betaFilter);
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
   };
 
@@ -474,6 +499,9 @@ export default function AdminPage() {
     if (tab === 'founders') {
       await loadFounders();
     }
+    if (tab === 'beta') {
+      await loadBetaApplications(betaFilter);
+    }
     if (tab === 'system') {
       await loadSystemHealth();
     }
@@ -511,6 +539,7 @@ export default function AdminPage() {
     { key: 'waitlist', label: 'Waitlist' },
     { key: 'profiles', label: t('admin.tab_profiles') },
     { key: 'founders', label: t('admin.tab_founders') },
+    { key: 'beta', label: t('admin.tab_beta') },
     { key: 'analytics', label: t('admin.tab_analytics') },
     { key: 'system', label: t('admin.tab_system') },
   ];
@@ -1558,6 +1587,88 @@ export default function AdminPage() {
                   ))}
                   {founders.length === 0 && (
                     <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-600 text-xs">Nessun founder</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'beta' && (
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            {['', 'pending', 'approved', 'rejected'].map(s => (
+              <button key={s || 'all'} onClick={() => { setBetaFilter(s); loadBetaApplications(s); }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                  betaFilter === s
+                    ? 'bg-drapera-gold/20 border-drapera-gold/40 text-drapera-gold'
+                    : 'border-drapera-border text-gray-500 hover:text-white hover:border-drapera-gold/30'
+                }`}
+              >
+                {s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Tutti'}
+              </button>
+            ))}
+          </div>
+
+          <div className="premium-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-drapera-border text-xs text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 font-medium">Nome</th>
+                    <th className="px-4 py-3 font-medium">Email</th>
+                    <th className="px-4 py-3 font-medium">Ruolo</th>
+                    <th className="px-4 py-3 font-medium">Azienda</th>
+                    <th className="px-4 py-3 font-medium">Esperienza</th>
+                    <th className="px-4 py-3 font-medium">Settore</th>
+                    <th className="px-4 py-3 font-medium">Motivazione</th>
+                    <th className="px-4 py-3 font-medium">Piano</th>
+                    <th className="px-4 py-3 font-medium">Come ci hai trovato</th>
+                    <th className="px-4 py-3 font-medium">Data</th>
+                    <th className="px-4 py-3 font-medium">Stato</th>
+                    <th className="px-4 py-3 font-medium text-right">Azioni</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {betaApplications.map((app: any) => (
+                    <tr key={app.id} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
+                      <td className="px-4 py-3 text-xs text-white">{app.full_name || '-'}</td>
+                      <td className="px-4 py-3 text-xs font-mono">{app.email || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.role || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.company || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.experience || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.sector || '-'}</td>
+                      <td className="px-4 py-3 text-xs max-w-[200px] truncate">{app.reason || '-'}</td>
+                      <td className="px-4 py-3 text-xs max-w-[150px] truncate">{app.usage_plan || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.hear_about || '-'}</td>
+                      <td className="px-4 py-3 text-xs">{app.created_at ? new Date(app.created_at).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
+                          app.status === 'approved' ? 'bg-green-500/10 text-green-400' :
+                          app.status === 'rejected' ? 'bg-red-500/10 text-red-400' :
+                          'bg-yellow-500/10 text-yellow-400'
+                        }`}>
+                          {app.status === 'approved' ? 'Approvato' : app.status === 'rejected' ? 'Respinto' : 'In attesa'}
+                        </span>
+                        {app.founder_position && (
+                          <span className="ml-1 text-[9px] text-drapera-gold">#{app.founder_position}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {app.status === 'pending' && (
+                            <>
+                              <button onClick={() => handleApproveBeta(app.id)} className="text-drapera-gold hover:text-amber-400 text-[10px] px-1.5 py-1 rounded hover:bg-drapera-gold/10">Approva</button>
+                              <button onClick={() => handleRejectBeta(app.id)} className="text-red-400 hover:text-red-300 text-[10px] px-1.5 py-1 rounded hover:bg-red-500/10">Respingi</button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {betaApplications.length === 0 && (
+                    <tr><td colSpan={12} className="px-4 py-8 text-center text-gray-600 text-xs">Nessuna candidatura beta</td></tr>
                   )}
                 </tbody>
               </table>

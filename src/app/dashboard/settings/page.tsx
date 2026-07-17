@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; training_ready?: boolean; country?: string }>>([]);
   const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
+  const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,6 +45,9 @@ export default function SettingsPage() {
         fetch(`${API_BASE}/api/profile/founder-status`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
         }).then(r => r.json()).then(setFounder).catch(() => {});
+        fetch(`${API_BASE}/api/profile/beta/application`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        }).then(r => r.ok ? r.json() : null).then(setBetaApp).catch(() => {});
       }
     });
   }, [router]);
@@ -177,6 +181,51 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2">
                   <p className="text-base text-white font-bold">{founder.position && founder.position <= 20 ? t('settings.founder_badge') : 'Beta Tester'}</p>
                   <span className="text-sm font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
+                </div>
+                <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!founder?.is_founder && betaApp === null && (
+          <Link href="/beta" className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative block hover:border-drapera-gold/40 transition-colors" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+                B
+              </div>
+              <div>
+                <p className="text-base text-white font-bold">{t('settings.beta_apply')}</p>
+                <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
+              </div>
+            </div>
+          </Link>
+        )}
+
+        {betaApp?.status === 'pending' && (
+          <div className="premium-card p-5 border border-yellow-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.1), rgba(234,179,8,0.02))' }}>
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+                B
+              </div>
+              <div>
+                <p className="text-base text-white font-bold">{t('settings.beta_pending')}</p>
+                <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {betaApp?.status === 'approved' && (
+          <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+                B
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-base text-white font-bold">{t('settings.beta_badge')}</p>
+                  <span className="text-sm font-bold text-drapera-gold">#{betaApp.founder_position ?? '?'}</span>
                 </div>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
               </div>
