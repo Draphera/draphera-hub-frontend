@@ -177,6 +177,25 @@ export const adminApi = {
     if (!res.ok) throw new Error((await res.json()).detail || await res.text());
     return res.json() as Promise<{ loaded: boolean; source: string; classes?: string[] }>;
   },
+  async listBetaApplications(status?: string) {
+    const headers = await getHeaders();
+    const qs = status ? `?status=${status}` : '';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/beta-applications${qs}`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json() as Promise<{ applications: Array<Record<string, unknown>>; count: number }>;
+  },
+  async approveBetaApplication(appId: string) {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/beta-applications/${appId}/approve`, { method: 'POST', headers });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
+  async rejectBetaApplication(appId: string) {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/beta-applications/${appId}/reject`, { method: 'POST', headers });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
 };
 
 export const userApi = {
@@ -191,6 +210,19 @@ export const userApi = {
     const res = await fetchWithTimeout(`${API_BASE}/api/profile/stats`, { headers });
     if (!res.ok) throw new Error(await res.text());
     return res.json() as Promise<{ total_uploads: number }>;
+  },
+  async submitBetaApplication(data: Record<string, string>) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/beta/apply`, { method: 'POST', headers, body: JSON.stringify(data) });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
+  async getBetaApplication() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/beta/application`, { headers });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
   },
 };
 
