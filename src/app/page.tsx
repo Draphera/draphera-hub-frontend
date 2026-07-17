@@ -83,7 +83,7 @@ export default function HomePage() {
   const isOpen = regState?.open ?? true;
   const remaining = regState?.remaining ?? 0;
   const current = regState?.current_users ?? 0;
-    const maxUsers = regState?.max_users ?? 10;
+    const maxUsers = regState?.max_users ?? 20;
   const totalVendors = stats ? Object.keys(stats.by_vendor).length : 0;
 
   return (
