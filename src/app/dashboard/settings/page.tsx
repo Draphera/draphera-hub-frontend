@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const [msg, setMsg] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; training_ready?: boolean; country?: string }>>([]);
-  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number } | null>(null);
+  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -151,16 +151,31 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {founder?.is_admin && (
+          <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
+            <div className="flex items-center gap-4 relative z-10">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
+                A
+              </div>
+              <div>
+                <p className="text-base text-white font-bold">Admin</p>
+                <p className="text-[11px] text-gray-500">Amministratore di sistema</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {founder?.is_founder && (
           <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
             <div className="flex items-center gap-4 relative z-10">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                F
+                {founder.position && founder.position <= 20 ? 'F' : 'B'}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-base text-white font-bold">{t('settings.founder_badge')}</p>
+                  <p className="text-base text-white font-bold">{founder.position && founder.position <= 20 ? t('settings.founder_badge') : 'Beta Tester'}</p>
                   <span className="text-sm font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
                 </div>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>

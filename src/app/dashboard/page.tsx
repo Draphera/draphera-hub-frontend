@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploads, setUploads] = useState<Array<Record<string, unknown>>>([]);
   const [showAll, setShowAll] = useState(false);
-  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number } | null>(null);
+  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
@@ -125,10 +125,16 @@ export default function DashboardPage() {
                 <h1 className="section-title text-white leading-tight">
                   {t('dashboard.hero_greeting').replace('{name}', name)}
                 </h1>
+                {founder?.is_admin && (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">A</div>
+                    <span className="text-[10px] font-bold text-drapera-gold">Admin</span>
+                  </div>
+                )}
                 {founder?.is_founder && (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">F</div>
-                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position}</span>
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">{founder.position && founder.position <= 20 ? 'F' : 'B'}</div>
+                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position} {founder.position && founder.position <= 20 ? 'Founder' : 'Beta'}</span>
                   </div>
                 )}
               </div>
