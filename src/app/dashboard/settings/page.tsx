@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; training_ready?: boolean; country?: string }>>([]);
   const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
+  const [uploadCount, setUploadCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -48,6 +49,9 @@ export default function SettingsPage() {
         fetch(`${API_BASE}/api/profile/beta/application`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
         }).then(r => r.ok ? r.json() : null).then(setBetaApp).catch(() => {});
+        fetch(`${API_BASE}/api/profile/stats`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        }).then(r => r.ok ? r.json() : null).then(d => { if (d) setUploadCount(d.total_uploads ?? 0); }).catch(() => {});
       }
     });
   }, [router]);
@@ -189,17 +193,29 @@ export default function SettingsPage() {
         )}
 
         {!founder?.is_founder && betaApp === null && (
-          <Link href="/beta" className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative block hover:border-drapera-gold/40 transition-colors" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+          <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
             <div className="flex items-center gap-4 relative z-10">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">
                 B
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-base text-white font-bold">{t('settings.beta_apply')}</p>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex-1 h-1.5 bg-drapera-border/30 rounded-full overflow-hidden">
+                    <div className="h-full bg-drapera-gold rounded-full transition-all" style={{ width: `${Math.min(100, (uploadCount / 50) * 100)}%` }} />
+                  </div>
+                  <span className="text-[10px] text-drapera-gold font-mono whitespace-nowrap">{uploadCount}/50 {(t as any)('profile.files') || 'file'}</span>
+                </div>
+                {uploadCount < 50 && <p className="text-[9px] text-gray-500 mt-1">{50 - uploadCount} file ancora necessari per candidarti</p>}
               </div>
             </div>
-          </Link>
+            {uploadCount >= 50 && (
+              <Link href="/beta" className="mt-3 block w-full text-center px-3 py-2 rounded-lg bg-drapera-gold/10 text-drapera-gold text-xs font-semibold hover:bg-drapera-gold/20 transition-colors border border-drapera-gold/20">
+                {t('settings.beta_apply')} →
+              </Link>
+            )}
+          </div>
         )}
 
         {betaApp?.status === 'pending' && (
