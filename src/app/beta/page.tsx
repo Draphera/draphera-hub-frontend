@@ -7,7 +7,7 @@ import { userApi } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import Header from '@/components/Header';
 
-export default function BetaApplyPage() {
+export default function FounderApplyPage() {
   const { lang } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
   const router = useRouter();
@@ -84,7 +84,7 @@ export default function BetaApplyPage() {
               <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             </div>
             <h1 className="text-xl font-bold text-white mb-2">{_('Candidatura approvata!', 'Application approved!')}</h1>
-            <p className="text-gray-500 text-sm mb-6">{_('Sei ora un Beta Tester di Draphera. Benvenuto a bordo!', 'You are now a Draphera Beta Tester. Welcome aboard!')}</p>
+            <p className="text-gray-500 text-sm mb-6">{_('Sei ora un Founder di Draphera. Benvenuto a bordo!', 'You are now a Draphera Founder. Welcome aboard!')}</p>
             <button onClick={() => router.push('/dashboard')} className="btn-gold text-sm px-6 py-2.5">{_('Vai alla dashboard', 'Go to dashboard')}</button>
           </div>
         ) : submitted ? (
@@ -99,8 +99,8 @@ export default function BetaApplyPage() {
         ) : (
           <>
             <div className="text-center mb-10">
-              <h1 className="text-3xl font-bold text-white mb-3">{_('Candidati come Beta Tester', 'Apply as Beta Tester')}</h1>
-              <p className="text-gray-500 max-w-lg mx-auto">{_('Compila il modulo per candidarti al programma Beta di Draphera. Cerchiamo professionisti del settore moda, sviluppatori e appassionati per testare VectorEngine e guidare lo sviluppo della piattaforma.', 'Fill out the form to apply for the Draphera Beta program. We are looking for fashion industry professionals, developers and enthusiasts to test VectorEngine and guide the platform development.')}</p>
+              <h1 className="text-3xl font-bold text-white mb-3">{_('Candidati come Founder', 'Apply as Founder')}</h1>
+              <p className="text-gray-500 max-w-lg mx-auto">{_('Compila il modulo per candidarti al programma Founder di Draphera. Cerchiamo professionisti del settore moda, sviluppatori e appassionati per testare VectorEngine e guidare lo sviluppo della piattaforma.', 'Fill out the form to apply for the Draphera Founder program. We are looking for fashion industry professionals, developers and enthusiasts to test VectorEngine and guide the platform development.')}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
