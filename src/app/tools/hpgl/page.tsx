@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useTranslation } from '@/lib/i18n';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import ViewerCanvas from '@/components/ViewerCanvas';
@@ -55,6 +56,7 @@ interface HPGLData {
 const APP_VERSION = '1.1.1';
 
 export default function HPGLViewerPage() {
+  const { lang } = useTranslation();
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -398,73 +400,134 @@ export default function HPGLViewerPage() {
   }, [features, fileName]);
 
   const handleExportPdf = useCallback(async () => {
+    const isEn = lang === 'en';
+    const _ = (itKey: string, enKey: string) => isEn ? enKey : itKey;
     const base = fileName.replace(/\.[^.]+$/, '');
-    const now = new Date().toLocaleDateString('it-IT');
+    const now = new Date().toLocaleDateString(isEn ? 'en-US' : 'it-IT');
     const misure = measureResults.map((r, i) =>
-      `<tr><td>${r.label || (r.type === 'distance' ? 'Distanza' : 'Angolo') + ' #' + (i + 1)}</td><td>${r.type === 'distance' ? r.value.toFixed(1) : r.value.toFixed(1) + '°'}</td></tr>`
+      `<tr><td>${r.label || (r.type === 'distance' ? _('Distanza', 'Distance') : _('Angolo', 'Angle')) + ' #' + (i + 1)}</td><td>${r.type === 'distance' ? r.value.toFixed(1) : r.value.toFixed(1) + '°'}</td></tr>`
     ).join('');
-    const cadName = hpglData?.cad?.cad ?? '-';
+    const cadInfo = hpglData?.cad;
+    const mlInfo = hpglData?.ml;
+    const cadName = cadInfo?.cad ?? '-';
+    const cadConf = cadInfo?.confidence ?? '-';
+    const mlCad = mlInfo?.final_cad ?? mlInfo?.ml_cad ?? null;
+    const mlConf = mlInfo?.final_confidence ?? mlInfo?.ml_confidence ?? null;
+    const mlSource = mlInfo?.source ?? null;
     const formatInfo = hpglData?.formatInfo;
     const formatName = formatInfo ? `${formatInfo.family} / ${formatInfo.variant}` : (hpglData?.meta?.labels ?? 0) > 0 ? 'HPGL/2' : 'HPGL/1';
     const dims = hpglData?.meta?.dimensions;
-    const dimStr = dims ? `${dims.width.toFixed(1)} x ${dims.height.toFixed(1)}` : '-';
+    const dimStr = dims ? `${dims.width.toFixed(1)} x ${dims.height.toFixed(1)} cm` : '-';
+    const meta = hpglData?.meta;
+    const pathCount = meta?.total_paths ?? '-';
+    const polyCount = meta?.polylines ?? '-';
+    const labelCount = meta?.labels ?? '-';
+    const userCad = hpglData?.user_cad_correction ?? null;
 
-    // Fetch enhanced SVG with pieces/placement
+    // Build ML info string
+    let mlStr = '';
+    if (mlCad && mlCad !== 'general_hpgl') {
+      const srcLabel: Record<string, string> = {
+        ml: _('Modello ML', 'ML Model'),
+        ml_rule_agreement: _('ML + Regole', 'ML + Rules'),
+        rule_based_fallback: _('Regole', 'Rules'),
+        no_model: _('Nessun modello', 'No model'),
+      };
+      mlStr = `${srcLabel[mlSource ?? ''] || mlSource}: ${mlCad} (${(mlConf !== null ? (mlConf * 100).toFixed(0) : cadConf === 'high' ? '>90' : cadConf === 'medium' ? '>50' : '<50')}%)`;
+    }
+
+    // Fetch enhanced SVG
     let svgPreview = '';
     if (rawFile) {
       try {
         svgPreview = await hpglApi.exportSvg(rawFile);
-      } catch { /* fallback: no preview */ }
+        // Convert to technical B/W: override colors
+        svgPreview = svgPreview
+          .replace('<?xml version="1.0" encoding="UTF-8"?>', '')
+          .replace('<svg', '<svg style="background:white;max-width:100%;height:auto"');
+        svgPreview = svgPreview.replace('</defs>', '</defs><style>svg *{stroke:#000!important;fill:rgba(0,0,0,0.04)!important}svg text{fill:#000!important;stroke:none!important}svg .piece-fill,.piece-overlay{fill:rgba(0,0,0,0.03)!important;stroke:#333!important;stroke-width:0.5!important}svg .info-strip{display:none}svg line,svg polyline,svg polygon{stroke:#111!important}</style>');
+      } catch { /* fallback */ }
     }
 
     const piecesHtml = pieces && pieces.length > 0 ? `
-<div class="section"><h2>Pezzi Rilevati (${pieces.length})</h2>
-<table><thead><tr><th>#</th><th>Area</th><th>Perimetro</th><th>Intagli</th><th>Drittofilo</th></tr></thead><tbody>
-${pieces.slice(0, 30).map(p => `<tr><td>${p.label || p.id}</td><td>${p.area.toFixed(0)}</td><td>${p.perimeter.toFixed(0)}</td><td>${p.notch_count}</td><td>${p.has_grainline ? 'Si' : 'No'}</td></tr>`).join('')}
-${pieces.length > 30 ? `<tr><td colspan="5" style="color:#999">... e altri ${pieces.length - 30} pezzi</td></tr>` : ''}
+<div class="section"><h2>${_('Pezzi Rilevati', 'Detected Pieces')} (${pieces.length})</h2>
+<table><thead><tr><th>#</th><th>${_('Area', 'Area')}</th><th>${_('Perimetro', 'Perimeter')}</th><th>${_('Intagli', 'Notches')}</th><th>${_('Drittofilo', 'Grainline')}</th></tr></thead><tbody>
+${pieces.slice(0, 30).map(p => `<tr><td>${p.label || p.id}</td><td>${p.area.toFixed(0)} cm²</td><td>${p.perimeter.toFixed(0)} cm</td><td>${p.notch_count}</td><td>${p.has_grainline ? _('Sì', 'Yes') : _('No', 'No')}</td></tr>`).join('')}
+${pieces.length > 30 ? `<tr><td colspan="5" style="color:#999">... ${_('e altri', 'and')} ${pieces.length - 30} ${_('pezzi', 'pieces')}</td></tr>` : ''}
 </tbody></table></div>` : '';
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Scheda Tecnica - ${base}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${_('Scheda Tecnica', 'Technical Sheet')} - ${base}</title>
 <style>
-  body{font-family:Inter,sans-serif;padding:40px;color:#1a1a2e;font-size:12px}
-  h1{font-size:20px;margin-bottom:4px;color:#1a1a2e}
-  .sub{color:#666;font-size:11px;margin-bottom:24px}
-  table{width:100%;border-collapse:collapse;margin-bottom:16px}
-  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}
-  th{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#888}
-  td{font-size:12px}
-  .section{margin-bottom:24px}
-  .section h2{font-size:13px;text-transform:uppercase;letter-spacing:0.12em;color:#555;margin-bottom:8px;padding-bottom:4px;border-bottom:2px solid #eee}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px}
-  .grid .lbl{color:#888;font-size:10px}
-  .grid .val{font-size:12px}
-  .preview{background:#120A20;border-radius:12px;padding:16px;margin-bottom:24px;text-align:center}
-  .preview svg{max-width:100%;height:auto;max-height:400px}
-  @media print{body{padding:20px}.preview svg{max-height:none}}
+  @page{size:A4;margin:15mm}
+  *{box-sizing:border-box}
+  body{font-family:Inter,sans-serif;padding:0;color:#000;font-size:10px;line-height:1.5}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #000}
+  .header h1{font-size:18px;margin:0;font-weight:700}
+  .header .meta{text-align:right;font-size:9px;color:#555}
+  h2{font-size:10px;text-transform:uppercase;letter-spacing:0.12em;margin:0 0 6px 0;padding-bottom:3px;border-bottom:1px solid #ccc}
+  table{width:100%;border-collapse:collapse;margin-bottom:12px}
+  th,td{text-align:left;padding:3px 6px;border-bottom:1px solid #ddd;font-size:9px}
+  th{font-size:7px;text-transform:uppercase;letter-spacing:0.1em;color:#555}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin-bottom:12px}
+  .grid .lbl{color:#555;font-size:8px}
+  .grid .val{font-size:10px;font-weight:500}
+  .section{margin-bottom:16px;page-break-inside:avoid}
+  .preview{border:1px solid #ccc;border-radius:4px;padding:8px;margin-bottom:12px;text-align:center;background:#fff}
+  .preview svg{max-width:100%;height:auto;max-height:500px}
+  .footer{margin-top:24px;padding-top:8px;border-top:1px solid #ccc;font-size:8px;color:#888;text-align:center}
+  @media print{body{padding:0}.preview svg{max-height:none}.section{page-break-inside:avoid}}
 </style></head><body>
-<h1>Scheda Tecnica</h1>
-<div class="sub">${base} &mdash; ${now}</div>
-<div class="section"><h2>File</h2>
+<div class="header">
+  <div>
+    <h1>${_('Scheda Tecnica', 'Technical Sheet')}</h1>
+    <div style="font-size:9px;color:#555;margin-top:2px">${base}</div>
+  </div>
+  <div class="meta">
+    <div>${now}</div>
+    <div style="margin-top:2px">VectorEngine v${APP_VERSION}</div>
+    <div style="margin-top:2px">draphera.com</div>
+  </div>
+</div>
+
+<div class="section"><h2>${_('File', 'File')}</h2>
 <div class="grid">
-  <span class="lbl">Nome</span><span class="val">${fileName}</span>
-  <span class="lbl">Formato</span><span class="val">${formatName}</span>
-  <span class="lbl">CAD</span><span class="val">${cadName}</span>
-  <span class="lbl">Dimensioni</span><span class="val">${dimStr}</span>
-  <span class="lbl">Path</span><span class="val">${hpglData?.meta?.total_paths ?? '-'}</span>
+  <span class="lbl">${_('Nome', 'Name')}</span><span class="val">${fileName}</span>
+  <span class="lbl">${_('Formato', 'Format')}</span><span class="val">${formatName}</span>
+  <span class="lbl">CAD ${_('rilevato', 'detected')}</span><span class="val">${cadName} (${cadConf})</span>
+  ${userCad ? `<span class="lbl">CAD ${_('corretto', 'corrected')}</span><span class="val">${userCad}</span>` : ''}
+  ${mlStr ? `<span class="lbl">${_('Classificazione ML', 'ML Classification')}</span><span class="val">${mlStr}</span>` : ''}
+  <span class="lbl">${_('Dimensioni', 'Dimensions')}</span><span class="val">${dimStr}</span>
+  <span class="lbl">${_('Path totali', 'Total Paths')}</span><span class="val">${pathCount} (${_('polilinee', 'polylines')}: ${polyCount}, ${_('label', 'labels')}: ${labelCount})</span>
+  ${meta?.pens ? `<span class="lbl">${_('Pen', 'Pens')}</span><span class="val">${meta.pens.join(', ')} (${meta.pens.length})</span>` : ''}
 </div></div>
-${svgPreview ? `<div class="section"><h2>Anteprima Piazzamento</h2><div class="preview">${svgPreview.replace('<?xml version="1.0" encoding="UTF-8"?>', '').replace('<svg', '<svg style="max-width:100%;height:auto"')}</div></div>` : ''}
+
+${svgPreview ? `<div class="section"><h2>${_('Anteprima Piazzamento', 'Placement Preview')}</h2><div class="preview">${svgPreview}</div></div>` : ''}
+
+<div class="section"><h2>${_('Riepilogo', 'Summary')}</h2>
+<div class="grid">
+  <span class="lbl">${_('Pezzi', 'Pieces')}</span><span class="val">${pieces?.length ?? 0}</span>
+  <span class="lbl">${_('Label', 'Labels')}</span><span class="val">${labelCount}</span>
+  <span class="lbl">${_('Archi', 'Arcs')}</span><span class="val">${meta?.arcs ?? 0}</span>
+  <span class="lbl">${_('Cerchi', 'Circles')}</span><span class="val">${meta?.circles ?? 0}</span>
+  <span class="lbl">${_('Rettangoli', 'Rectangles')}</span><span class="val">${meta?.rectangles ?? 0}</span>
+  ${dims ? `<span class="lbl">${_('Larghezza', 'Width')}</span><span class="val">${dims.width.toFixed(1)} cm</span><span class="lbl">${_('Altezza', 'Height')}</span><span class="val">${dims.height.toFixed(1)} cm</span>` : ''}
+</div></div>
+
 ${piecesHtml}
-${misure ? `<div class="section"><h2>Misure (${measureResults.length})</h2><table><thead><tr><th>Descrizione</th><th>Valore</th></tr></thead><tbody>${misure}</tbody></table></div>` : ''}
-<p style="margin-top:32px;font-size:9px;color:#aaa">Generato da Draphera Hub</p>
+${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResults.length})</h2><table><thead><tr><th>${_('Descrizione', 'Description')}</th><th>${_('Valore', 'Value')}</th></tr></thead><tbody>${misure}</tbody></table></div>` : ''}
+
+<div class="footer">
+  ${_('Generato da', 'Generated by')} Draphera VectorEngine v${APP_VERSION} &mdash; draphera.com
+</div>
 </body></html>`;
 
     const win = window.open('', '_blank');
-    if (!win) { setMsg('Apri il popup per esportare il PDF'); return; }
+    if (!win) { setMsg(_('Apri il popup per esportare il PDF', 'Open the popup to export PDF')); return; }
     win.document.write(html);
     win.document.close();
     win.focus();
-    setMsg('Scheda tecnica aperta — usa Ctrl+P per salvare PDF');
-  }, [fileName, measureResults, hpglData, rawFile, pieces]);
+    setMsg(_('Scheda tecnica aperta — usa Ctrl+P per salvare PDF', 'Technical sheet opened — press Ctrl+P to save PDF'));
+  }, [fileName, measureResults, hpglData, rawFile, pieces, lang]);
 
   const handleRotateLeft = useCallback(() => setRotation(r => ((r - 90 + 360) % 360) as 0 | 90 | 180 | 270), []);
   const handleRotateRight = useCallback(() => setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270), []);
