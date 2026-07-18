@@ -447,19 +447,17 @@ export default function HPGLViewerPage() {
 
     // Build vector placement preview from pieces data (fallback: backend SVG)
     let svgPreview = '';
-    if (pieces && pieces.length > 0 && dims) {
+    if (pieces && pieces.length > 0 && dims && dims.width > 0 && dims.height > 0) {
       const pad = 10;
-      const svgW = 600;
-      const svgH = 400;
-      const scaleX = (svgW - pad * 2) / dims.width;
-      const scaleY = (svgH - pad * 2) / dims.height;
-      const sc = Math.min(scaleX, scaleY);
-      const cx = (dims.width * sc) / 2;
-      const cy = (dims.height * sc) / 2;
-      const ox = svgW / 2 - cx;
-      const oy = svgH / 2 - cy;
+      const maxDim = Math.max(dims.width, dims.height);
+      const svgSize = 500;
+      const sc = svgSize / maxDim;
+      const svgW = dims.width * sc + pad * 2;
+      const svgH = dims.height * sc + pad * 2;
+      const ox = pad;
+      const oy = pad;
 
-      const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + pt[1] * sc).toFixed(1)}`;
+      const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + (dims.height - pt[1]) * sc).toFixed(1)}`;
 
       const piecePolys = pieces.map((p, i) => {
         const midIdx = Math.floor(p.contour_points.length / 2);
