@@ -46,7 +46,7 @@ export default function DashboardPage() {
   const [uploadCount, setUploadCount] = useState(0);
   const [uploads, setUploads] = useState<Array<Record<string, unknown>>>([]);
   const [showAll, setShowAll] = useState(false);
-  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
+  const [founder, setFounder] = useState<{ is_founder: boolean; is_beta?: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
@@ -131,12 +131,12 @@ export default function DashboardPage() {
                     <span className="text-[10px] font-bold text-drapera-gold">Admin</span>
                   </div>
                 )}
-                {founder?.is_founder && (
+                {founder?.is_founder || founder?.is_beta ? (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">{founder.position && founder.position <= 10 ? 'F' : 'B'}</div>
                     <span className="text-[10px] font-bold text-drapera-gold">#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
                   </div>
-                )}
+                ) : null}
               </div>
               <p className="section-subtitle max-w-xl">{t('dashboard.hero_desc')}</p>
             </div>
@@ -164,6 +164,18 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </div>
+
+            {founder?.is_beta && !founder?.is_founder && (
+              <div className="premium-card p-4 mt-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-white font-semibold">{_('Candidati come Founder', 'Apply as Founder')}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{_('Carica 50 file unici per sbloccare la candidatura', 'Upload 50 unique files to unlock the application')}</p>
+                </div>
+                <Link href="/dashboard/settings" className="text-xs px-3 py-1.5 rounded-lg bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20 hover:bg-drapera-gold/20 transition-colors whitespace-nowrap">
+                  {_('Vai a Impostazioni', 'Go to Settings')} →
+                </Link>
+              </div>
+            )}
 
             <div className="premium-card p-5 mt-6 flex items-center gap-5">
               <div className="text-3xl">{level.icon}</div>

@@ -22,7 +22,7 @@ export default function SettingsPage() {
   const [msg, setMsg] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; training_ready?: boolean; country?: string }>>([]);
-  const [founder, setFounder] = useState<{ is_founder: boolean; position?: number; is_admin?: boolean } | null>(null);
+  const [founder, setFounder] = useState<{ is_founder: boolean; is_beta?: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const [uploadCount, setUploadCount] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -174,7 +174,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {founder?.is_founder && (
+        {(founder?.is_founder || founder?.is_beta) && (
           <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
             <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
             <div className="flex items-center gap-4 relative z-10">
@@ -192,7 +192,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {!founder?.is_founder && betaApp === null && (
+        {founder?.is_beta && !founder?.is_founder && betaApp === null && (
           <div className="premium-card p-5 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
             <div className="flex items-center gap-4 relative z-10">
               <div className="w-14 h-14 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-lg font-bold text-drapera-dark shrink-0 shadow-gold-glow">

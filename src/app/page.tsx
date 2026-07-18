@@ -97,7 +97,7 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-drapera-gold/20 bg-drapera-gold/5 text-drapera-gold text-sm font-medium">
                 <span className="w-2 h-2 rounded-full bg-drapera-gold animate-pulse-gold" />
-                Early Access — {isOpen ? `${remaining} posti disponibili` : 'Completato'}
+                Early Access — {isOpen ? `${current}/20 Beta · 1/10 Founder` : 'Completato'}
               </span>
               <span className="px-3 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium">
                 Powered by <strong>Draphera VectorEngine™</strong>
@@ -134,7 +134,7 @@ export default function HomePage() {
               </Link>
               {isOpen ? (
                 <Link href="/auth/signup" className="btn-ghost text-lg px-8 py-4">
-                  Registrati — {remaining} posti
+                  Registrati come Beta Tester
                 </Link>
               ) : (
                 <form onSubmit={handleWaitlist} className="flex flex-wrap items-end gap-3">
