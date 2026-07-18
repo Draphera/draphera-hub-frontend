@@ -436,17 +436,42 @@ export default function HPGLViewerPage() {
       mlStr = `${srcLabel[mlSource ?? ''] || mlSource}: ${mlCad} (${(mlConf !== null ? (mlConf * 100).toFixed(0) : cadConf === 'high' ? '>90' : cadConf === 'medium' ? '>50' : '<50')}%)`;
     }
 
-    // Fetch enhanced SVG
+    // Build vector placement preview from pieces data
     let svgPreview = '';
-    if (rawFile) {
-      try {
-        svgPreview = await hpglApi.exportSvg(rawFile);
-        // Convert to technical B/W: override colors
-        svgPreview = svgPreview
-          .replace('<?xml version="1.0" encoding="UTF-8"?>', '')
-          .replace('<svg', '<svg style="background:white;max-width:100%;height:auto"');
-        svgPreview = svgPreview.replace('</defs>', '</defs><style>svg *{stroke:#000!important;fill:rgba(0,0,0,0.04)!important}svg text{fill:#000!important;stroke:none!important}svg .piece-fill,.piece-overlay{fill:rgba(0,0,0,0.03)!important;stroke:#333!important;stroke-width:0.5!important}svg .info-strip{display:none}svg line,svg polyline,svg polygon{stroke:#111!important}</style>');
-      } catch { /* fallback */ }
+    if (pieces && pieces.length > 0 && dims) {
+      const pad = 10;
+      const svgW = 600;
+      const svgH = 400;
+      const scaleX = (svgW - pad * 2) / dims.width;
+      const scaleY = (svgH - pad * 2) / dims.height;
+      const sc = Math.min(scaleX, scaleY);
+      const cx = (dims.width * sc) / 2;
+      const cy = (dims.height * sc) / 2;
+      const ox = svgW / 2 - cx;
+      const oy = svgH / 2 - cy;
+
+      const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + pt[1] * sc).toFixed(1)}`;
+
+      const piecePolys = pieces.map((p, i) => {
+        const midIdx = Math.floor(p.contour_points.length / 2);
+        const mid = p.contour_points[midIdx];
+        const midSvg = toSvg(mid);
+        return `<polygon points="${p.contour_points.map(toSvg).join(' ')}" fill="none" stroke="#000" stroke-width="0.5" stroke-linejoin="round" />`
+          + (p.starting_point ? `<circle cx="${toSvg(p.starting_point).split(',')[0]}" cy="${toSvg(p.starting_point).split(',')[1]}" r="1.5" fill="#000" />` : '')
+          + `<text x="${midSvg.split(',')[0]}" y="${midSvg.split(',')[1]}" font-size="5" text-anchor="middle" fill="#555">${p.label || p.id}</text>`;
+      }).join('\n          ');
+
+      const filteredPolys = (filteredContours || []).map(fc =>
+        `<polygon points="${fc.contour_points.map(toSvg).join(' ')}" fill="none" stroke="${fc.type === 'placement_rect' ? '#888' : '#aaa'}" stroke-width="0.3" stroke-dasharray="${fc.type === 'placement_rect' ? '4,3' : '2,2'}" />`
+      ).join('\n          ');
+
+      svgPreview = `<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;background:#fff">
+        <rect width="${svgW}" height="${svgH}" fill="#fff" />
+        <g transform="translate(0,0)">
+          ${filteredPolys}
+          ${piecePolys}
+        </g>
+      </svg>`;
     }
 
     const piecesHtml = pieces && pieces.length > 0 ? `
@@ -527,7 +552,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
     win.document.close();
     win.focus();
     setMsg(_('Scheda tecnica aperta — usa Ctrl+P per salvare PDF', 'Technical sheet opened — press Ctrl+P to save PDF'));
-  }, [fileName, measureResults, hpglData, rawFile, pieces, lang]);
+  }, [fileName, measureResults, hpglData, pieces, filteredContours, lang]);
 
   const handleRotateLeft = useCallback(() => setRotation(r => ((r - 90 + 360) % 360) as 0 | 90 | 180 | 270), []);
   const handleRotateRight = useCallback(() => setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270), []);
