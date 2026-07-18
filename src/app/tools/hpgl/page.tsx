@@ -585,6 +585,7 @@ ${svgPreview ? `<div class="section"><h2>${_('Anteprima Piazzamento', 'Placement
   <span class="lbl">${_('Cerchi', 'Circles')}</span><span class="val">${meta?.circles ?? 0}</span>
   <span class="lbl">${_('Rettangoli', 'Rectangles')}</span><span class="val">${meta?.rectangles ?? 0}</span>
   ${dims ? `<span class="lbl">${_('Larghezza', 'Width')}</span><span class="val">${dims.width.toFixed(1)} cm</span><span class="lbl">${_('Altezza', 'Height')}</span><span class="val">${dims.height.toFixed(1)} cm</span>` : ''}
+  ${simCutDistance ? `<span class="lbl">${_('Taglio', 'Cut')}</span><span class="val">${simCutDistance.toFixed(1)} m</span><span class="lbl">${_('Spostamento', 'Move')}</span><span class="val">${simMoveDistance.toFixed(1)} m</span>` : ''}
 </div></div>
 
 ${piecesHtml}
@@ -601,7 +602,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
     win.document.close();
     win.focus();
     setMsg(_('Scheda tecnica aperta — usa Ctrl+P per salvare PDF', 'Technical sheet opened — press Ctrl+P to save PDF'));
-  }, [fileName, measureResults, hpglData, pieces, filteredContours, lang]);
+  }, [fileName, measureResults, hpglData, pieces, filteredContours, lang, simCutDistance, simMoveDistance]);
 
   const handleRotateLeft = useCallback(() => setRotation(r => ((r - 90 + 360) % 360) as 0 | 90 | 180 | 270), []);
   const handleRotateRight = useCallback(() => setRotation(r => ((r + 90) % 360) as 0 | 90 | 180 | 270), []);
@@ -1119,7 +1120,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
             const pts = p.points?.map(pt => `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)})`).join(' → ') ?? '';
             return `[${i + 1}] ${p.type.toUpperCase()} | pen=${p.pen ?? '-'} | ${pts}`;
           }) ?? [];
-          const header = `Draphera VectorEngine - Simulation Report\nFile: ${fileName}\nDate: ${new Date().toISOString()}\nPaths: ${lines.length}\n${'='.repeat(50)}\n\n`;
+          const header = `Draphera VectorEngine - Simulation Report\nFile: ${fileName}\nDate: ${new Date().toISOString()}\nPaths: ${lines.length}\nCut distance: ${simCutDistance.toFixed(1)} m\nMove distance: ${simMoveDistance.toFixed(1)} m\nTotal distance: ${(simCutDistance + simMoveDistance).toFixed(1)} m\n${'='.repeat(50)}\n\n`;
           const blob = new Blob([header + lines.join('\n')], { type: 'text/plain' });
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);
