@@ -1079,7 +1079,20 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         onSimResume={() => setSimPaused(false)}
         onSimStop={() => { setSimulating(false); setSimPaused(false); setSimPathIndex(-1); }}
         onSimStep={() => { setSimPathIndex(i => Math.min(i + 1, (hpglData?.paths.length ?? 1) - 1)); setSimPaused(true); }}
-        onSimSpeedChange={s => setSimSpeed(s)} />
+        onSimSpeedChange={s => setSimSpeed(s)}
+        onSimExportLog={() => {
+          const lines = hpglData?.paths?.map((p, i) => {
+            const pts = p.points?.map(pt => `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)})`).join(' → ') ?? '';
+            return `[${i + 1}] ${p.type.toUpperCase()} | pen=${p.pen ?? '-'} | ${pts}`;
+          }) ?? [];
+          const header = `Draphera VectorEngine - Simulation Report\nFile: ${fileName}\nDate: ${new Date().toISOString()}\nPaths: ${lines.length}\n${'='.repeat(50)}\n\n`;
+          const blob = new Blob([header + lines.join('\n')], { type: 'text/plain' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = fileName.replace(/\.[^.]+$/, '') + '_simulation.log';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (

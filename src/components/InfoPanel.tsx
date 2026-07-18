@@ -102,11 +102,12 @@ interface Props {
   onSimStop?: () => void;
   onSimStep?: () => void;
   onSimSpeedChange?: (speed: number) => void;
+  onSimExportLog?: () => void;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -532,8 +533,14 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                       <div className="h-1 bg-drapera-border/30 rounded-full overflow-hidden">
                         <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${((simPathIndex + 1) / totalPaths) * 100}%` }} />
                       </div>
-                      <p className="text-[8px] text-gray-600 mt-1 text-right">{simPathIndex + 1}/{totalPaths}</p>
-                    </div>
+                    <p className="text-[8px] text-gray-600 mt-1 text-right">{simPathIndex + 1}/{totalPaths}</p>
+                  </div>
+
+                  {/* Export log */}
+                  <button onClick={onSimExportLog}
+                    className="w-full mt-1 px-2 py-1.5 rounded bg-white/5 text-gray-400 text-[8px] font-semibold hover:text-white hover:bg-white/10 transition-colors">
+                    {_('Esporta report (.log)', 'Export report (.log)')}
+                  </button>
                   </div>
                 </>
               ) : (
