@@ -196,6 +196,17 @@ export const adminApi = {
     if (!res.ok) throw new Error((await res.json()).detail || await res.text());
     return res.json();
   },
+  async listFeatureFlags() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/feature-flags`, { headers });
+    return res.json();
+  },
+  async updateFeatureFlag(key: string, enabled: boolean) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/feature-flags/${key}`, { method: 'PUT', headers, body: JSON.stringify({ enabled }) });
+    return res.json();
+  },
 };
 
 export const userApi = {
@@ -222,6 +233,12 @@ export const userApi = {
     const headers = await getHeaders();
     const res = await fetchWithTimeout(`${API_BASE}/api/profile/beta/application`, { headers });
     if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async getFeatureFlags() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/feature-flags`, { headers });
+    if (!res.ok) return { flags: [] };
     return res.json();
   },
 };

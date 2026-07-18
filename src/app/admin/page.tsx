@@ -49,7 +49,7 @@ const TYPE_COLORS: Record<string, string> = {
   dxf: 'bg-green-500/20 text-green-400 border-green-500/30',
 };
 
-type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'beta' | 'analytics' | 'system';
+type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'beta' | 'flags' | 'analytics' | 'system';
 
 export default function AdminPage() {
   const { t } = useTranslation();
@@ -121,6 +121,7 @@ export default function AdminPage() {
   const [founderAddUserId, setFounderAddUserId] = useState('');
   const [betaApplications, setBetaApplications] = useState<Array<Record<string, unknown>>>([]);
   const [betaFilter, setBetaFilter] = useState('');
+  const [featureFlags, setFeatureFlags] = useState<Array<{ key: string; enabled: boolean }>>([]);
   const [systemHealth, setSystemHealth] = useState<{
     status: string; supabase_url: string; python_version: string;
     fastapi_version: string; admin_emails: number;
@@ -263,6 +264,14 @@ export default function AdminPage() {
       setMsg('Beta respinto');
       await loadBetaApplications(betaFilter);
     } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+  };
+
+  const loadFeatureFlags = async () => {
+    try { setFeatureFlags((await adminApi.listFeatureFlags()).flags ?? []); } catch {}
+  };
+
+  const handleToggleFlag = async (key: string, current: boolean) => {
+    try { await adminApi.updateFeatureFlag(key, !current); setMsg('Flag aggiornato'); loadFeatureFlags(); } catch (e: any) { setMsg('Errore: ' + e.message); }
   };
 
   const loadSystemHealth = async () => {
@@ -502,6 +511,9 @@ export default function AdminPage() {
     if (tab === 'beta') {
       await loadBetaApplications(betaFilter);
     }
+    if (tab === 'flags') {
+      await loadFeatureFlags();
+    }
     if (tab === 'system') {
       await loadSystemHealth();
     }
@@ -540,6 +552,7 @@ export default function AdminPage() {
     { key: 'profiles', label: t('admin.tab_profiles') },
     { key: 'founders', label: t('admin.tab_founders') },
     { key: 'beta', label: t('admin.tab_beta') },
+    { key: 'flags', label: 'Feature Flags' },
     { key: 'analytics', label: t('admin.tab_analytics') },
     { key: 'system', label: t('admin.tab_system') },
   ];
@@ -1672,6 +1685,32 @@ export default function AdminPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'flags' && (
+        <div>
+          <div className="premium-card">
+            <h3 className="font-display font-bold text-base text-white mb-4">Funzioni Avanzate</h3>
+            <div className="space-y-3">
+              {featureFlags.map(flag => (
+                <div key={flag.key} className="flex items-center justify-between px-4 py-3 rounded-lg bg-drapera-dark/50 border border-drapera-border">
+                  <div>
+                    <p className="text-sm text-white font-medium">{flag.key}</p>
+                  </div>
+                  <button
+                    onClick={() => handleToggleFlag(flag.key, flag.enabled)}
+                    className={`relative w-10 h-5 rounded-full transition-colors ${flag.enabled ? 'bg-drapera-gold' : 'bg-drapera-border'}`}
+                  >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${flag.enabled ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+              ))}
+              {featureFlags.length === 0 && (
+                <p className="text-xs text-gray-600 text-center py-4">Nessun feature flag disponibile</p>
+              )}
             </div>
           </div>
         </div>

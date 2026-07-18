@@ -94,6 +94,7 @@ export default function HPGLViewerPage() {
   const [showNotches, setShowNotches] = useState(false);
   const [filled, setFilled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [featureFlags, setFeatureFlags] = useState<Record<string, boolean>>({});
   const [rotation, setRotation] = useState<0 | 90 | 180 | 270>(0);
   const [flipX, setFlipX] = useState(true);
   const [flipY, setFlipY] = useState(false);
@@ -242,6 +243,14 @@ export default function HPGLViewerPage() {
       setLoading(false);
       adminApi.check().then(r => setIsAdmin(!!r.is_admin)).catch(() => {});
     });
+    fetch(`/api/profile/feature-flags`)
+      .then(r => r.json())
+      .then(d => {
+        const m: Record<string, boolean> = {};
+        for (const f of (d.flags || [])) m[f.key] = f.enabled;
+        setFeatureFlags(m);
+      })
+      .catch(() => {});
   }, [router]);
 
   useEffect(() => {
@@ -1047,8 +1056,8 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
           DEBUG MODE
         </div>
       )}
-      {/* Simulation: HPGL Replay (admin only) */}
-      {isAdmin && hpglData && (
+      {/* Simulation: HPGL Replay */}
+      {(isAdmin || featureFlags['simulation_player']) && hpglData && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
           {!simulating ? (
             <button onClick={() => { setSimPathIndex(0); setSimulating(true); setSimPaused(false); }}
@@ -1160,6 +1169,11 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
           )}
         </div>
       )}
+      {hpglData && !isAdmin && !featureFlags['simulation_player'] && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-gray-500/10 border border-gray-500/20 text-[11px] text-gray-500 font-semibold">
+          Presto disponibile
+        </div>
+      )}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad}                       onOpenCadModal={() => { setShowCadModal(true); setCadSearch(''); }} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
@@ -1169,6 +1183,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         pieces={pieces} piecesLoading={piecesLoading} onDetectPieces={handleDetectPieces}
         selectedPiece={selectedPieceId !== undefined && pieces ? pieces.find(p => p.id === selectedPieceId) ?? undefined : undefined}
         isAdmin={isAdmin}
+        featureFlags={featureFlags}
         filteredContours={filteredContours ?? []}
         showPlacementRect={showPlacementRect} onTogglePlacementRect={() => setShowPlacementRect(v => !v)}
         showBlockFuse={showBlockFuse} onToggleBlockFuse={() => setShowBlockFuse(v => !v)}

@@ -90,11 +90,12 @@ interface Props {
   onToggleStartPoints?: () => void;
   cleanView?: boolean;
   onToggleCleanView?: () => void;
+  featureFlags?: Record<string, boolean>;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags }: Props) {
   const { t } = useTranslation();
 
   const [activeTab, setActiveTab] = useState<'info' | 'analysis'>('info');
@@ -108,7 +109,7 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
         </div>
 
         {/* Tabs */}
-        {(pens?.length || selectedPath || filteredContours?.length || (pieces?.length ?? 0) >= 1 || (isAdmin && onDetectPieces)) && (
+        {(pens?.length || selectedPath || filteredContours?.length || (pieces?.length ?? 0) >= 1 || ((isAdmin || featureFlags?.['piece_detection']) && onDetectPieces)) && (
           <div className="flex rounded-lg border border-drapera-border overflow-hidden">
             <button onClick={() => setActiveTab('info')}
               className={`flex-1 py-1 text-[9px] font-medium transition-colors ${activeTab === 'info' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
@@ -393,12 +394,17 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
               </div>
             )}
 
-            {isAdmin && onDetectPieces && (
+            {(isAdmin || featureFlags?.['piece_detection']) && onDetectPieces && (
               <button onClick={onDetectPieces} disabled={piecesLoading}
                 className="w-full flex items-center justify-center gap-1.5 py-1 rounded text-[9px] font-semibold transition-all bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 disabled:opacity-40">
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 010 2H6v3a1 1 0 01-2 0V5zm14 14a1 1 0 01-1 1h-4a1 1 0 010-2h3v-3a1 1 0 012 0v4zM4 19a1 1 0 001 1h4a1 1 0 000-2H6v-3a1 1 0 00-2 0v4zm14-14a1 1 0 00-1-1h-4a1 1 0 000 2h3v3a1 1 0 002 0V5z" /></svg>
                 {piecesLoading ? 'Rilevamento...' : pieces ? `${pieces.length} pezzi` : 'Rileva pezzi'}
               </button>
+            )}
+            {!(isAdmin || featureFlags?.['piece_detection']) && onDetectPieces && (
+              <div className="w-full text-center py-1 rounded text-[9px] font-semibold bg-gray-500/10 text-gray-500 border border-drapera-border">
+                Presto disponibile
+              </div>
             )}
             {selectedPiece && (
               <div className="px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
