@@ -241,6 +241,13 @@ export const userApi = {
     if (!res.ok) return { flags: [] };
     return res.json();
   },
+  async submitBugReport(data: { description: string; page?: string; email?: string }) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/bug-report`, { method: 'POST', headers, body: JSON.stringify(data) });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
 };
 
 export const adminCadApi = {
