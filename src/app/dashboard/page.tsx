@@ -170,10 +170,14 @@ export default function DashboardPage() {
               <div className="premium-card p-4 mt-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm text-white font-semibold">{_('Candidati come Founder', 'Apply as Founder')}</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">{_('Carica 50 file unici per sbloccare la candidatura', 'Upload 50 unique files to unlock the application')}</p>
+                  {uploadCount >= 50 ? (
+                    <p className="text-[10px] text-gray-500 mt-0.5">{_('Raccontaci il tuo background per la candidatura', 'Tell us about your background to apply')}</p>
+                  ) : (
+                    <p className="text-[10px] text-gray-500 mt-0.5">{_('Carica 50 file unici per sbloccare la candidatura', 'Upload 50 unique files to unlock the application')}</p>
+                  )}
                 </div>
-                <Link href="/dashboard/settings" className="text-xs px-3 py-1.5 rounded-lg bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20 hover:bg-drapera-gold/20 transition-colors whitespace-nowrap">
-                  {_('Vai a Impostazioni', 'Go to Settings')} →
+                <Link href={uploadCount >= 50 ? '/beta' : '/dashboard/settings'} className="text-xs px-3 py-1.5 rounded-lg bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20 hover:bg-drapera-gold/20 transition-colors whitespace-nowrap">
+                  {uploadCount >= 50 ? _('Candidati ora', 'Apply now') : _('Vai a Impostazioni', 'Go to Settings')} →
                 </Link>
               </div>
             )}
