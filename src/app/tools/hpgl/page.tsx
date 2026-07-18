@@ -436,7 +436,7 @@ export default function HPGLViewerPage() {
       mlStr = `${srcLabel[mlSource ?? ''] || mlSource}: ${mlCad} (${(mlConf !== null ? (mlConf * 100).toFixed(0) : cadConf === 'high' ? '>90' : cadConf === 'medium' ? '>50' : '<50')}%)`;
     }
 
-    // Build vector placement preview from pieces data
+    // Build vector placement preview from pieces data (fallback: backend SVG)
     let svgPreview = '';
     if (pieces && pieces.length > 0 && dims) {
       const pad = 10;
@@ -472,6 +472,16 @@ export default function HPGLViewerPage() {
           ${piecePolys}
         </g>
       </svg>`;
+    } else if (rawFile && dims) {
+      // Fallback: fetch full HPGL SVG from backend
+      try {
+        let backendSvg = await hpglApi.exportSvg(rawFile);
+        backendSvg = backendSvg
+          .replace('<?xml version="1.0" encoding="UTF-8"?>', '')
+          .replace('<svg', '<svg style="background:white;max-width:100%;height:auto"');
+        backendSvg = backendSvg.replace('</defs>', '</defs><style>svg *{stroke:#000!important;fill:rgba(0,0,0,0.04)!important}svg text{fill:#000!important;stroke:none!important}svg .info-strip{display:none}svg line,svg polyline,svg polygon{stroke:#111!important}</style>');
+        svgPreview = backendSvg;
+      } catch { /* no preview */ }
     }
 
     const piecesHtml = pieces && pieces.length > 0 ? `
