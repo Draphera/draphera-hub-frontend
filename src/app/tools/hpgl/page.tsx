@@ -112,7 +112,7 @@ export default function HPGLViewerPage() {
   const [debug, setDebug] = useState(false);
   const [simulating, setSimulating] = useState(false);
   const [simPaused, setSimPaused] = useState(false);
-  const [simSpeed, setSimSpeed] = useState(50);
+  const [simSpeed, setSimSpeed] = useState(10);
   const [simPathIndex, setSimPathIndex] = useState(-1);
   const [rawHpglText, setRawHpglText] = useState('');
   const termRef = useRef<HTMLDivElement>(null);
@@ -254,10 +254,9 @@ export default function HPGLViewerPage() {
     if (simPathIndex >= hpglData.paths.length) {
       setSimulating(false);
       setSimPaused(false);
-      setSimPathIndex(-1);
       return;
     }
-    const interval = Math.max(3, 1000 / (simSpeed + 5));
+    const interval = Math.max(1, 500 / simSpeed);
     const timer = setTimeout(() => setSimPathIndex(i => i + 1), interval);
     return () => clearTimeout(timer);
   }, [simulating, simPaused, simPathIndex, simSpeed, hpglData]);
@@ -1107,6 +1106,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         simPathIndex={simPathIndex}
         simSpeed={simSpeed}
         simPaused={simPaused}
+        simulating={simulating}
         onSimStart={() => { setSimPathIndex(0); setSimulating(true); setSimPaused(false); }}
         onSimPause={() => setSimPaused(true)}
         onSimResume={() => setSimPaused(false)}

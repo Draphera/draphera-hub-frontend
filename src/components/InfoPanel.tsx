@@ -96,6 +96,7 @@ interface Props {
   simPathIndex?: number;
   simSpeed?: number;
   simPaused?: boolean;
+  simulating?: boolean;
   onSimStart?: () => void;
   onSimPause?: () => void;
   onSimResume?: () => void;
@@ -109,7 +110,7 @@ interface Props {
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -503,28 +504,37 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                   {/* Controls */}
                   <div className="space-y-2">
                     <div className="flex gap-1">
-                      <button onClick={onSimStep}
-                        className="flex-1 px-2 py-1.5 rounded bg-white/5 text-white text-[9px] font-semibold hover:bg-white/10 transition-colors">
-                        {_('Passo', 'Step')}
-                      </button>
-                      <button onClick={simPaused ? onSimResume : onSimPause}
-                        className="flex-1 px-2 py-1.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-semibold hover:bg-amber-500/20 transition-colors">
-                        {simPaused ? _('▶ Riprendi', '▶ Resume') : _('⏸ Pausa', '⏸ Pause')}
-                      </button>
-                      <button onClick={onSimStop}
-                        className="px-2 py-1.5 rounded bg-red-500/10 text-red-400 text-[9px] font-semibold hover:bg-red-500/20 transition-colors">
-                        {_('■ Stop', '■ Stop')}
-                      </button>
+                      {simulating ? (
+                        <>
+                          <button onClick={onSimStep}
+                            className="flex-1 px-2 py-1.5 rounded bg-white/5 text-white text-[9px] font-semibold hover:bg-white/10 transition-colors">
+                            {_('Passo', 'Step')}
+                          </button>
+                          <button onClick={simPaused ? onSimResume : onSimPause}
+                            className="flex-1 px-2 py-1.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-semibold hover:bg-amber-500/20 transition-colors">
+                            {simPaused ? _('▶ Riprendi', '▶ Resume') : _('⏸ Pausa', '⏸ Pause')}
+                          </button>
+                          <button onClick={onSimStop}
+                            className="px-2 py-1.5 rounded bg-red-500/10 text-red-400 text-[9px] font-semibold hover:bg-red-500/20 transition-colors">
+                            {_('■ Stop', '■ Stop')}
+                          </button>
+                        </>
+                      ) : (
+                        <button onClick={onSimStart}
+                          className="w-full px-2 py-1.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-semibold hover:bg-amber-500/20 transition-colors">
+                          {_('▶ Re-simula', '▶ Re-simulate')}
+                        </button>
+                      )}
                     </div>
 
                     {/* Speed presets */}
                     <div>
                       <p className="text-[8px] text-gray-600 mb-1">{_('Velocità', 'Speed')}</p>
                       <div className="flex gap-1">
-                        {[5, 25, 50, 95, 100].map(s => (
+                        {[1, 5, 10, 100, 1000].map(s => (
                           <button key={s} onClick={() => onSimSpeedChange?.(s)}
                             className={`flex-1 px-1 py-1 rounded text-[8px] font-semibold transition-colors ${simSpeed === s ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-gray-500 hover:text-white'}`}>
-                            {s === 5 ? '1×' : s === 25 ? '5×' : s === 50 ? '10×' : s === 95 ? '100×' : 'MAX'}
+                            {s === 1 ? '1×' : s === 5 ? '5×' : s === 10 ? '10×' : s === 100 ? '100×' : 'MAX'}
                           </button>
                         ))}
                       </div>
