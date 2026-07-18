@@ -107,11 +107,12 @@ interface Props {
   simCutDistance?: number;
   simMoveDistance?: number;
   simCutOrderScore?: number;
+  simHpglText?: string;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance, simCutOrderScore }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance, simCutOrderScore, simHpglText }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -498,8 +499,35 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
               ) : simPathIndex !== undefined && simPathIndex >= 0 ? (
                 <>
                   {/* Terminal */}
-                  <div className="bg-drapera-darker rounded-lg p-2 mb-3 font-mono text-[9px] leading-relaxed max-h-[180px] overflow-y-auto">
-                    <span className="text-gray-600">{_('Comando', 'Cmd')} #{simPathIndex + 1}/{totalPaths}</span>
+                  <div className="bg-drapera-darker rounded-lg font-mono text-[9px] leading-relaxed max-h-[140px] overflow-y-auto mb-3 border border-drapera-border/50">
+                    <div className="flex items-center gap-2 px-2 py-1 bg-white/5 border-b border-drapera-border/30 sticky top-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[7px] text-gray-600 uppercase tracking-wider">{_('Console', 'Console')}</span>
+                      <span className="text-[7px] text-gray-700 ml-auto">{simPathIndex + 1}/{totalPaths}</span>
+                    </div>
+                    <div className="p-2">
+                      {simHpglText && (() => {
+                        const lines = simHpglText.split('\n').slice(0, 500);
+                        const total = lines.length;
+                        const pos = total > 0 ? (simPathIndex + 1) / (totalPaths ?? 1) * total : 0;
+                        const start = Math.max(0, Math.floor(pos) - 8);
+                        const end = Math.min(total, start + 18);
+                        return lines.slice(start, end).map((line, i) => {
+                          const idx = start + i;
+                          const isPast = idx < Math.floor(pos);
+                          const isCurrent = idx === Math.floor(pos);
+                          return (
+                            <div key={i}
+                              className={`${isPast ? 'text-emerald-300/70' : isCurrent ? 'text-white' : 'text-gray-800'}
+                                ${isCurrent ? 'bg-emerald-400/10 border-l-2 border-emerald-400 -ml-1 pl-1.5' : ''}`}
+                              style={{ whiteSpace: 'pre' }}>
+                              {isCurrent && <span className="text-emerald-400 mr-0.5">›</span>}
+                              {line || '\u00A0'}
+                            </div>
+                          );
+                        });
+                      })()}
+                    </div>
                   </div>
 
                   {/* Controls */}

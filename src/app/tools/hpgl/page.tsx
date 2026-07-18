@@ -1154,6 +1154,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         simCutDistance={simCutDistance}
         simMoveDistance={simMoveDistance}
         simCutOrderScore={simCutOrderScore}
+        simHpglText={rawHpglText}
         onSimExportLog={() => {
           const lines = hpglData?.paths?.map((p, i) => {
             const pts = p.points?.map(pt => `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)})`).join(' → ') ?? '';
