@@ -103,11 +103,13 @@ interface Props {
   onSimStep?: () => void;
   onSimSpeedChange?: (speed: number) => void;
   onSimExportLog?: () => void;
+  simCutDistance?: number;
+  simMoveDistance?: number;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -535,6 +537,18 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                       </div>
                     <p className="text-[8px] text-gray-600 mt-1 text-right">{simPathIndex + 1}/{totalPaths}</p>
                   </div>
+
+                  {/* Distance stats */}
+                  {simCutDistance !== undefined && (
+                    <div className="flex justify-between text-[8px] border-t border-drapera-border/30 pt-2 mt-1">
+                      <span className="text-gray-600">{_('Taglio', 'Cut')}</span>
+                      <span className="text-emerald-400 font-mono">{simCutDistance.toFixed(1)} m</span>
+                      <span className="text-gray-600">{_('Spost.', 'Move')}</span>
+                      <span className="text-amber-400 font-mono">{simMoveDistance?.toFixed(1) ?? '0'} m</span>
+                      <span className="text-gray-600">{_('Totale', 'Total')}</span>
+                      <span className="text-white font-mono">{((simCutDistance ?? 0) + (simMoveDistance ?? 0)).toFixed(1)} m</span>
+                    </div>
+                  )}
 
                   {/* Export log */}
                   <button onClick={onSimExportLog}

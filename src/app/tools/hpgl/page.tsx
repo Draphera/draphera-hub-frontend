@@ -117,6 +117,38 @@ export default function HPGLViewerPage() {
   const [rawHpglText, setRawHpglText] = useState('');
   const termRef = useRef<HTMLDivElement>(null);
 
+  // Calculate distances from paths
+  const simCutDistance = useMemo(() => {
+    if (!hpglData?.paths) return 0;
+    let total = 0;
+    const paths = hpglData.paths;
+    for (let i = 0; i < paths.length; i++) {
+      const pts = paths[i].points;
+      if (!pts || pts.length < 2) continue;
+      for (let j = 1; j < pts.length; j++) {
+        const dx = pts[j][0] - pts[j - 1][0];
+        const dy = pts[j][1] - pts[j - 1][1];
+        total += Math.sqrt(dx * dx + dy * dy);
+      }
+    }
+    return total / 100; // cm → m
+  }, [hpglData]);
+
+  const simMoveDistance = useMemo(() => {
+    if (!hpglData?.paths || hpglData.paths.length < 2) return 0;
+    let total = 0;
+    const paths = hpglData.paths;
+    for (let i = 1; i < paths.length; i++) {
+      const prev = paths[i - 1].points;
+      const curr = paths[i].points;
+      if (!prev || !curr || prev.length === 0 || curr.length === 0) continue;
+      const dx = curr[0][0] - prev[prev.length - 1][0];
+      const dy = curr[0][1] - prev[prev.length - 1][1];
+      total += Math.sqrt(dx * dx + dy * dy);
+    }
+    return total / 100; // cm → m
+  }, [hpglData]);
+
   const HPGL_DECODE: Record<string, string> = {
     'PU': 'Pen Up',
     'PD': 'Pen Down',
@@ -1080,6 +1112,8 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         onSimStop={() => { setSimulating(false); setSimPaused(false); setSimPathIndex(-1); }}
         onSimStep={() => { setSimPathIndex(i => Math.min(i + 1, (hpglData?.paths.length ?? 1) - 1)); setSimPaused(true); }}
         onSimSpeedChange={s => setSimSpeed(s)}
+        simCutDistance={simCutDistance}
+        simMoveDistance={simMoveDistance}
         onSimExportLog={() => {
           const lines = hpglData?.paths?.map((p, i) => {
             const pts = p.points?.map(pt => `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)})`).join(' → ') ?? '';
