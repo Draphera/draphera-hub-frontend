@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -25,7 +25,7 @@ interface LeaderboardEntry {
 
 export default function CommunityPage() {
   const { lang } = useTranslation();
-  const _ = (it: string, en: string) => lang === 'en' ? en : it;
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export default function CommunityPage() {
       } catch { setMsg(_('Errore caricamento classifica', 'Error loading leaderboard')); }
       setLoading(false);
     });
-  }, [router, _]);
+  }, [router]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-6 h-6 border-2 border-drapera-gold border-t-transparent rounded-full animate-spin" /></div>;
   if (!session) return null;
