@@ -48,7 +48,7 @@ export default function SettingsPage() {
         }).then(r => r.json()).then(setFounder).catch(() => {});
         fetch(`${API_BASE}/api/profile/beta/application`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
-        }).then(r => r.ok ? r.json() : null).then(setBetaApp).catch(() => {});
+        }).then(r => r.ok ? r.json() : null).then(d => setBetaApp(d?.application ?? null)).catch(() => {});
         fetch(`${API_BASE}/api/profile/stats`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
         }).then(r => r.ok ? r.json() : null).then(d => { if (d) setUploadCount(d.total_uploads ?? 0); }).catch(() => {});
