@@ -91,14 +91,26 @@ interface Props {
   cleanView?: boolean;
   onToggleCleanView?: () => void;
   featureFlags?: Record<string, boolean>;
+  // Simulation
+  totalPaths?: number;
+  simPathIndex?: number;
+  simSpeed?: number;
+  simPaused?: boolean;
+  onSimStart?: () => void;
+  onSimPause?: () => void;
+  onSimResume?: () => void;
+  onSimStop?: () => void;
+  onSimStep?: () => void;
+  onSimSpeedChange?: (speed: number) => void;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags }: Props) {
-  const { t } = useTranslation();
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange }: Props) {
+  const { lang, t } = useTranslation();
+  const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
-  const [activeTab, setActiveTab] = useState<'info' | 'analysis'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'analysis' | 'simulation'>('info');
 
   return (
     <aside className="fixed right-0 top-14 bottom-0 w-[260px] bg-drapera-midnight border-l border-drapera-border overflow-y-auto z-40">
@@ -117,8 +129,14 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             </button>
             <button onClick={() => setActiveTab('analysis')}
               className={`flex-1 py-1 text-[9px] font-medium transition-colors ${activeTab === 'analysis' ? 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-500 hover:text-white'}`}>
-              Analisi
+              {_('Analisi', 'Analysis')}
             </button>
+            {(isAdmin || featureFlags?.['simulation_player']) && totalPaths && totalPaths > 0 && (
+              <button onClick={() => setActiveTab('simulation')}
+                className={`flex-1 py-1 text-[9px] font-medium transition-colors ${activeTab === 'simulation' ? 'bg-amber-500/10 text-amber-400 border-b-2 border-amber-400' : 'text-gray-500 hover:text-white'}`}>
+                {_('Simula', 'Simulate')}
+              </button>
+            )}
           </div>
         )}
 
@@ -458,6 +476,73 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* --- Tab 3: Simula --- */}
+        {activeTab === 'simulation' && totalPaths && totalPaths > 0 && (
+          <div className="space-y-3">
+            <div className="premium-card p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-2">{_('Replay Plotter', 'Plotter Replay')}</p>
+              <p className="text-[9px] text-gray-600 mb-3">{_('Simula il percorso di taglio passo-passo.', 'Simulate the cutting path step by step.')}</p>
+
+              {!onSimStart ? (
+                <div className="text-center py-6">
+                  <p className="text-[10px] text-gray-500">{_('Carica un file HPGL per abilitare la simulazione.', 'Upload an HPGL file to enable simulation.')}</p>
+                </div>
+              ) : simPathIndex !== undefined && simPathIndex >= 0 ? (
+                <>
+                  {/* Terminal */}
+                  <div className="bg-drapera-darker rounded-lg p-2 mb-3 font-mono text-[9px] leading-relaxed max-h-[180px] overflow-y-auto">
+                    <span className="text-gray-600">{_('Comando', 'Cmd')} #{simPathIndex + 1}/{totalPaths}</span>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="space-y-2">
+                    <div className="flex gap-1">
+                      <button onClick={onSimStep}
+                        className="flex-1 px-2 py-1.5 rounded bg-white/5 text-white text-[9px] font-semibold hover:bg-white/10 transition-colors">
+                        {_('Passo', 'Step')}
+                      </button>
+                      <button onClick={simPaused ? onSimResume : onSimPause}
+                        className="flex-1 px-2 py-1.5 rounded bg-amber-500/10 text-amber-400 text-[9px] font-semibold hover:bg-amber-500/20 transition-colors">
+                        {simPaused ? _('▶ Riprendi', '▶ Resume') : _('⏸ Pausa', '⏸ Pause')}
+                      </button>
+                      <button onClick={onSimStop}
+                        className="px-2 py-1.5 rounded bg-red-500/10 text-red-400 text-[9px] font-semibold hover:bg-red-500/20 transition-colors">
+                        {_('■ Stop', '■ Stop')}
+                      </button>
+                    </div>
+
+                    {/* Speed presets */}
+                    <div>
+                      <p className="text-[8px] text-gray-600 mb-1">{_('Velocità', 'Speed')}</p>
+                      <div className="flex gap-1">
+                        {[5, 25, 50, 95, 100].map(s => (
+                          <button key={s} onClick={() => onSimSpeedChange?.(s)}
+                            className={`flex-1 px-1 py-1 rounded text-[8px] font-semibold transition-colors ${simSpeed === s ? 'bg-amber-500/20 text-amber-400' : 'bg-white/5 text-gray-500 hover:text-white'}`}>
+                            {s === 5 ? '1×' : s === 25 ? '5×' : s === 50 ? '10×' : s === 95 ? '100×' : 'MAX'}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Progress */}
+                    <div>
+                      <div className="h-1 bg-drapera-border/30 rounded-full overflow-hidden">
+                        <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${((simPathIndex + 1) / totalPaths) * 100}%` }} />
+                      </div>
+                      <p className="text-[8px] text-gray-600 mt-1 text-right">{simPathIndex + 1}/{totalPaths}</p>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <button onClick={onSimStart}
+                  className="w-full px-3 py-2 rounded-lg bg-amber-500/10 text-amber-400 text-[10px] font-semibold hover:bg-amber-500/20 transition-colors border border-amber-500/20">
+                  ▶ {_('Avvia simulazione', 'Start simulation')}
+                </button>
+              )}
+            </div>
           </div>
         )}
 

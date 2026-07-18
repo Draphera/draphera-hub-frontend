@@ -1054,124 +1054,6 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
           DEBUG MODE
         </div>
       )}
-      {/* Simulation: HPGL Replay */}
-      {(isAdmin || featureFlags['simulation_player']) && hpglData && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
-          {!simulating ? (
-            <button onClick={() => { setSimPathIndex(0); setSimulating(true); setSimPaused(false); }}
-              className="group relative px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-green-500/10 border border-emerald-400/30 text-xs text-emerald-300 font-semibold tracking-wider
-                hover:from-emerald-400/30 hover:to-green-400/20 hover:border-emerald-300/40 hover:text-emerald-200 hover:shadow-lg hover:shadow-emerald-500/20
-                transition-all duration-300">
-              <span className="flex items-center gap-2">
-                <svg className="w-3.5 h-3.5 group-hover:animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>▶ Replay Plotter</span>
-                <span className="text-[8px] text-gray-500 font-normal ml-1">Plotter</span>
-              </span>
-            </button>
-          ) : (
-            <div className="flex flex-col items-center gap-2 w-[92vw] max-w-3xl">
-              {/* Terminal */}
-              {rawHpglText && (
-                <div className="w-full bg-black/95 border border-emerald-500/20 rounded-2xl overflow-hidden shadow-2xl shadow-emerald-900/30 backdrop-blur-sm">
-                  <div className="flex items-center gap-3 px-4 py-2.5 bg-emerald-950/30 border-b border-emerald-500/10">
-                    <div className="flex gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-                    </div>
-                    <span className="text-[9px] text-emerald-400/70 font-mono font-bold tracking-[0.2em] uppercase">Plotter Terminal</span>
-                    <span className="text-[8px] text-emerald-600/50 font-mono ml-auto">
-                      {Math.min(simPathIndex + 1, hpglData.paths.length)}/{hpglData.paths.length} paths
-                    </span>
-                  </div>
-                  <div ref={termRef} className="overflow-y-auto max-h-36 p-3 font-mono text-[10px] leading-relaxed"
-                    style={{ scrollBehavior: 'smooth', background: 'repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0,255,0,0.02) 1px, rgba(0,255,0,0.02) 2px)' }}>
-                    {rawHpglText.split('\n').slice(0, 300).map((line, i) => {
-                      const totalLines = Math.min(rawHpglText.split('\n').length, 300);
-                      const pos = totalLines > 0 ? (simPathIndex + 1) / hpglData.paths.length * totalLines : 0;
-                      const isPast = i < Math.floor(pos);
-                      const isCurrent = i === Math.floor(pos);
-                      const liveDecode = isCurrent ? decodeHpglLine(line) : '';
-                      return (
-                        <div key={i}
-                          className={`${isPast ? 'text-emerald-300/90' : isCurrent ? 'text-emerald-200' : 'text-gray-800'}
-                            ${isCurrent ? 'bg-emerald-400/10 border-l-2 border-emerald-400 -ml-1 pl-2' : ''}`}
-                          style={{ whiteSpace: 'pre', fontFamily: '"JetBrains Mono", "Fira Code", monospace' }}>
-                          {isCurrent && <span className="text-emerald-400 mr-1.5">›</span>}
-                          <span className={liveDecode ? '' : ''}>{line || '\u00A0'}</span>
-                          {liveDecode && (
-                            <span className="text-gray-500 ml-3">→ {liveDecode}</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* Controls bar */}
-              <div className="flex items-center gap-3 bg-drapera-midnight/95 border border-drapera-border rounded-2xl px-5 py-3 backdrop-blur-sm shadow-xl w-full max-w-xl">
-                {/* Step */}
-                <button onClick={() => { setSimPaused(true); setSimPathIndex(i => Math.min(i + 1, hpglData.paths.length - 1)); }}
-                  className="px-3 py-1.5 rounded-xl bg-drapera-midnight border border-drapera-border text-[10px] text-gray-300 font-semibold
-                    hover:bg-drapera-border/30 hover:text-white transition-all duration-200"
-                  title="Step avanti un comando">
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-                </button>
-                {/* Play / Pause */}
-                <button onClick={() => setSimPaused(p => !p)}
-                  className="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-400/20 text-[10px] text-emerald-400 font-semibold
-                    hover:bg-emerald-500/20 hover:border-emerald-400/30 transition-all duration-200">
-                  {simPaused ? (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-                  )}
-                </button>
-                {/* Speed presets */}
-                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-drapera-border/10">
-                  {[
-                    { label: '1×', value: 5 },
-                    { label: '5×', value: 25 },
-                    { label: '10×', value: 50 },
-                    { label: '100×', value: 95 },
-                    { label: 'MAX', value: 100 },
-                  ].map(p => (
-                    <button key={p.label} onClick={() => setSimSpeed(p.value)}
-                      className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all duration-150 ${
-                        simSpeed === p.value
-                          ? 'bg-emerald-400/20 text-emerald-300 border border-emerald-400/30'
-                          : 'text-gray-500 hover:text-gray-300 border border-transparent'
-                      }`}>
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
-                {/* Progress */}
-                <div className="flex-1 flex items-center gap-2">
-                  <div className="flex-1 h-1 rounded-full bg-drapera-border/50 overflow-hidden">
-                    <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-green-400 transition-all duration-150"
-                      style={{ width: `${hpglData.paths.length > 0 ? (simPathIndex + 1) / hpglData.paths.length * 100 : 0}%` }} />
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">
-                    {Math.min(simPathIndex + 1, hpglData.paths.length)}<span className="text-gray-600">/{hpglData.paths.length}</span>
-                  </span>
-                </div>
-                {/* Stop */}
-                <button onClick={() => { setSimulating(false); setSimPaused(false); setSimPathIndex(-1); }}
-                  className="px-3.5 py-1.5 rounded-xl bg-red-500/10 border border-red-400/20 text-[10px] text-red-400 font-semibold
-                    hover:bg-red-500/20 hover:border-red-400/30 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-200">
-                  Stop
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-      {hpglData && !isAdmin && !featureFlags['simulation_player'] && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-2xl bg-gray-500/10 border border-gray-500/20 text-[11px] text-gray-500 font-semibold">
-          Presto disponibile
-        </div>
-      )}
       <InfoPanel meta={hpglData?.meta ?? null} fileName={fileName} cad={hpglData?.cad ?? null} ml={hpglData?.ml ?? null} features={hpglData?.features ?? undefined} onCorrectCad={handleCorrectCad}                       onOpenCadModal={() => { setShowCadModal(true); setCadSearch(''); }} userSelectedCad={userSelectedCad} selectedPath={selectedPath?.info ?? null}
         formatInfo={hpglData?.formatInfo ?? undefined}
         pens={hpglData?.meta?.pens ?? []}
@@ -1187,7 +1069,17 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         showBlockFuse={showBlockFuse} onToggleBlockFuse={() => setShowBlockFuse(v => !v)}
         showCutOrder={showCutOrder} onToggleCutOrder={() => setShowCutOrder(v => !v)}
         showStartPoints={showStartPoints} onToggleStartPoints={() => setShowStartPoints(v => !v)}
-        cleanView={cleanView} onToggleCleanView={() => setCleanView(v => !v)} />
+        cleanView={cleanView} onToggleCleanView={() => setCleanView(v => !v)}
+        totalPaths={hpglData?.meta?.total_paths ?? 0}
+        simPathIndex={simPathIndex}
+        simSpeed={simSpeed}
+        simPaused={simPaused}
+        onSimStart={() => { setSimPathIndex(0); setSimulating(true); setSimPaused(false); }}
+        onSimPause={() => setSimPaused(true)}
+        onSimResume={() => setSimPaused(false)}
+        onSimStop={() => { setSimulating(false); setSimPaused(false); setSimPathIndex(-1); }}
+        onSimStep={() => { setSimPathIndex(i => Math.min(i + 1, (hpglData?.paths.length ?? 1) - 1)); setSimPaused(true); }}
+        onSimSpeedChange={s => setSimSpeed(s)} />
 
       {/* CAD Selection Modal */}
       {showCadModal && (
