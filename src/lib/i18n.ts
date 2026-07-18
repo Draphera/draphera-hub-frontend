@@ -7,7 +7,7 @@ type Lang = 'it' | 'en';
 const it = {
     'nav.dashboard': 'Dashboard',
     'nav.hpgl_viewer': 'VectorEngine',
-    'nav.tools': 'Strumenti',
+    'nav.tools': 'Prodotti',
     'nav.export': 'Export',
     'nav.generate_zip': 'Generate ZIP',
     'nav.signin': 'Accedi',
@@ -448,7 +448,7 @@ const it = {
 const en = {
     'nav.dashboard': 'Dashboard',
     'nav.hpgl_viewer': 'VectorEngine',
-    'nav.tools': 'Tools',
+    'nav.tools': 'Products',
     'nav.export': 'Export',
     'nav.generate_zip': 'Generate ZIP',
     'nav.signin': 'Sign In',
