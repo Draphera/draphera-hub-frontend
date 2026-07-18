@@ -149,6 +149,43 @@ export default function HPGLViewerPage() {
     return total / 100; // cm → m
   }, [hpglData]);
 
+  const simCutOrderScore = useMemo(() => {
+    if (!hpglData?.paths || hpglData.paths.length < 2) return 0;
+    const cut = simCutDistance;
+    const move = simMoveDistance;
+    const total = cut + move;
+    if (total === 0) return 0;
+
+    // 1. Movement efficiency (50 pts): cut / total
+    const efficiency = cut / total;
+    const effScore = Math.round(efficiency * 50);
+
+    // 2. Average move penalty (30 pts)
+    const paths = hpglData.paths;
+    let moveCount = 0;
+    let totalMove = 0;
+    for (let i = 1; i < paths.length; i++) {
+      const prev = paths[i - 1].points;
+      const curr = paths[i].points;
+      if (!prev || !curr || prev.length === 0 || curr.length === 0) continue;
+      const dx = curr[0][0] - prev[prev.length - 1][0];
+      const dy = curr[0][1] - prev[prev.length - 1][1];
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d > 0.01) { moveCount++; totalMove += d; }
+    }
+    const avgMove = moveCount > 0 ? totalMove / moveCount : 0;
+    const moveScore = avgMove < 0.5 ? 30 : avgMove < 1 ? 20 : avgMove < 2 ? 10 : 0;
+
+    // 3. Pen grouping (20 pts): count pen switches
+    let switches = 0;
+    for (let i = 1; i < paths.length; i++) {
+      if (paths[i].pen !== paths[i - 1].pen) switches++;
+    }
+    const penScore = switches === 0 ? 20 : switches < paths.length * 0.1 ? 15 : switches < paths.length * 0.3 ? 10 : 5;
+
+    return Math.min(100, effScore + moveScore + penScore);
+  }, [hpglData, simCutDistance, simMoveDistance]);
+
   const HPGL_DECODE: Record<string, string> = {
     'PU': 'Pen Up',
     'PD': 'Pen Down',
@@ -585,6 +622,7 @@ ${svgPreview ? `<div class="section"><h2>${_('Anteprima Piazzamento', 'Placement
   <span class="lbl">${_('Rettangoli', 'Rectangles')}</span><span class="val">${meta?.rectangles ?? 0}</span>
   ${dims ? `<span class="lbl">${_('Larghezza', 'Width')}</span><span class="val">${dims.width.toFixed(1)} cm</span><span class="lbl">${_('Altezza', 'Height')}</span><span class="val">${dims.height.toFixed(1)} cm</span>` : ''}
   ${simCutDistance ? `<span class="lbl">${_('Taglio', 'Cut')}</span><span class="val">${simCutDistance.toFixed(1)} m</span><span class="lbl">${_('Spostamento', 'Move')}</span><span class="val">${simMoveDistance.toFixed(1)} m</span>` : ''}
+  ${simCutOrderScore !== undefined ? `<span class="lbl">${_('Ordine taglio', 'Cut order')}</span><span class="val">${simCutOrderScore}/100</span>` : ''}
 </div></div>
 
 ${piecesHtml}
@@ -1115,12 +1153,13 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         onSimSpeedChange={s => setSimSpeed(s)}
         simCutDistance={simCutDistance}
         simMoveDistance={simMoveDistance}
+        simCutOrderScore={simCutOrderScore}
         onSimExportLog={() => {
           const lines = hpglData?.paths?.map((p, i) => {
             const pts = p.points?.map(pt => `(${pt[0].toFixed(2)}, ${pt[1].toFixed(2)})`).join(' → ') ?? '';
             return `[${i + 1}] ${p.type.toUpperCase()} | pen=${p.pen ?? '-'} | ${pts}`;
           }) ?? [];
-          const header = `Draphera VectorEngine - Simulation Report\nFile: ${fileName}\nDate: ${new Date().toISOString()}\nPaths: ${lines.length}\nCut distance: ${simCutDistance.toFixed(1)} m\nMove distance: ${simMoveDistance.toFixed(1)} m\nTotal distance: ${(simCutDistance + simMoveDistance).toFixed(1)} m\n${'='.repeat(50)}\n\n`;
+          const header = `Draphera VectorEngine - Simulation Report\nFile: ${fileName}\nDate: ${new Date().toISOString()}\nPaths: ${lines.length}\nCut distance: ${simCutDistance.toFixed(1)} m\nMove distance: ${simMoveDistance.toFixed(1)} m\nTotal distance: ${(simCutDistance + simMoveDistance).toFixed(1)} m\nCut order score: ${simCutOrderScore}/100\n${'='.repeat(50)}\n\n`;
           const blob = new Blob([header + lines.join('\n')], { type: 'text/plain' });
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob);

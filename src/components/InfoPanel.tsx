@@ -106,11 +106,12 @@ interface Props {
   onSimExportLog?: () => void;
   simCutDistance?: number;
   simMoveDistance?: number;
+  simCutOrderScore?: number;
 }
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance, simCutOrderScore }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -557,6 +558,18 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
                       <span className="text-amber-400 font-mono">{simMoveDistance?.toFixed(1) ?? '0'} m</span>
                       <span className="text-gray-600">{_('Totale', 'Total')}</span>
                       <span className="text-white font-mono">{((simCutDistance ?? 0) + (simMoveDistance ?? 0)).toFixed(1)} m</span>
+                    </div>
+                  )}
+                  {simCutOrderScore !== undefined && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[8px] text-gray-600">{_('Ordine taglio', 'Cut order')}</span>
+                      <div className="flex-1 h-1 bg-drapera-border/30 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${simCutOrderScore >= 80 ? 'bg-emerald-500' : simCutOrderScore >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                          style={{ width: `${simCutOrderScore}%` }} />
+                      </div>
+                      <span className={`text-[8px] font-mono ${simCutOrderScore >= 80 ? 'text-emerald-400' : simCutOrderScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+                        {simCutOrderScore}/100
+                      </span>
                     </div>
                   )}
 
