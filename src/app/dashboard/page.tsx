@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -38,7 +38,8 @@ function getNextLevel(count: number) {
 }
 
 export default function DashboardPage() {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
