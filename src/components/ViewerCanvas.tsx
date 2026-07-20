@@ -352,21 +352,33 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   }
 
-  // Ruler marks (anchored to viewer edges, outside content transform)
+  // Ruler marks (in SVG pixel space, anchored to viewer edges)
+  // Convert SVG pixel position → content coordinate: contentX = (px - pan.x) / effectiveZoom
   const rulerColor = invertColors ? 'rgba(255,255,255,0.2)' : 'rgba(200,204,212,0.25)';
   const rulerTextColor = invertColors ? 'rgba(255,255,255,0.3)' : 'rgba(200,204,212,0.35)';
   const rulerLines: JSX.Element[] = [];
   const rulerStep = gridSize * 2;
-  for (let i = 0; i < 2000; i += rulerStep) {
-    // X axis ruler (bottom edge of viewer)
+  const viewW2 = VIEW_W;
+  const viewH2 = VIEW_H;
+  // Determine first visible grid line in content space, convert to SVG pixel space
+  const firstX = Math.ceil((-pan.x) / (rulerStep * effectiveZoom)) * rulerStep;
+  const firstY = Math.ceil((-pan.y) / (rulerStep * effectiveZoom)) * rulerStep;
+  for (let c = firstX; c < firstX + viewW2 / (rulerStep * effectiveZoom) * rulerStep + rulerStep; c += rulerStep) {
+    if (c < 0) continue;
+    const px = c * effectiveZoom + pan.x;
+    if (px < 0 || px > viewW2) continue;
     rulerLines.push(
-      <line key={`rx${i}`} x1={i} y1={viewH} x2={i} y2={viewH + 10} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`tx${i}`} x={i} y={viewH + 18} fill={rulerTextColor} fontSize={7} textAnchor="middle" fontFamily="monospace">{i}</text>,
+      <line key={`rx${c}`} x1={px} y1={viewH2 - 8} x2={px} y2={viewH2} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`tx${c}`} x={px} y={viewH2 - 10} fill={rulerTextColor} fontSize={6} textAnchor="middle" fontFamily="monospace">{c}</text>,
     );
-    // Y axis ruler (left edge of viewer)
+  }
+  for (let c = firstY; c < firstY + viewH2 / (rulerStep * effectiveZoom) * rulerStep + rulerStep; c += rulerStep) {
+    if (c < 0) continue;
+    const py = c * effectiveZoom + pan.y;
+    if (py < 0 || py > viewH2) continue;
     rulerLines.push(
-      <line key={`ry${i}`} x1={0} y1={i} x2={-8} y2={i} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`ty${i}`} x={-10} y={i + 2} fill={rulerTextColor} fontSize={7} textAnchor="end" fontFamily="monospace">{i}</text>,
+      <line key={`ry${c}`} x1={0} y1={py} x2={8} y2={py} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`ty${c}`} x={10} y={py + 2} fill={rulerTextColor} fontSize={6} textAnchor="start" fontFamily="monospace">{c}</text>,
     );
   }
 
