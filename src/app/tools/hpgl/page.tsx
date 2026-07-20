@@ -528,6 +528,11 @@ export default function HPGLViewerPage() {
 
       const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + (dims.height - pt[1]) * sc).toFixed(1)}`;
 
+      // HPGL paths as thin background lines
+      const pathLines = (hpglData?.paths || []).filter(p => p.type === 'polyline' && p.points && p.points.length >= 2).map(p =>
+        `<polyline points="${p.points.map(toSvg).join(' ')}" fill="none" stroke="#999" stroke-width="0.15" stroke-linejoin="round" stroke-linecap="round" />`
+      ).join('\n          ');
+
       const piecePolys = pieces.map((p, i) => {
         const midIdx = Math.floor(p.contour_points.length / 2);
         const mid = p.contour_points[midIdx];
@@ -544,6 +549,7 @@ export default function HPGLViewerPage() {
       svgPreview = `<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;background:#fff">
         <rect width="${svgW}" height="${svgH}" fill="#fff" />
         <g transform="translate(0,0)">
+          ${pathLines}
           ${filteredPolys}
           ${piecePolys}
         </g>
