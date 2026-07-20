@@ -1142,6 +1142,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         showCutOrder={showCutOrder} onToggleCutOrder={() => setShowCutOrder(v => !v)}
         showStartPoints={showStartPoints} onToggleStartPoints={() => setShowStartPoints(v => !v)}
         cleanView={cleanView} onToggleCleanView={() => setCleanView(v => !v)}
+        dimScale={hpglScale / 0.025}
         totalPaths={hpglData?.meta?.total_paths ?? 0}
         simPathIndex={simPathIndex}
         simSpeed={simSpeed}

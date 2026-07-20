@@ -91,6 +91,7 @@ interface Props {
   cleanView?: boolean;
   onToggleCleanView?: () => void;
   featureFlags?: Record<string, boolean>;
+  dimScale?: number;
   // Simulation
   totalPaths?: number;
   simPathIndex?: number;
@@ -112,7 +113,7 @@ interface Props {
 
 const VE_VERSION = '1.0.0';
 
-export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance, simCutOrderScore, simHpglText }: Props) {
+export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrectCad, onOpenCadModal, userSelectedCad, selectedPath, formatInfo, pens, penVisibility, onPenToggle, penColors, onPenColorChange, flattened, onToggleFlattened, pieces, piecesLoading, onDetectPieces, selectedPiece, isAdmin, filteredContours, showPlacementRect, onTogglePlacementRect, showBlockFuse, onToggleBlockFuse, showCutOrder, onToggleCutOrder, showStartPoints, onToggleStartPoints, cleanView, onToggleCleanView, featureFlags, dimScale = 1, totalPaths, simPathIndex, simSpeed, simPaused, simulating, onSimStart, onSimPause, onSimResume, onSimStop, onSimStep, onSimSpeedChange, onSimExportLog, simCutDistance, simMoveDistance, simCutOrderScore, simHpglText }: Props) {
   const { lang, t } = useTranslation();
   const _ = (it: string, en: string) => lang === 'en' ? en : it;
 
@@ -242,7 +243,7 @@ export default function InfoPanel({ meta, fileName, cad, ml, features, onCorrect
             <div className="space-y-1">
               {[
                 { label: t('info.file_name'), value: fileName || '\u2014', cls: 'truncate max-w-[140px]', always: true },
-                { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? meta.dimensions.width.toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? meta.dimensions.height.toFixed(1) : '0'}` : '\u2014', always: true },
+                { label: t('info.dimensions'), value: meta ? `${Number.isFinite(meta.dimensions.width) ? (meta.dimensions.width * dimScale).toFixed(1) : '0'} \u00d7 ${Number.isFinite(meta.dimensions.height) ? (meta.dimensions.height * dimScale).toFixed(1) : '0'}` : '\u2014', always: true },
                 { label: t('info.total_paths'), value: meta?.total_paths ?? '\u2014', always: true },
                 { label: t('info.lines'), value: meta?.polylines, hideZero: true },
                 { label: t('info.arcs'), value: meta?.arcs, hideZero: true },

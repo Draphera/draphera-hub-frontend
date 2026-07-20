@@ -353,33 +353,57 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   }
 
-  // Ruler marks (in SVG pixel space, anchored to viewer edges)
-  // Convert SVG pixel position → content coordinate: contentX = (px - pan.x) / effectiveZoom
-  const rulerColor = invertColors ? 'rgba(255,255,255,0.2)' : 'rgba(200,204,212,0.25)';
-  const rulerTextColor = invertColors ? 'rgba(255,255,255,0.3)' : 'rgba(200,204,212,0.35)';
+  // CAD-style rulers (anchored to viewer edges)
+  const rulerColor = invertColors ? 'rgba(255,255,255,0.15)' : 'rgba(200,204,212,0.15)';
+  const rulerTickMajor = invertColors ? 'rgba(255,255,255,0.4)' : 'rgba(200,204,212,0.4)';
+  const rulerTickMinor = invertColors ? 'rgba(255,255,255,0.15)' : 'rgba(200,204,212,0.15)';
+  const rulerTextColor = invertColors ? 'rgba(255,255,255,0.45)' : 'rgba(200,204,212,0.45)';
   const rulerLines: JSX.Element[] = [];
-  const rulerStep = gridSize * 2;
+  const majorStep = gridSize * 2;
+  const minorStep = gridSize;
   const viewW2 = VIEW_W;
   const viewH2 = VIEW_H;
-  // Determine first visible grid line in content space, convert to SVG pixel space
-  const firstX = Math.ceil((-pan.x) / (rulerStep * effectiveZoom)) * rulerStep;
-  const firstY = Math.ceil((-pan.y) / (rulerStep * effectiveZoom)) * rulerStep;
-  for (let c = firstX; c < firstX + viewW2 / (rulerStep * effectiveZoom) * rulerStep + rulerStep; c += rulerStep) {
+  const firstMajor = Math.ceil((-pan.x) / (majorStep * effectiveZoom)) * majorStep;
+  const firstMinor = Math.ceil((-pan.x) / (minorStep * effectiveZoom)) * minorStep;
+  const firstMajorY = Math.ceil((-pan.y) / (majorStep * effectiveZoom)) * majorStep;
+  const firstMinorY = Math.ceil((-pan.y) / (minorStep * effectiveZoom)) * minorStep;
+
+  // X major ticks
+  for (let c = firstMajor; c < firstMajor + viewW2 / (majorStep * effectiveZoom) * majorStep + majorStep; c += majorStep) {
     if (c < 0) continue;
     const px = c * effectiveZoom + pan.x;
     if (px < 0 || px > viewW2) continue;
     rulerLines.push(
-      <line key={`rx${c}`} x1={px} y1={viewH2 - 8} x2={px} y2={viewH2} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`tx${c}`} x={px} y={viewH2 - 10} fill={rulerTextColor} fontSize={6} textAnchor="middle" fontFamily="monospace">{c}</text>,
+      <line key={`rx${c}`} x1={px} y1={viewH2 - 10} x2={px} y2={viewH2} stroke={rulerTickMajor} strokeWidth={0.5} />,
+      <text key={`tx${c}`} x={px} y={viewH2 - 12} fill={rulerTextColor} fontSize={6} textAnchor="middle" fontFamily="monospace">{c}</text>,
     );
   }
-  for (let c = firstY; c < firstY + viewH2 / (rulerStep * effectiveZoom) * rulerStep + rulerStep; c += rulerStep) {
+  // X minor ticks
+  for (let c = firstMinor; c < firstMinor + viewW2 / (minorStep * effectiveZoom) * minorStep + minorStep; c += minorStep) {
+    if (c < 0 || c % majorStep === 0) continue;
+    const px = c * effectiveZoom + pan.x;
+    if (px < 0 || px > viewW2) continue;
+    rulerLines.push(
+      <line key={`rxm${c}`} x1={px} y1={viewH2 - 4} x2={px} y2={viewH2} stroke={rulerTickMinor} strokeWidth={0.3} />,
+    );
+  }
+  // Y major ticks
+  for (let c = firstMajorY; c < firstMajorY + viewH2 / (majorStep * effectiveZoom) * majorStep + majorStep; c += majorStep) {
     if (c < 0) continue;
     const py = c * effectiveZoom + pan.y;
     if (py < 0 || py > viewH2) continue;
     rulerLines.push(
-      <line key={`ry${c}`} x1={0} y1={py} x2={8} y2={py} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`ty${c}`} x={10} y={py + 2} fill={rulerTextColor} fontSize={6} textAnchor="start" fontFamily="monospace">{c}</text>,
+      <line key={`ry${c}`} x1={0} y1={py} x2={10} y2={py} stroke={rulerTickMajor} strokeWidth={0.5} />,
+      <text key={`ty${c}`} x={12} y={py + 2} fill={rulerTextColor} fontSize={6} textAnchor="start" fontFamily="monospace">{c}</text>,
+    );
+  }
+  // Y minor ticks
+  for (let c = firstMinorY; c < firstMinorY + viewH2 / (minorStep * effectiveZoom) * minorStep + minorStep; c += minorStep) {
+    if (c < 0 || c % majorStep === 0) continue;
+    const py = c * effectiveZoom + pan.y;
+    if (py < 0 || py > viewH2) continue;
+    rulerLines.push(
+      <line key={`rym${c}`} x1={0} y1={py} x2={4} y2={py} stroke={rulerTickMinor} strokeWidth={0.3} />,
     );
   }
 
