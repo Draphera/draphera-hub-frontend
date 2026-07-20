@@ -80,8 +80,8 @@ export default function DashboardPage() {
 
   const allTools = [
     { id: 'hpgl-viewer', title: 'VectorEngine', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
-    { id: 'iso-viewer', title: 'VectorEngine ISO', description: 'Analisi di modelli ISO per calzatura.', href: '/tools/iso', comingSoon: true },
-    { id: 'dxf-viewer', title: 'VectorEngine DXF', description: 'Analisi DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
+    { id: 'iso-viewer', title: 'VectorEngine ISO', description: _('Analisi di modelli ISO per calzatura.', 'ISO pattern analysis for footwear.'), href: '/tools/iso', comingSoon: true },
+    { id: 'dxf-viewer', title: 'VectorEngine DXF', description: _('Analisi DXF per componenti tecnici.', 'DXF analysis for technical components.'), href: '/tools/dxf', comingSoon: true },
   ];
 
   const officeToolIds: Record<string, string[]> = {
@@ -128,7 +128,7 @@ export default function DashboardPage() {
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
                       <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
                     </div>
-                    <span className="text-[10px] font-semibold text-amber-400">Admin</span>
+                    <span className="text-[10px] font-semibold text-amber-400">{_('Admin', 'Admin')}</span>
                   </div>
                 )}
                 {founder?.is_founder || founder?.is_beta ? (
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                         <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
                       )}
                     </div>
-                    <span className={`text-[10px] font-semibold ${founder.position && founder.position <= 10 ? 'text-amber-400' : 'text-cyan-400'}`}>#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
+                    <span className={`text-[10px] font-semibold ${founder.position && founder.position <= 10 ? 'text-amber-400' : 'text-cyan-400'}`}>#{founder.position} {founder.position && founder.position <= 10 ? _('Founder', 'Founder') : _('Beta', 'Beta')}</span>
                   </div>
                 ) : null}
                 {badges.includes('custode') && (
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center shrink-0">
                       <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
                     </div>
-                    <span className="text-[10px] font-semibold text-red-400">Custode</span>
+                    <span className="text-[10px] font-semibold text-red-400">{_('Custode', 'Custodian')}</span>
                   </div>
                 )}
                 {badges.includes('tetris_secret') && (
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center shrink-0">
                       <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 22h20L12 2z" /></svg>
                     </div>
-                    <span className="text-[10px] font-semibold text-purple-400">Tetris</span>
+                    <span className="text-[10px] font-semibold text-purple-400">{_('Tetris', 'Tetris')}</span>
                   </div>
                 )}
               </div>
@@ -172,8 +172,8 @@ export default function DashboardPage() {
                 <p className="text-[11px] text-gray-500 mt-0.5">{_('In laboratorio', 'In lab')}</p>
               </div>
               <Link href="/dashboard/community" className="premium-card p-4 text-center block hover:border-drapera-gold/40 transition-colors">
-                <p className="text-2xl font-bold text-drapera-gold">Community</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">Scopri chi c'è</p>
+                <p className="text-2xl font-bold text-drapera-gold">{_('Community', 'Community')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{_('Scopri chi c\'è', 'Discover who is here')}</p>
               </Link>
               <div className="premium-card p-4 text-center">
                 <p className="text-2xl font-bold text-drapera-gold">{uploadCount}</p>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                   </div>
                 )}
                 {!nextLevel && (
-                  <p className="text-xs text-drapera-gold mt-1">Massimo livello raggiunto!</p>
+                  <p className="text-xs text-drapera-gold mt-1">{_('Massimo livello raggiunto!', 'Maximum level reached!')}</p>
                 )}
               </div>
             </div>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
             {labTools.filter(t => tools.includes(t)).length > 0 && (
               <div className="mt-12">
                 <div className="flex items-center gap-2 mb-4">
-                  <h2 className="section-title text-white text-base">Laboratorio</h2>
+                  <h2 className="section-title text-white text-base">{_('Laboratorio', 'Lab')}</h2>
                   <span className="px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">{_('Ricerca', 'Research')}</span>
                 </div>
                 <p className="text-xs text-gray-500 mb-4">
@@ -313,12 +313,12 @@ export default function DashboardPage() {
                 <a href="https://linkedin.com/company/draphera" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-semibold hover:bg-blue-600/30 transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                  LinkedIn
+                  {_('LinkedIn', 'LinkedIn')}
                 </a>
                 <a href="https://instagram.com/draphera" target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-pink-600/20 text-pink-400 border border-pink-500/30 text-sm font-semibold hover:bg-pink-600/30 transition-colors">
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-                  Instagram
+                  {_('Instagram', 'Instagram')}
                 </a>
               </div>
               <button onClick={() => { localStorage.setItem('draphera-social-shown', '1'); setMsg(''); }}

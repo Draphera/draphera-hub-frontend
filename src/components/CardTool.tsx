@@ -13,7 +13,8 @@ interface CardToolProps {
 }
 
 export default function CardTool({ title, description, href, icon, premium, active, comingSoon, changelog }: CardToolProps) {
-  const { t } = useTranslation();
+  const { t, lang } = useTranslation();
+  const _card = (it: string, en: string) => lang === 'en' ? en : it;
   const Wrapper = comingSoon ? 'div' : Link;
 
   return (
@@ -62,7 +63,7 @@ export default function CardTool({ title, description, href, icon, premium, acti
             </span>
             {changelog && (
               <Link href={changelog} className="text-[10px] text-gray-600 hover:text-gray-400 transition-colors underline decoration-dotted underline-offset-2">
-                Changelog
+                {_card('Novità', 'Changelog')}
               </Link>
             )}
           </div>

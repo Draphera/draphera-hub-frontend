@@ -62,9 +62,9 @@ export default function HomePage() {
         body: JSON.stringify({ email: wlEmail }),
       });
       const data = await res.json();
-      if (data.status === 'can_register') setWlMsg('Puoi registrarti ora!');
-      else setWlMsg(`Sei in coda! Posizione: #${data.position || 0}`);
-    } catch { setWlMsg('Errore. Riprova.'); }
+      if (data.status === 'can_register') setWlMsg(_('Puoi registrarti ora!', 'You can register now!'));
+      else setWlMsg(_('Sei in coda!', 'You are in queue!') + ` #${data.position || 0}`);
+    } catch { setWlMsg(_('Errore. Riprova.', 'Error. Try again.')); }
   };
 
   const isOpen = regState?.open ?? true;
@@ -234,7 +234,7 @@ export default function HomePage() {
               <div className="relative rounded-xl border border-drapera-border overflow-hidden shadow-2xl">
                 <Image
                   src={viewerScreenshot}
-                  alt="VectorEngine interface — HPGL viewer with CAD recognition"
+                  alt={_('Interfaccia VectorEngine — viewer HPGL con riconoscimento CAD', 'VectorEngine interface — HPGL viewer with CAD recognition')}
                   className="w-full h-auto block"
                   priority
                 />
@@ -298,7 +298,7 @@ export default function HomePage() {
               </p>
               <div className="grid sm:grid-cols-2 gap-6 text-left max-w-lg mx-auto">
                 <div className="rounded-xl bg-white/5 border border-drapera-border p-5">
-                  <p className="text-drapera-gold font-bold text-lg mb-1">Founder</p>
+                  <p className="text-drapera-gold font-bold text-lg mb-1">{t('home.founder_title')}</p>
                   <p className="text-xs text-gray-400">{t('home.founder_desc')}</p>
                   <p className="text-[10px] text-gray-600 mt-3"><span className="text-drapera-gold font-semibold">10</span> {_('posti', 'seats')}</p>
                 </div>
