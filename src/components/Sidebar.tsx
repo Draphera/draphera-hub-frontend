@@ -10,6 +10,8 @@ interface SidebarProps {
   onZoomChange: (z: number) => void;
   unit: 'cm' | 'inch';
   onUnitChange: (u: 'cm' | 'inch') => void;
+  hpglScale: number;  // HPGL unit resolution in mm: 0.025 | 0.1 | 0.25 | 0.254
+  onHpglScaleChange: (s: number) => void;
   snapGrid: boolean;
   onToggleSnap: () => void;
   snapMeasure: boolean;
@@ -39,7 +41,7 @@ interface SidebarProps {
 
 export default function Sidebar({
   onFileUpload, invertColors, onToggleInvert, zoom, onZoomChange,
-  unit, onUnitChange, snapGrid, onToggleSnap, snapMeasure, onToggleSnapMeasure,
+  unit, onUnitChange, hpglScale, onHpglScaleChange, snapGrid, onToggleSnap, snapMeasure, onToggleSnapMeasure,
   viewMode, onViewModeChange,
   pens, penVisibility, onPenToggle, penColors, onPenColorChange,
   flattened, onToggleFlattened,
@@ -47,7 +49,8 @@ export default function Sidebar({
   filled, onToggleFilled,
   rotation, onRotateLeft, onRotateRight, flipX, onFlipX, flipY, onFlipY, onResetTransform,
 }: SidebarProps) {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
 
   const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg'];
   const isValidFile = (f: File) => {
@@ -108,9 +111,18 @@ export default function Sidebar({
 
             <div>
               <span className="text-xs text-gray-400 block mb-1.5">{t('sidebar.units')}</span>
-              <div className="flex rounded-lg border border-drapera-border overflow-hidden">
+              <div className="flex rounded-lg border border-drapera-border overflow-hidden mb-2">
                 <button onClick={() => onUnitChange('cm')} className={`flex-1 py-1.5 text-[11px] font-medium transition-colors ${unit === 'cm' ? 'bg-drapera-gold text-drapera-dark' : 'text-gray-500 hover:text-white'}`}>{t('sidebar.cm')}</button>
                 <button onClick={() => onUnitChange('inch')} className={`flex-1 py-1.5 text-[11px] font-medium transition-colors ${unit === 'inch' ? 'bg-drapera-gold text-drapera-dark' : 'text-gray-500 hover:text-white'}`}>{t('sidebar.inch')}</button>
+              </div>
+              <span className="text-[9px] text-gray-600 block mb-1">{'Risoluzione HPGL'}</span>
+              <div className="flex rounded-lg border border-drapera-border overflow-hidden">
+                {[0.025, 0.1, 0.25, 0.254].map(s => (
+                  <button key={s} onClick={() => onHpglScaleChange(s)}
+                    className={`flex-1 py-1 text-[9px] font-mono font-medium transition-colors ${hpglScale === s ? 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-600 hover:text-white'}`}>
+                    {s === 0.025 ? 'Std' : s + ''}
+                  </button>
+                ))}
               </div>
             </div>
 

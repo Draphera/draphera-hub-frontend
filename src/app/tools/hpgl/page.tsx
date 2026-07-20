@@ -77,6 +77,7 @@ export default function HPGLViewerPage() {
   const [zoom, setZoom] = useState(1);
   const [invertColors, setInvertColors] = useState(false);
   const [unit, setUnit] = useState<'cm' | 'inch'>('cm');
+  const [hpglScale, setHpglScale] = useState(0.025); // mm/unit
   const [snapGrid, setSnapGrid] = useState(true);
   const [snapMeasure, setSnapMeasure] = useState(false);
   const [selectionActive, setSelectionActive] = useState(false);
@@ -905,6 +906,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         invertColors={invertColors} onToggleInvert={() => setInvertColors(v => !v)}
         zoom={zoom} onZoomChange={setZoom}
         unit={unit} onUnitChange={setUnit}
+        hpglScale={hpglScale} onHpglScaleChange={setHpglScale}
         snapGrid={snapGrid} onToggleSnap={() => setSnapGrid(v => !v)}
         snapMeasure={snapMeasure} onToggleSnapMeasure={() => setSnapMeasure(v => !v)}
         viewMode={viewMode} onViewModeChange={v => { setViewMode(v); if (v === 'measurement') setMeasureMode('distance'); else if (v !== 'selection') setMeasureMode('off'); setMeasurePoints([]); if (v !== 'selection') setSelectionActive(false); }}
@@ -965,7 +967,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
         {compareMode === 'side' && secondTabId ? (
           <div className="flex gap-2" style={{ height: 'calc(100vh - 12rem)' }}>
             <div className="flex-1 min-w-0">
-              <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
+              <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} hpglScale={hpglScale} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1} rotation={rotation} flipX={flipX} flipY={flipY}
                 onPathSelect={(path, idx) => {
@@ -974,7 +976,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
                   let length = 0;
                   for (let i = 1; i < pts.length; i++) length += Math.sqrt((pts[i][0] - pts[i-1][0]) ** 2 + (pts[i][1] - pts[i-1][1]) ** 2);
                   setSelectedPath({ index: idx, path, info: { type: path.type, vertices: pts.length, pen: path.pen ?? 0, lineType: path.lineType ?? 0, closed: path.closed, length, firstPoint: pts.length > 0 ? [pts[0][0], pts[0][1]] : undefined } });
-                }} />
+                }} hpglScale={hpglScale} />
             </div>
             <div className="flex-1 min-w-0">
               {(() => {
@@ -1018,7 +1020,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
                   },
                 },
               };
-              return <ViewerCanvas data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY}
+              return <ViewerCanvas hpglScale={hpglScale} data={mergedData} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure} rotation={rotation} flipX={flipX} flipY={flipY}
                 penVisibility={penVisibility} penColors={penColors} flattened={flattened}
                 selectedPathIndex={selectedPath?.index ?? -1}
                 onPathSelect={(path, idx) => {
@@ -1031,7 +1033,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
             })()}
           </div>
         ) : (
-          <ViewerCanvas data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
+          <ViewerCanvas hpglScale={hpglScale} data={hpglData ?? null} zoom={zoom} invertColors={invertColors} snapGrid={snapGrid && gridOn} viewMode={viewMode} fitKey={fitKey} snapMeasure={snapMeasure}
             penVisibility={penVisibility} penColors={penColors} flattened={flattened}
             selectedPathIndex={selectedPath?.index ?? -1}
             measureMode={measureMode} measurePoints={measurePoints} measureResults={measureResults}

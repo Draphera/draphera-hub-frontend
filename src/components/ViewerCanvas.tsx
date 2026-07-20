@@ -161,6 +161,7 @@ interface Props {
   onPieceDoubleClick?: (piece: NonNullable<Props['pieces']>[number]) => void;
   simulating?: boolean;
   simPathIndex?: number;
+  hpglScale?: number;
 }
 
 const PAD = 40;
@@ -284,7 +285,7 @@ function isPathVisible(
   return true;
 }
 
-export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false, simulating, simPathIndex }: Props) {
+export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, snapGrid, viewMode, fitKey, penVisibility, penColors, flattened, onPathSelect, selectedPathIndex, measureMode, measurePoints, onCanvasClick, measureResults, showNotches, filled, snapMeasure, selectionActive, selectionBounds, onSelectionChange, rotation, flipX, flipY, onRotateLeft, onRotateRight, onFlipX, onFlipY, onResetTransform, pieces, filteredContours, cleanView, showCutOrder, showStartPoints, selectedPieceId, onPieceSelect, onPieceDoubleClick, debug = false, simulating, simPathIndex, hpglScale = 0.025 }: Props) {
   const { t } = useTranslation();
   const svgRef = useRef<SVGSVGElement>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -323,7 +324,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     }
   }, [fitKey]);
 
-  const effectiveZoom = zoom * fitScale * wheelZoom;
+  const effectiveZoom = zoom * fitScale * wheelZoom * (hpglScale / 0.025);
 
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
