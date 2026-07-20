@@ -500,6 +500,8 @@ export default function SettingsPage() {
               );
             })}
           </div>
+        </div>
+        )}
 
         {settingsTab === 'account' && (
 
