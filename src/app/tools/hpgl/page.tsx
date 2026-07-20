@@ -1536,6 +1536,10 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
                 ? `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.filter(r => r.startsWith('✓')).join('\n')}`
                 : `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.join('\n')}`
               );
+              alert(reasons.filter(r => r.startsWith('✓')).length >= 4
+                ? `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.filter(r => r.startsWith('✓')).join('\n')}`
+                : `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.join('\n')}`
+              );
             }}
               className="w-full flex items-center justify-center gap-1.5 py-2 mt-3 rounded-lg text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
