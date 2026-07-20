@@ -196,6 +196,13 @@ export const adminApi = {
     if (!res.ok) throw new Error((await res.json()).detail || await res.text());
     return res.json();
   },
+  async assignBadge(userId: string, badgeId: string) {
+    const headers = await getHeaders();
+    headers['Content-Type'] = 'application/json';
+    const res = await fetchWithTimeout(`${API_BASE}/api/admin/badges/assign`, { method: 'POST', headers, body: JSON.stringify({ user_id: userId, badge_id: badgeId }) });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
   async listFeatureFlags() {
     const headers = await getHeaders();
     const res = await fetchWithTimeout(`${API_BASE}/api/admin/feature-flags`, { headers });
