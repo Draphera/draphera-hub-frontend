@@ -1429,10 +1429,28 @@ export default function AdminPage() {
                                         {o}
                                       </button>
                                     ))}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="relative group">
+                                  <button className="text-[10px] px-2 py-1 rounded text-purple-500 hover:text-purple-400 hover:bg-purple-500/10 transition-colors">
+                                    Badge
+                                  </button>
+                                  <div className="absolute right-0 top-full mt-1 z-20 hidden group-hover:block min-w-[160px]">
+                                    <div className="premium-card p-2 space-y-1">
+                                      {['contributor', 'architect', 'custode', 'tetris_secret'].map(bid => (
+                                        <button key={bid}
+                                          onClick={async () => {
+                                            try { await adminApi.assignBadge(String(p.id), bid); setMsg(`Badge ${bid} assegnato`); } catch (e: any) { setMsg(`Errore: ${e.message}`); }
+                                          }}
+                                          className="block w-full text-left text-[10px] px-2 py-1 rounded text-gray-400 hover:text-white hover:bg-white/5 transition-colors uppercase tracking-wider">
+                                          {bid === 'tetris_secret' ? '???' : bid}
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
                           </td>
                         </tr>
                       );
