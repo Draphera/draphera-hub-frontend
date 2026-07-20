@@ -82,25 +82,19 @@ export default function DashboardPage() {
     { id: 'hpgl-viewer', title: 'VectorEngine', description: t('home.cta_hpgl'), href: '/tools/hpgl', premium: true, active: true },
     { id: 'iso-viewer', title: 'VectorEngine ISO', description: 'Analisi di modelli ISO per calzatura.', href: '/tools/iso', comingSoon: true },
     { id: 'dxf-viewer', title: 'VectorEngine DXF', description: 'Analisi DXF per componenti tecnici.', href: '/tools/dxf', comingSoon: true },
-    { id: 'techsheet', title: 'TechSheet Light', description: 'Genera schede tecniche ZIP.', href: '/tools/techsheet-light', premium: true, comingSoon: true },
-    { id: 'material', title: 'Material Normalizer', description: 'Normalizza descrizioni materiali ERP.', href: '/tools/material-normalizer', comingSoon: true },
-    { id: 'accessory', title: 'Accessory Normalizer', description: 'Standardizza nomenclature accessori.', href: '/tools/accessory-normalizer', comingSoon: true },
-    { id: 'bom', title: 'BOM Generator', description: 'Genera distinte base.', href: '/tools/bom-generator', comingSoon: true },
-    { id: 'quality', title: 'Checklist Qualità', description: 'Checklist per controlli qualità.', href: '/tools/checklist-qualita', comingSoon: true },
-    { id: 'labels', title: 'Generatore Etichette', description: 'Crea etichette prodotto in batch.', href: '/tools/generatore-etichette', comingSoon: true },
   ];
 
   const officeToolIds: Record<string, string[]> = {
     modellistica: ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'],
-    produzione: ['bom', 'quality', 'accessory'],
   };
 
-  const coreIds = ['hpgl-viewer', 'iso-viewer', 'dxf-viewer'];
+  const coreIds = ['hpgl-viewer'];
+  const labIds = ['iso-viewer', 'dxf-viewer'];
   const userOffice = profile.office || '';
   const officeIds = userOffice ? (officeToolIds[userOffice] || null) : null;
   const tools = officeIds ? allTools.filter(t => officeIds.includes(t.id)) : allTools;
   const coreTools = allTools.filter(t => coreIds.includes(t.id));
-  const labTools = allTools.filter(t => !coreIds.includes(t.id));
+  const labTools = allTools.filter(t => labIds.includes(t.id));
 
   const name = profile.full_name || session?.user?.user_metadata?.full_name || session?.user?.email?.split('@')[0] || '';
   const level = getLevel(uploadCount);
@@ -171,11 +165,11 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-10">
               <div className="premium-card p-4 text-center">
                 <p className="text-2xl font-bold text-drapera-gold">1</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.active_tools_count')}</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{_('Strumento attivo', 'Active tool')}</p>
               </div>
               <div className="premium-card p-4 text-center">
-                <p className="text-2xl font-bold text-white">8</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">{t('dashboard.dev_count')}</p>
+                <p className="text-2xl font-bold text-white">2</p>
+                <p className="text-[11px] text-gray-500 mt-0.5">{_('In laboratorio', 'In lab')}</p>
               </div>
               <Link href="/dashboard/community" className="premium-card p-4 text-center block hover:border-drapera-gold/40 transition-colors">
                 <p className="text-2xl font-bold text-drapera-gold">Community</p>
@@ -275,8 +269,8 @@ export default function DashboardPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="section-title text-white text-xl">Modellistica &amp; CAD</h2>
-                <p className="text-sm text-drapera-steel-light mt-1">Visualizzatori e riconoscimento intelligente.</p>
+                <h2 className="section-title text-white text-xl">VectorEngine<sup>™</sup></h2>
+                <p className="text-sm text-drapera-steel-light mt-1">{_('Analisi geometrica per file HPGL', 'Geometric analysis for HPGL files')}</p>
               </div>
               <Link href="/tools/hpgl" className="btn-gold text-xs px-4 py-2 hidden sm:inline-flex">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -290,22 +284,14 @@ export default function DashboardPage() {
             {labTools.filter(t => tools.includes(t)).length > 0 && (
               <div className="mt-12">
                 <div className="flex items-center gap-2 mb-4">
-                  <h2 className="section-title text-white text-base">Laboratorio Draphera</h2>
-                  <span className="px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Beta</span>
+                  <h2 className="section-title text-white text-base">Laboratorio</h2>
+                  <span className="px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">{_('Ricerca', 'Research')}</span>
                 </div>
                 <p className="text-xs text-gray-500 mb-4">
-                  Strumenti in fase di sviluppo. Partecipa ai sondaggi per aiutarci a prioritizzare.
+                  {_('Estensioni future del motore VISION ad altri formati CAD.', 'Future extensions of the VISION engine to other CAD formats.')}
                 </p>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {labTools.filter(t => tools.includes(t)).map(tool => <CardTool key={tool.href} {...tool} />)}
-                </div>
-                <div className="mt-6 premium-card p-5 text-center">
-                  <p className="text-sm text-white font-medium mb-2">Cosa vorresti vedere in Draphera Hub?</p>
-                  <p className="text-xs text-gray-500 mb-4">I nostri 10 Founder e 20 Beta Tester mensili guideranno la roadmap del prodotto.</p>
-                  <Link href="/sondaggio" className="btn-gold text-xs px-4 py-2 inline-flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
-                    Partecipa al sondaggio
-                  </Link>
                 </div>
               </div>
             )}
