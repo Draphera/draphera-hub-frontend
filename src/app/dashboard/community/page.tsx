@@ -13,6 +13,7 @@ const API_BASE = '';
 interface LeaderboardEntry {
   id: string;
   full_name: string;
+  title?: string;
   avatar_url?: string;
   company_name?: string;
   office?: string;
@@ -112,6 +113,9 @@ export default function CommunityPage() {
                             <div className="min-w-0">
                               <p className="text-sm text-white font-semibold truncate">{m.full_name || _('Anonimo', 'Anonymous')}</p>
                               <div className="flex items-center gap-1.5 mt-0.5">
+                                {m.title && (
+                                  <span className="text-[9px] text-gray-400 truncate max-w-[120px]">{m.title}</span>
+                                )}
                                 {m.company_name && (
                                   <span className="text-[9px] text-gray-500 truncate max-w-[120px]">{m.company_name}</span>
                                 )}
