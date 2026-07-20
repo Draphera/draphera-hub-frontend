@@ -976,7 +976,7 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
                   let length = 0;
                   for (let i = 1; i < pts.length; i++) length += Math.sqrt((pts[i][0] - pts[i-1][0]) ** 2 + (pts[i][1] - pts[i-1][1]) ** 2);
                   setSelectedPath({ index: idx, path, info: { type: path.type, vertices: pts.length, pen: path.pen ?? 0, lineType: path.lineType ?? 0, closed: path.closed, length, firstPoint: pts.length > 0 ? [pts[0][0], pts[0][1]] : undefined } });
-                }} hpglScale={hpglScale} />
+                }} />
             </div>
             <div className="flex-1 min-w-0">
               {(() => {
