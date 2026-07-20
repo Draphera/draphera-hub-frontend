@@ -259,6 +259,20 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {badges.find(b => b.id === 'custode')?.unlocked && (
+          <div className="premium-card p-2.5 border border-red-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(239,68,68,0.08), rgba(239,68,68,0.02))' }}>
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center shrink-0 shadow-md shadow-red-500/20">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-white font-semibold truncate">{badges.find(b => b.id === 'custode')?.name || 'Custode'}</p>
+                <p className="text-[9px] text-red-400/70 uppercase tracking-wider">Mythic</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         </div>
 
         {/* Tabs */}
