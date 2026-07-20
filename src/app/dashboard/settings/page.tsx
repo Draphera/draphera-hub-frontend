@@ -27,7 +27,7 @@ export default function SettingsPage() {
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const [uploadCount, setUploadCount] = useState(0);
   const [settingsTab, setSettingsTab] = useState<'profile' | 'social' | 'badges' | 'account'>('profile');
-  const [badges, setBadges] = useState<Array<{ id: string; name: string; icon: string; rarity: string; unlocked: boolean }>>([]);
+  const [badges, setBadges] = useState<Array<{ id: string; name: string; icon: string; rarity: string; unlocked: boolean; description?: string }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -451,6 +451,7 @@ export default function SettingsPage() {
                     <p className={`text-[8px] uppercase tracking-wider ${b.unlocked ? `opacity-60 ${rarityColors[b.rarity]?.split(' ')[1] || 'text-gray-500'}` : 'text-gray-700'}`}>
                       {b.rarity === 'extra_rare' ? 'Extra Rare' : b.rarity === 'ultra_secret' ? 'Ultra Secret' : b.rarity?.charAt(0).toUpperCase() + b.rarity?.slice(1)}
                     </p>
+                    <p className="text-[7px] text-gray-600 leading-tight mt-0.5">{b.description || ''}</p>
                   </div>
                   {!b.unlocked && (
                     <svg className="w-3 h-3 ml-auto text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
@@ -492,6 +493,7 @@ export default function SettingsPage() {
                     <p className={`text-[8px] uppercase tracking-wider ${b.unlocked ? 'opacity-60 text-purple-400' : 'text-gray-700'}`}>
                       {b.unlocked ? 'Ultra Secret' : '???'}
                     </p>
+                    <p className="text-[7px] text-gray-600 leading-tight mt-0.5">{b.unlocked ? b.description || '' : _('Nascosto. Continua ad esplorare...', 'Hidden. Keep exploring...')}</p>
                   </div>
                   {!b.unlocked && (
                     <svg className="w-3 h-3 ml-auto text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
