@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const [uploadCount, setUploadCount] = useState(0);
   const [settingsTab, setSettingsTab] = useState<'profile' | 'social' | 'account'>('profile');
+  const [badges, setBadges] = useState<Array<{ id: string; name: string; icon: string; rarity: string; unlocked: boolean }>>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -54,6 +55,9 @@ export default function SettingsPage() {
         fetch(`${API_BASE}/api/profile/stats`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
         }).then(r => r.ok ? r.json() : null).then(d => { if (d) setUploadCount(d.total_uploads ?? 0); }).catch(() => {});
+        fetch(`${API_BASE}/api/profile/badges`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+        }).then(r => r.ok ? r.json() : null).then(d => { if (d?.badges) setBadges(d.badges); }).catch(() => {});
       }
     });
   }, [router]);
@@ -388,6 +392,45 @@ export default function SettingsPage() {
               />
             </div>
           ))}
+          <div className="h-px bg-drapera-border/40 my-6" />
+          <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-3">{_('Badge', 'Badges')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {badges.map(b => {
+              const rarityColors: Record<string, string> = {
+                rare: 'border-blue-500/30 text-blue-400 bg-blue-500/5',
+                extra_rare: 'border-amber-500/30 text-amber-400 bg-amber-500/5',
+                ultra_secret: 'border-purple-500/30 text-purple-400 bg-purple-500/5',
+                legendary: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/5',
+                mythic: 'border-red-500/30 text-red-400 bg-red-500/5',
+              };
+              const iconSvgs: Record<string, string> = {
+                square: 'M3.75 3.75v16.5h16.5V3.75H3.75z',
+                hexagon: 'M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+                triangle: 'M12 2L2 22h20L12 2z',
+                diamond: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+                circle: 'M12 2a10 10 0 100 20 10 10 0 000-20z',
+                shield: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z',
+              };
+              return (
+                <div key={b.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border ${b.unlocked ? rarityColors[b.rarity] || 'border-gray-500/20 text-gray-400' : 'border-drapera-border/30 text-gray-700 opacity-50'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${b.unlocked ? 'bg-gradient-to-br from-blue-500/20 to-transparent' : ''}`}>
+                    <svg className={`w-4 h-4 ${b.unlocked ? 'text-current' : 'text-gray-700'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d={iconSvgs[b.icon] || iconSvgs.square} />
+                    </svg>
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-xs font-semibold truncate ${b.unlocked ? 'text-white' : 'text-gray-600'}`}>{b.name}</p>
+                    <p className={`text-[8px] uppercase tracking-wider ${b.unlocked ? `opacity-60 ${rarityColors[b.rarity]?.split(' ')[1] || 'text-gray-500'}` : 'text-gray-700'}`}>
+                      {b.rarity === 'extra_rare' ? 'Extra Rare' : b.rarity === 'ultra_secret' ? 'Ultra Secret' : b.rarity?.charAt(0).toUpperCase() + b.rarity?.slice(1)}
+                    </p>
+                  </div>
+                  {!b.unlocked && (
+                    <svg className="w-3 h-3 ml-auto text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  )}
+                </div>
+              );
+            })}
+          </div>
           <div className="flex items-center gap-3 pt-2">
             <button onClick={handleSave} disabled={saving} className="btn-gold text-sm px-6 py-2.5">
               {saving ? (

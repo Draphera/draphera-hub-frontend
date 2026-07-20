@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { userApi } from '@/lib/api';
 
 const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight'];
 const COLORS = ['#1A2E5A', '#C8CCD4', '#F5F7FA', '#0F1113', '#1E90FF'];
@@ -34,6 +35,7 @@ export default function DrapheraGlitch() {
       keysRef.current = keysRef.current.slice(-KONAMI.length);
       if (keysRef.current.join(',') === KONAMI.join(',')) {
         setActive(true);
+        userApi.unlockTetrisBadge().catch(() => {});
         setTimeout(() => { setActive(false); setShowBadge(true); }, 5000);
         setTimeout(() => setShowBadge(false), 8000);
       }

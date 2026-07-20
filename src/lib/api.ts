@@ -248,6 +248,18 @@ export const userApi = {
     if (!res.ok) throw new Error((await res.json()).detail || await res.text());
     return res.json();
   },
+  async getBadges() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/badges`, { headers });
+    if (!res.ok) return { badges: [] };
+    return res.json();
+  },
+  async unlockTetrisBadge() {
+    const headers = await getHeaders();
+    const res = await fetchWithTimeout(`${API_BASE}/api/profile/badge/tetris-unlock`, { method: 'POST', headers });
+    if (!res.ok) throw new Error((await res.json()).detail || await res.text());
+    return res.json();
+  },
 };
 
 export const adminCadApi = {
