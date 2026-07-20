@@ -35,6 +35,7 @@ interface HPGLData {
     total_paths: number; polylines: number; arcs: number; circles: number;
     rectangles: number; labels: number; labelChars?: number;
     dimensions: { width: number; height: number };
+    origin?: { x: number; y: number };
     pens: number[];
   };
   upload?: { saved: boolean; id?: string; existing?: boolean; error?: string };
@@ -526,18 +527,29 @@ export default function HPGLViewerPage() {
       const ox = pad;
       const oy = pad;
 
-      const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + (dims.height - pt[1]) * sc).toFixed(1)}`;
+      // Normalize coordinates so origin at (0,0) maps to (ox, oy)
+      let minX = Infinity, minY = Infinity;
+      for (const p of (hpglData?.paths || [])) {
+        if ((p.type === 'polyline' || p.type === 'rectangle') && p.points) {
+          for (const pt of p.points) {
+            if (pt[0] < minX) minX = pt[0];
+            if (pt[1] < minY) minY = pt[1];
+          }
+        }
+      }
+      if (minX === Infinity) { minX = 0; minY = 0; }
+      const toSvg = (pt: number[]) => `${(ox + (pt[0] - minX) * sc).toFixed(1)},${(oy + (dims.height - (pt[1] - minY)) * sc).toFixed(1)}`;
 
       // HPGL paths as thin background lines
       const pathLines = (hpglData?.paths || []).filter((p: any) => p.type === 'polyline' && p.points && p.points.length >= 2).map((p: any) =>
-        `<polyline points="${p.points.map(toSvg).join(' ')}" fill="none" stroke="#999" stroke-width="0.15" stroke-linejoin="round" stroke-linecap="round" />`
+        `<polyline points="${p.points.map(toSvg).join(' ')}" fill="none" stroke="#999" stroke-width="0.5" stroke-linejoin="round" stroke-linecap="round" />`
       ).join('\n          ');
 
       const piecePolys = pieces.map((p, i) => {
         const midIdx = Math.floor(p.contour_points.length / 2);
         const mid = p.contour_points[midIdx];
         const midSvg = toSvg(mid);
-        return `<polygon points="${p.contour_points.map(toSvg).join(' ')}" fill="none" stroke="#000" stroke-width="0.5" stroke-linejoin="round" />`
+        return `<polygon points="${p.contour_points.map(toSvg).join(' ')}" fill="none" stroke="#000" stroke-width="0.8" stroke-linejoin="round" />`
           + (p.starting_point ? `<circle cx="${toSvg(p.starting_point).split(',')[0]}" cy="${toSvg(p.starting_point).split(',')[1]}" r="1.5" fill="#000" />` : '')
           + `<text x="${midSvg.split(',')[0]}" y="${midSvg.split(',')[1]}" font-size="5" text-anchor="middle" fill="#555">${p.label || p.id}</text>`;
       }).join('\n          ');

@@ -28,6 +28,7 @@ interface HPGLData {
     total_paths: number; polylines: number; arcs: number; circles: number;
     rectangles: number; labels: number;
     dimensions: { width: number; height: number };
+    origin?: { x: number; y: number };
     pens: number[];
   };
   iw?: [number, number, number, number] | null;

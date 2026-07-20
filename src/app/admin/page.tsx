@@ -1109,7 +1109,7 @@ export default function AdminPage() {
                       <input
                         type="file"
                         multiple
-                        accept=".hpgl,.plt,.hpg,.iso,.dxf,.pin,.ass,.mod,.p99,.zl,.pd"
+                        accept=".hpgl,.plt,.hpg,.hp,.iso,.dxf,.pin,.ass,.mod,.p99,.zl,.pd"
                         className="hidden"
                         id="train-file-input"
                         onChange={e => {

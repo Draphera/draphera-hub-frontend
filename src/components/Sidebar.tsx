@@ -51,7 +51,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { lang, t } = useTranslation();
 
-  const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg'];
+  const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg', '.hp'];
   const isValidFile = (f: File) => {
     const name = f.name.toLowerCase();
     // Accept known HPGL extensions OR files with no extension at all
