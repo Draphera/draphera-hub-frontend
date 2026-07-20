@@ -1,12 +1,20 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] — 2026-07-20
 
 ### Added
+- Supporto estensione `.HP` per file HPGL plotter (Sidebar + Admin upload)
+- `origin: {x, y}` nel meta response del parser HPGL per future normalizzazioni
 - Landing page copy: tiered access system (20 Founder + 30 Beta Tester)
 - `CHANGELOG.md` tracciamento modifiche
 
+### Fixed
+- **Scheda Tecnica**: coordinate HPGL assolute non venivano normalizzate — path renderizzati fuori viewBox per file con origine ≠ (0,0). Aggiunta sottrazione di minX/minY in `toSvg`
+- **Backend SVG export**: stesso bug in `build_svg` — coordinate normalizzate via `_compute_bounds()` e offset `ox/oy` in tutti gli elementi SVG (path, archi, cerchi, label, marker pezzi)
+- **Stroke width**: path interni nella scheda tecnica 0.15→0.5, contorni pezzi 0.5→0.8 per migliore visibilità a stampa
+
 ### Changed
+- Bump versione a 1.2.0
 - Rendering order in ViewerCanvas: piece hit-test polygons ora sono in topo a tutti i path HPGL — fix selezione pezzi quando una cucitura si sovrappone al bordo
 
 ## [1.1.1] — 2026-07-14

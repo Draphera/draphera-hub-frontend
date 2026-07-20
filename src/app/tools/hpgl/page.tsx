@@ -54,7 +54,7 @@ interface HPGLData {
   };
 }
 
-const APP_VERSION = '1.1.1';
+const APP_VERSION = '1.2.0';
 
 export default function HPGLViewerPage() {
   const { lang } = useTranslation();
