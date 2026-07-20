@@ -1515,17 +1515,17 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
             {/* Why button */}
             <button onClick={() => {
               const reasons = [
-                pieceDetail.piece.contour_quality >= 80 ? '✓ Loop chiuso — contorno completo' : '⚠ Loop aperto — contorno incompleto',
-                pieceDetail.piece.compactness >= 0.4 ? '✓ Nessuna auto intersezione rilevata' : '⚠ Possibile auto intersezione',
-                pieceDetail.piece.segment_count > 0 ? '✓ Segmentazione coerente' : '⚠ Segmentazione assente',
-                '✓ Topologia valida — pezzo riconosciuto',
-                pieceDetail.piece.contour_points.length >= 3 ? '✓ Continuità verificata — punti contorno ≥ 3' : '⚠ Punti contorno insufficienti',
-                pieceDetail.piece.has_grainline ? '✓ Drittofilo presente' : '⚠ Drittofilo non rilevato',
-                pieceDetail.piece.notch_count > 0 ? `✓ ${pieceDetail.piece.notch_count} intacchi riconosciuti` : '⚠ Nessun intacco rilevato',
+                pieceDetail.piece.contour_quality >= 80 ? _('✓ Loop chiuso — contorno completo', '✓ Closed loop — complete contour') : _('⚠ Loop aperto — contorno incompleto', '⚠ Open loop — incomplete contour'),
+                pieceDetail.piece.compactness >= 0.4 ? _('✓ Nessuna auto intersezione rilevata', '✓ No self-intersection detected') : _('⚠ Possibile auto intersezione', '⚠ Possible self-intersection'),
+                pieceDetail.piece.segment_count > 0 ? _('✓ Segmentazione coerente', '✓ Consistent segmentation') : _('⚠ Segmentazione assente', '⚠ Missing segmentation'),
+                _('✓ Topologia valida — pezzo riconosciuto', '✓ Valid topology — piece recognized'),
+                pieceDetail.piece.contour_points.length >= 3 ? _('✓ Continuità verificata — punti contorno ≥ 3', '✓ Continuity verified — contour points ≥ 3') : _('⚠ Punti contorno insufficienti', '⚠ Insufficient contour points'),
+                pieceDetail.piece.has_grainline ? _('✓ Drittofilo presente', '✓ Grainline present') : _('⚠ Drittofilo non rilevato', '⚠ Grainline not detected'),
+                pieceDetail.piece.notch_count > 0 ? `${_('✓', '✓')} ${pieceDetail.piece.notch_count} ${_('intacchi riconosciuti', 'notches recognized')}` : _('⚠ Nessun intacco rilevato', '⚠ No notches detected'),
               ];
               setMsg(reasons.filter(r => r.startsWith('✓')).length >= 4
-                ? `Qualità ${pieceDetail.piece.contour_quality}%:\n${reasons.filter(r => r.startsWith('✓')).join('\n')}`
-                : `Qualità ${pieceDetail.piece.contour_quality}%:\n${reasons.join('\n')}`
+                ? `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.filter(r => r.startsWith('✓')).join('\n')}`
+                : `${_('Qualità', 'Quality')} ${pieceDetail.piece.contour_quality}%:\n${reasons.join('\n')}`
               );
             }}
               className="w-full flex items-center justify-center gap-1.5 py-2 mt-3 rounded-lg text-[10px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors">
