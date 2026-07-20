@@ -529,7 +529,7 @@ export default function HPGLViewerPage() {
       const toSvg = (pt: number[]) => `${(ox + pt[0] * sc).toFixed(1)},${(oy + (dims.height - pt[1]) * sc).toFixed(1)}`;
 
       // HPGL paths as thin background lines
-      const pathLines = (hpglData?.paths || []).filter(p => p.type === 'polyline' && p.points && p.points.length >= 2).map(p =>
+      const pathLines = (hpglData?.paths || []).filter((p: any) => p.type === 'polyline' && p.points && p.points.length >= 2).map((p: any) =>
         `<polyline points="${p.points.map(toSvg).join(' ')}" fill="none" stroke="#999" stroke-width="0.15" stroke-linejoin="round" stroke-linecap="round" />`
       ).join('\n          ');
 
