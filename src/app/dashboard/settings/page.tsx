@@ -433,12 +433,18 @@ export default function SettingsPage() {
               return (
                 <div key={b.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border ${b.unlocked ? rarityColors[b.rarity] || 'border-gray-500/20 text-gray-400' : 'border-drapera-border/30 text-gray-700 opacity-50'}`}>
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${b.unlocked ? 'bg-gradient-to-br from-blue-500/20 to-transparent' : ''}`}>
-                    <svg className={`w-4 h-4 ${b.unlocked ? 'text-current' : 'text-gray-700'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                      <path d={iconSvgs[b.icon] || iconSvgs.square} />
-                    </svg>
+                    {b.id === 'tetris_secret' && !b.unlocked ? (
+                      <span className="text-[10px] font-bold text-gray-700">?</span>
+                    ) : (
+                      <svg className={`w-4 h-4 ${b.unlocked ? 'text-current' : 'text-gray-700'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d={iconSvgs[b.icon] || iconSvgs.square} />
+                      </svg>
+                    )}
                   </div>
                   <div className="min-w-0">
-                    <p className={`text-xs font-semibold truncate ${b.unlocked ? 'text-white' : 'text-gray-600'}`}>{b.name}</p>
+                    <p className={`text-xs font-semibold truncate ${b.unlocked ? 'text-white' : 'text-gray-600'}`}>
+                      {b.id === 'tetris_secret' && !b.unlocked ? '???' : b.name}
+                    </p>
                     <p className={`text-[8px] uppercase tracking-wider ${b.unlocked ? `opacity-60 ${rarityColors[b.rarity]?.split(' ')[1] || 'text-gray-500'}` : 'text-gray-700'}`}>
                       {b.rarity === 'extra_rare' ? 'Extra Rare' : b.rarity === 'ultra_secret' ? 'Ultra Secret' : b.rarity?.charAt(0).toUpperCase() + b.rarity?.slice(1)}
                     </p>
