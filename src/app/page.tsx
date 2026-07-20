@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import CardTool from '@/components/CardTool';
 import Header from '@/components/Header';
@@ -36,7 +36,8 @@ function AnimatedCounter({ value, label, color }: { value: number; label: string
 }
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const [stats, setStats] = useState<{ total: number; hpgl: number; iso: number; dxf: number; by_vendor: Record<string, number> } | null>(null);
   const [regState, setRegState] = useState<{ open: boolean; remaining: number; current_users: number; max_users: number } | null>(null);
   const [cadSystems, setCadSystems] = useState<Array<{ id: string; name: string; color?: string; country?: string; training_ready?: boolean }>>([]);
@@ -97,28 +98,24 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-2 mb-6">
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-drapera-gold/20 bg-drapera-gold/5 text-drapera-gold text-sm font-medium">
                 <span className="w-2 h-2 rounded-full bg-drapera-gold animate-pulse-gold" />
-                Early Access — {isOpen ? `${current}/20 Beta · 1/10 Founder` : 'Completato'}
+                Early Access — {isOpen ? `${current}/20 Beta · 1/10 Founder` : t('home.completed')}
               </span>
               <span className="px-3 py-2 rounded-full border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 text-xs font-medium">
-                Powered by <strong>Draphera VectorEngine™</strong>
-                <a href="#vector-engine" className="ml-1 underline decoration-dotted underline-offset-2 hover:text-cyan-300">Cos'è?</a>
+                {_('Alimentato da', 'Powered by')} <strong>Draphera VectorEngine™</strong>
+                <a href="#vector-engine" className="ml-1 underline decoration-dotted underline-offset-2 hover:text-cyan-300">{_('Cos\'è?', 'What is it?')}</a>
               </span>
             </div>
 
-            <h1 className="section-title text-white mb-6 leading-tight">
-              La piattaforma intelligente<br />
-              <span className="gradient-text">per la modellistica digitale</span>
-            </h1>
+            <h1 className="section-title text-white mb-6 leading-tight" dangerouslySetInnerHTML={{ __html: t('home.hero_title') }} />
             <p className="text-lg md:text-2xl font-bold text-white/90 mb-3 leading-relaxed">
-              Il primo sistema che riconosce automaticamente<br className="hidden sm:block" />
-              il CAD di origine dei tuoi file.
+              {t('home.hero_subtitle')}
             </p>
             <p className="section-subtitle mb-6">
-              VectorEngine<sup>™</sup> — Analizza. Identifica. Comprende. Visualizza.
+              VectorEngine<sup>™</sup> — {_('Analizza. Identifica. Comprende. Visualizza.', 'Analyze. Identify. Understand. Visualize.')}
             </p>
 
             <div className="inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-white/5 border border-drapera-border mb-8">
-              <span className="text-xs text-gray-500">Utenti attivi:</span>
+              <span className="text-xs text-gray-500">{t('home.active_users')}</span>
               <span className="text-sm font-bold text-drapera-gold">{current}</span>
               <span className="text-xs text-gray-600">/</span>
               <span className="text-sm text-gray-400">{maxUsers}</span>
@@ -129,21 +126,21 @@ export default function HomePage() {
 
             <div className="flex flex-wrap gap-4">
               <Link href="/tools/hpgl" className="btn-gold text-lg px-8 py-4">
-                Apri VectorEngine
+                {t('home.cta_hpgl')}
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </Link>
               {isOpen ? (
                 <Link href="/auth/signup" className="btn-ghost text-lg px-8 py-4">
-                  Registrati come Beta Tester
+                  {_('Registrati come Beta Tester', 'Register as Beta Tester')}
                 </Link>
               ) : (
                 <form onSubmit={handleWaitlist} className="flex flex-wrap items-end gap-3">
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Registrazione chiusa — entra in waitlist</p>
-                    <input type="email" value={wlEmail} onChange={e => setWlEmail(e.target.value)} placeholder="La tua email"
+                    <p className="text-xs text-gray-500 mb-1">{t('home.registration_closed')}</p>
+                    <input type="email" value={wlEmail} onChange={e => setWlEmail(e.target.value)} placeholder={t('home.email_placeholder')}
                       className="w-64 bg-drapera-dark border border-drapera-border rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 outline-none focus:border-drapera-gold/50" required />
                   </div>
-                  <button type="submit" className="btn-gold text-sm px-6 py-2.5">Entra in waitlist</button>
+                  <button type="submit" className="btn-gold text-sm px-6 py-2.5">{t('home.join_waitlist')}</button>
                 </form>
               )}
             </div>
