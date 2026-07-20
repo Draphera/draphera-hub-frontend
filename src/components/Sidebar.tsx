@@ -50,7 +50,6 @@ export default function Sidebar({
   rotation, onRotateLeft, onRotateRight, flipX, onFlipX, flipY, onFlipY, onResetTransform,
 }: SidebarProps) {
   const { lang, t } = useTranslation();
-  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
 
   const VALID_EXTENSIONS = ['.hpgl', '.plt', '.hpg'];
   const isValidFile = (f: File) => {
