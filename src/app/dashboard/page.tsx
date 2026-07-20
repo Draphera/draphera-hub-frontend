@@ -127,15 +127,23 @@ export default function DashboardPage() {
                   {t('dashboard.hero_greeting').replace('{name}', name)}
                 </h1>
                 {founder?.is_admin && (
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">A</div>
-                    <span className="text-[10px] font-bold text-drapera-gold">Admin</span>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 shadow-lg shadow-amber-500/10">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                    </div>
+                    <span className="text-[10px] font-semibold text-amber-400">Admin</span>
                   </div>
                 )}
                 {founder?.is_founder || founder?.is_beta ? (
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-drapera-gold/20 to-amber-500/10 border border-drapera-gold/30 shadow-gold-glow">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">{founder.position && founder.position <= 10 ? 'F' : 'B'}</div>
-                    <span className="text-[10px] font-bold text-drapera-gold">#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
+                  <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full border shadow-lg ${founder.position && founder.position <= 10 ? 'bg-amber-500/10 border-amber-500/20 shadow-amber-500/10' : 'bg-cyan-500/10 border-cyan-500/20 shadow-cyan-500/10'}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${founder.position && founder.position <= 10 ? 'bg-gradient-to-br from-amber-400 to-yellow-600' : 'bg-gradient-to-br from-cyan-400 to-blue-600'}`}>
+                      {founder.position && founder.position <= 10 ? (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                      ) : (
+                        <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+                      )}
+                    </div>
+                    <span className={`text-[10px] font-semibold ${founder.position && founder.position <= 10 ? 'text-amber-400' : 'text-cyan-400'}`}>#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
                   </div>
                 ) : null}
               </div>

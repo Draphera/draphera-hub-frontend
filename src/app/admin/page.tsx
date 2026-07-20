@@ -1588,7 +1588,7 @@ export default function AdminPage() {
                   {founders.map(f => (
                     <tr key={String(f.user_id)} className="border-b border-drapera-border/50 text-gray-300 hover:bg-white/5">
                       <td className="px-4 py-3">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[9px] font-bold text-drapera-dark">#{String(f.position)}</div>
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-[9px] font-bold text-white shadow-sm">#{String(f.position)}</div>
                       </td>
                       <td className="px-4 py-3 text-xs text-white">{String(f.email || '-')}</td>
                       <td className="px-4 py-3 text-xs">{String(f.full_name || '-')}</td>
