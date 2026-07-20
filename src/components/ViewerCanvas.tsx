@@ -621,7 +621,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         );
       }
     }
-    return <g>{filteredOverlays}{cutOrderPolyline}{data.paths.map((path, idx) => {
+    return <g>{filteredOverlays}{cutOrderPolyline}{cleanView && pieces && pieces.length > 0 ? null : data.paths.map((path, idx) => {
       if (idx === boundRectIdx) return null;
       if (cleanView && path.type === 'label') return null;
       // Viewport culling with large margin to avoid pop-in during zoom/pan
