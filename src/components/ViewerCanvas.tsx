@@ -352,6 +352,24 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
     );
   }
 
+  // Ruler marks
+  const rulerColor = invertColors ? 'rgba(255,255,255,0.15)' : 'rgba(200,204,212,0.2)';
+  const rulerTextColor = invertColors ? 'rgba(255,255,255,0.25)' : 'rgba(200,204,212,0.3)';
+  const rulerLines: JSX.Element[] = [];
+  const rulerStep = gridSize * 2;
+  for (let i = -2000; i < 2000; i += rulerStep) {
+    // X axis ruler (bottom)
+    rulerLines.push(
+      <line key={`rx${i}`} x1={i} y1={VIEW_H - 8} x2={i} y2={VIEW_H} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`tx${i}`} x={i} y={VIEW_H - 10} fill={rulerTextColor} fontSize={6} textAnchor="middle" fontFamily="monospace">{i}</text>,
+    );
+    // Y axis ruler (left)
+    rulerLines.push(
+      <line key={`ry${i}`} x1={0} y1={i} x2={8} y2={i} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`ty${i}`} x={10} y={i + 2} fill={rulerTextColor} fontSize={6} textAnchor="start" fontFamily="monospace">{i}</text>,
+    );
+  }
+
   const boundRectIdx = useMemo(() => {
     if (!data) return -1;
     const overall = detectPlacementBounds(data.paths);
@@ -1003,16 +1021,17 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         {data ? (
           <>
           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
-            {contentTransform ? (
-              <g transform={contentTransform}>
-                {!cleanView && gridLines}
-                {renderPaths()}
-              </g>
-            ) : (
-              <>{!cleanView && gridLines}{renderPaths()}
-              </>
-            )}
-            {!cleanView && renderMeasurement()}
+             {contentTransform ? (
+               <g transform={contentTransform}>
+                 {!cleanView && gridLines}
+                 {renderPaths()}
+               </g>
+             ) : (
+               <>{!cleanView && gridLines}{renderPaths()}
+               </>
+             )}
+             {!cleanView && rulerLines}
+             {!cleanView && renderMeasurement()}
             {/* Selection rectangle during drag */}
             {dragRect && (
               <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
@@ -1073,6 +1092,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
         ) : (
           <>
             {gridLines}
+            {rulerLines}
               <text x={VIEW_W / 2} y={VIEW_H / 2} textAnchor="middle" fill="#4A4A6A" fontSize={13} fontFamily="Inter">
                 {t('viewer.hint')}
               </text>
