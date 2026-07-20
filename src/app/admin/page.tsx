@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -52,7 +52,8 @@ const TYPE_COLORS: Record<string, string> = {
 type AdminTab = 'uploads' | 'cad' | 'rules' | 'trainer' | 'waitlist' | 'profiles' | 'founders' | 'beta' | 'flags' | 'analytics' | 'system';
 
 export default function AdminPage() {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1741,43 +1742,43 @@ export default function AdminPage() {
               </div>
 
               <div className="premium-card p-5">
-                <h3 className="font-display font-bold text-base text-white mb-4">VectorEngine</h3>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-red-500/10'}`}>
-                    <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-red-400'}`}>
-                      {systemHealth.ml_model.in_memory ? 'Caricato (Supabase)' : systemHealth.ml_model.in_supabase ? 'In Supabase' : 'Assente'}
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">Modello</p>
-                  </div>
-                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-gray-500/10'}`}>
-                    <p className={`text-sm font-bold ${systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-gray-400'}`}>
-                      {systemHealth.ml_model.in_supabase ? 'In Supabase' : 'Assente'}
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">Database</p>
-                  </div>
-                  <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
-                    <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : 'text-yellow-400'}`}>
-                      {systemHealth.ml_model.in_memory ? 'Caricato' : 'Non caricato'}
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">Stato in memoria</p>
-                  </div>
-                </div>
-                {!systemHealth.ml_model.in_memory && systemHealth.ml_model.in_supabase && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const r = await adminApi.loadModel();
-                        alert(`Modello caricato da ${r.source} (classi: ${(r.classes || []).join(', ')})`);
-                        setSystemHealth(await adminApi.systemHealth());
-                      } catch (e: any) {
-                        alert(`Errore: ${e.message}`);
-                      }
-                    }}
-                    className="mt-3 w-full px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 text-xs font-semibold hover:bg-blue-600/30 transition-colors"
-                  >
-                    Carica da Supabase
-                  </button>
-                )}
+                 <h3 className="font-display font-bold text-base text-white mb-4">VectorEngine</h3>
+                 <div className="grid grid-cols-3 gap-3">
+                   <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-red-500/10'}`}>
+                     <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-red-400'}`}>
+                       {systemHealth.ml_model.in_memory ? _('Caricato (Supabase)', 'Loaded (Supabase)') : systemHealth.ml_model.in_supabase ? _('In Supabase', 'In Supabase') : _('Assente', 'Missing')}
+                     </p>
+                     <p className="text-[10px] text-gray-500 mt-0.5">{_('Modello', 'Model')}</p>
+                   </div>
+                   <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_supabase ? 'bg-blue-500/10' : 'bg-gray-500/10'}`}>
+                     <p className={`text-sm font-bold ${systemHealth.ml_model.in_supabase ? 'text-blue-400' : 'text-gray-400'}`}>
+                       {systemHealth.ml_model.in_supabase ? _('In Supabase', 'In Supabase') : _('Assente', 'Missing')}
+                     </p>
+                     <p className="text-[10px] text-gray-500 mt-0.5">{_('Database', 'Database')}</p>
+                   </div>
+                   <div className={`rounded-lg p-3 text-center ${systemHealth.ml_model.in_memory ? 'bg-green-500/10' : 'bg-yellow-500/10'}`}>
+                     <p className={`text-sm font-bold ${systemHealth.ml_model.in_memory ? 'text-green-400' : 'text-yellow-400'}`}>
+                       {systemHealth.ml_model.in_memory ? _('Caricato', 'Loaded') : _('Non caricato', 'Not loaded')}
+                     </p>
+                     <p className="text-[10px] text-gray-500 mt-0.5">{_('Stato in memoria', 'Memory state')}</p>
+                   </div>
+                 </div>
+                 {!systemHealth.ml_model.in_memory && systemHealth.ml_model.in_supabase && (
+                   <button
+                     onClick={async () => {
+                       try {
+                         const r = await adminApi.loadModel();
+                         alert(`${_('Modello caricato da', 'Model loaded from')} ${r.source} (${_('classi', 'classes')}: ${(r.classes || []).join(', ')})`);
+                         setSystemHealth(await adminApi.systemHealth());
+                       } catch (e: any) {
+                         alert(`${_('Errore', 'Error')}: ${e.message}`);
+                       }
+                     }}
+                     className="mt-3 w-full px-3 py-2 rounded-lg bg-blue-600/20 text-blue-400 text-xs font-semibold hover:bg-blue-600/30 transition-colors"
+                   >
+                     {_('Carica da Supabase', 'Load from Supabase')}
+                   </button>
+                 )}
               </div>
 
               <div className="premium-card p-5">
