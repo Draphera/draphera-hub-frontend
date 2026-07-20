@@ -18,6 +18,38 @@ const SHAPES = [
   [[0,1,1],[1,1,0]],
 ];
 
+// Tetris theme (Korobeiniki) — notes as [midiNote, duration(ms)]
+const TETRIS_THEME: [number, number][] = [
+  [76, 180], [76, 180], [71, 180], [72, 180], [74, 180], [72, 180], [71, 180], [69, 180],
+  [69, 180], [72, 180], [76, 180], [74, 180], [72, 180], [71, 180], [71, 180], [72, 180],
+  [74, 180], [76, 180], [72, 180], [69, 180], [69, 360],
+  [74, 180], [77, 180], [81, 180], [81, 180], [79, 180], [77, 180], [76, 180], [76, 180],
+  [72, 180], [76, 180], [74, 180], [72, 180], [71, 180], [71, 180], [72, 180], [74, 180],
+  [76, 180], [72, 180], [69, 180], [69, 360],
+];
+
+function playTetrisMelody() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.08;
+
+    let time = ctx.currentTime + 0.05;
+    for (const [note, dur] of TETRIS_THEME) {
+      const freq = 440 * Math.pow(2, (note - 69) / 12);
+      const osc = ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      osc.start(time);
+      osc.stop(time + dur / 1000);
+      time += dur / 1000;
+    }
+    setTimeout(() => ctx.close(), (time - ctx.currentTime) * 1000 + 100);
+  } catch {}
+}
+
 export default function DrapheraGlitch() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [active, setActive] = useState(false);
@@ -36,6 +68,7 @@ export default function DrapheraGlitch() {
       if (keysRef.current.join(',') === KONAMI.join(',')) {
         setActive(true);
         userApi.unlockTetrisBadge().catch(() => {});
+        playTetrisMelody();
         setTimeout(() => { setActive(false); setShowBadge(true); }, 5000);
         setTimeout(() => setShowBadge(false), 8000);
       }
