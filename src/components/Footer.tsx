@@ -32,18 +32,39 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="border-t border-drapera-border/30 py-4">
-        <div className="max-w-7xl mx-auto px-4 text-center space-y-2">
-          <div className="flex items-center justify-center gap-4 text-[11px]">
-            <Link href="/changelog" className="text-gray-600 hover:text-drapera-gold transition-colors">{_('Novità', 'Changelog')}</Link>
-            <Link href="/termini" className="text-gray-600 hover:text-drapera-gold transition-colors">{_('Termini', 'Terms')}</Link>
-            <Link href="/privacy" className="text-gray-600 hover:text-drapera-gold transition-colors">{_('Privacy', 'Privacy')}</Link>
-            <button onClick={() => setShowBugModal(true)} className="text-gray-600 hover:text-red-400 transition-colors">{_('Bug?', 'Bug?')}</button>
+      <footer className="border-t border-drapera-border/30 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid sm:grid-cols-3 gap-6 mb-6 text-center sm:text-left">
+            <div>
+              <p className="text-[11px] font-semibold text-white uppercase tracking-wider mb-2">{_('Piattaforma', 'Platform')}</p>
+              <div className="space-y-1.5">
+                <Link href="/" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">Draphera Hub</Link>
+                <Link href="/tools/hpgl" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">VectorEngine</Link>
+                <a href="https://draphera.com" target="_blank" rel="noopener noreferrer" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">VISION</a>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-white uppercase tracking-wider mb-2">{_('Risorse', 'Resources')}</p>
+              <div className="space-y-1.5">
+                <Link href="/changelog" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">{_('Novità', 'Changelog')}</Link>
+                <Link href="/termini" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">{_('Termini', 'Terms')}</Link>
+                <Link href="/privacy" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">{_('Privacy', 'Privacy')}</Link>
+                <a href="https://github.com/Draphera" target="_blank" rel="noopener noreferrer" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">GitHub</a>
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold text-white uppercase tracking-wider mb-2">{_('Contatti', 'Contact')}</p>
+              <div className="space-y-1.5">
+                <button onClick={() => setShowBugModal(true)} className="block text-[11px] text-gray-600 hover:text-red-400 transition-colors">{_('Segnala bug', 'Report bug')}</button>
+                <Link href="/cancellazione-dati" className="block text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">{_('Cancellazione dati', 'Data deletion')}</Link>
+              </div>
+            </div>
           </div>
-          <a href="https://draphera.com" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-600 hover:text-drapera-gold transition-colors block">
-            © {new Date().getFullYear()} Draphera.com
-          </a>
-          <p className="text-[10px] text-gray-700">{_('Early Access v1.0', 'Early Access v1.0')}</p>
+          <div className="border-t border-drapera-border/20 pt-4 text-center">
+            <a href="https://draphera.com" target="_blank" rel="noopener noreferrer" className="text-[11px] text-gray-600 hover:text-drapera-gold transition-colors">
+              © {new Date().getFullYear()} Draphera.com — {_('Infrastruttura per la geometria industriale', 'Infrastructure for industrial geometry')}
+            </a>
+          </div>
         </div>
       </footer>
 

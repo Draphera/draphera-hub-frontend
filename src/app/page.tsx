@@ -126,7 +126,7 @@ export default function HomePage() {
               <div className="mt-12 space-y-4 max-w-2xl">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <AnimatedCounter value={stats.total} label={t('home.stats_files')} color="text-drapera-gold" />
-                  <AnimatedCounter value={stats.hpgl} label="HPGL" color="text-cyan-400" />
+                  <AnimatedCounter value={stats.hpgl} label={_('File HPGL', 'HPGL files')} color="text-cyan-400" />
                   <AnimatedCounter value={trainedCadCount} label={t('home.stats_cad')} color="text-green-400" />
                   <div className="text-center">
                     <p className="text-3xl font-bold text-purple-400">v1.2</p>
@@ -236,9 +236,11 @@ export default function HomePage() {
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-white font-display mb-2">{t('home.cad_origins_title')}</h2>
-              <p className="text-xs text-gray-500 mb-6">
-                {trainedCadCount} {_('addestrate', 'trained')} · {pendingCadCount} {_('in preparazione', 'dataset in progress')} · {researchCadCount} {_('in coda di ricerca', 'research queue')}
-              </p>
+              <div className="flex flex-wrap items-center gap-3 mb-6 text-[11px]">
+                <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> {_('Riconosciuto', 'Recognized')}</span>
+                <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 rounded-full bg-amber-400" /> {_('Dataset disponibile', 'Dataset available')}</span>
+                <span className="flex items-center gap-1.5 text-gray-500"><span className="w-2 h-2 rounded-full bg-gray-500" /> {_('Ricerca', 'Research')}</span>
+              </div>
               <div className="flex flex-wrap gap-2 mb-4">
                 {cadSystems.map(cad => {
                   const isTrained = cad.training_ready;
