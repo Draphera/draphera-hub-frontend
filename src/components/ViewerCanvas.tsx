@@ -151,7 +151,7 @@ interface Props {
   onFlipX?: () => void;
   onFlipY?: () => void;
   onResetTransform?: () => void;
-  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; cut_order?: number; seam_lines?: number[][][] }>;
+  pieces?: Array<{ id: number; minx: number; miny: number; maxx: number; maxy: number; area: number; perimeter: number; notch_count: number; has_grainline: boolean; winding: string; starting_point: number[]; label: string; complexity: number; contour_quality: number; segment_count: number; linear_segments: number; curved_segments: number; compactness: number; grainline_length?: number; grainline_angle?: number; contour_points: number[][]; holes?: number[][][]; cut_order?: number; seam_lines?: number[][][] }>;
   filteredContours?: Array<{ type: 'placement_rect' | 'block_fuse'; contour_points: number[][] }>;
   cleanView?: boolean;
   showCutOrder?: boolean;
@@ -548,6 +548,19 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               strokeLinejoin="round"
               style={{ pointerEvents: 'none' }}
             />
+            {/* Holes — rendered as cutouts by masking the fill */}
+            {p.holes?.map((hole, hi) => {
+              const holePts = hole.map(pt => `${pt[0]},${pt[1]}`).join(' ');
+              return (
+                <polygon key={`hole_${p.id}_${hi}`} points={holePts}
+                  fill={bgColor}
+                  stroke={color}
+                  strokeWidth={0.5 / effectiveZoom}
+                  strokeOpacity={0.4}
+                  style={{ pointerEvents: 'none' }}
+                />
+              );
+            })}
           </g>
         );
       }
