@@ -2,9 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Header from '@/components/Header';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
+import viewerScreenshot from '../../assets/ve-hpgl.png';
 
 const API_BASE = '';
 
@@ -226,108 +228,16 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Viewer mockup — professional CAD interface */}
+            {/* Viewer screenshot */}
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-br from-cyan-500/10 via-transparent to-drapera-gold/10 rounded-3xl blur-2xl" />
-              <div className="relative rounded-xl border border-drapera-border overflow-hidden bg-drapera-midnight shadow-2xl">
-                {/* Title bar */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-drapera-dark/80 border-b border-drapera-border">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-                  </div>
-                  <div className="flex items-center gap-2 mx-auto">
-                    <span className="w-4 h-4 rounded bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-[8px] font-bold text-drapera-dark shrink-0">D</span>
-                    <span className="text-[10px] text-gray-500 font-medium">VectorEngine — <span className="text-cyan-400">Gerber</span> <span className="text-gray-600">· 35%</span></span>
-                  </div>
-                </div>
-
-                <div className="flex" style={{ height: '320px' }}>
-                  {/* Sidebar */}
-                  <div className="w-14 bg-drapera-dark/60 border-r border-drapera-border/30 flex flex-col items-center gap-3 py-3">
-                    <div className="w-8 h-8 rounded-lg bg-drapera-gold/10 border border-drapera-gold/20 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-drapera-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                    </div>
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>
-                    </div>
-                  </div>
-
-                  {/* Canvas area — geometric paths */}
-                  <div className="flex-1 bg-drapera-dark/40 relative overflow-hidden">
-                    <svg viewBox="0 0 200 200" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
-                      {/* Grid dots */}
-                      <defs>
-                        <pattern id="grid-dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                          <circle cx="1" cy="1" r="0.6" fill="rgba(255,255,255,0.06)" />
-                        </pattern>
-                      </defs>
-                      <rect width="200" height="200" fill="url(#grid-dots)" />
-                      {/* Piece contour — closed polygon */}
-                      <polygon points="40,30 60,22 85,25 110,20 140,28 160,35 170,55 165,80 155,100 140,115 120,125 100,130 75,128 55,120 42,105 35,85 32,65 33,48" fill="rgba(0,174,239,0.08)" stroke="#00AEEF" strokeWidth="0.8" strokeLinejoin="round" />
-                      {/* Internal cut paths */}
-                      <polyline points="70,50 78,48 85,52 82,60 73,62 68,56" fill="none" stroke="#FF6B6B" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <polyline points="120,55 128,52 135,56 132,65 124,67 119,60" fill="none" stroke="#FF6B6B" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" />
-                      {/* Placement rect */}
-                      <polygon points="35,25 165,25 165,135 35,135" fill="none" stroke="#EF4444" strokeWidth="0.5" strokeDasharray="3,2" strokeOpacity="0.5" />
-                      {/* Grainline */}
-                      <line x1="60" y1="95" x2="100" y2="85" stroke="#F2C94C" strokeWidth="0.6" strokeDasharray="2,2" />
-                      {/* Notch markers */}
-                      <rect x="37" y="23" width="3" height="3" fill="none" stroke="#00E676" strokeWidth="0.4" />
-                      <rect x="163" y="23" width="3" height="3" fill="none" stroke="#00E676" strokeWidth="0.4" />
-                      {/* Labels */}
-                      <text x="90" y="82" fontSize="4" fill="#888" fontFamily="monospace">PEZZO #1</text>
-                      <text x="10" y="15" fontSize="3.5" fill="#555" fontFamily="monospace">HPGL/1 · 1.234 paths</text>
-                      {/* Rulers */}
-                      <line x1="0" y1="148" x2="50" y2="148" stroke="#333" strokeWidth="0.4" />
-                      <line x1="10" y1="148" x2="10" y2="152" stroke="#333" strokeWidth="0.3" />
-                      <line x1="30" y1="148" x2="30" y2="151" stroke="#333" strokeWidth="0.3" />
-                      <line x1="50" y1="148" x2="50" y2="152" stroke="#333" strokeWidth="0.3" />
-                    </svg>
-
-                    {/* Bottom bar */}
-                    <div className="absolute bottom-0 left-0 right-0 h-7 bg-drapera-dark/80 border-t border-drapera-border/30 flex items-center px-2 gap-3">
-                      <span className="text-[9px] text-gray-600">X: 1,042.3</span>
-                      <span className="text-[9px] text-gray-600">Y: 2,381.7</span>
-                      <span className="text-[9px] text-gray-600 ml-auto">Scale: 1.00</span>
-                      <span className="text-[9px] text-gray-600">+</span>
-                      <span className="text-[9px] text-gray-600">−</span>
-                      <span className="text-[9px] text-gray-600">⊞</span>
-                    </div>
-                  </div>
-
-                  {/* Right info panel */}
-                  <div className="w-36 bg-drapera-dark/60 border-l border-drapera-border/30 p-2.5 space-y-2 overflow-y-auto">
-                    <div className="pb-1.5 border-b border-drapera-border/20">
-                      <p className="text-[8px] text-gray-600 uppercase tracking-wider">CAD</p>
-                      <p className="text-[10px] text-white font-semibold">Gerber</p>
-                      <div className="flex items-center gap-1 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                        <span className="text-[8px] text-green-400/80">35%</span>
-                      </div>
-                    </div>
-                    <div className="pb-1.5 border-b border-drapera-border/20">
-                      <p className="text-[8px] text-gray-600 uppercase tracking-wider">{_('Formato', 'Format')}</p>
-                      <p className="text-[10px] text-cyan-400 font-mono">HPGL/1</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] text-gray-600 uppercase tracking-wider">{_('Pezzi', 'Pieces')}</p>
-                      <p className="text-[10px] text-white font-mono">3</p>
-                    </div>
-                    <div>
-                      <p className="text-[8px] text-gray-600 uppercase tracking-wider">{_('Penne', 'Pens')}</p>
-                      <div className="flex gap-1 mt-0.5">
-                        <span className="w-3 h-3 rounded-full border border-white/10" style={{ background: '#F2C94C' }} />
-                        <span className="w-3 h-3 rounded-full border border-white/10" style={{ background: '#00E5FF' }} />
-                        <span className="w-3 h-3 rounded-full border border-white/10" style={{ background: '#FF4081' }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative rounded-xl border border-drapera-border overflow-hidden shadow-2xl">
+                <Image
+                  src={viewerScreenshot}
+                  alt="VectorEngine interface — HPGL viewer with CAD recognition"
+                  className="w-full h-auto block"
+                  priority
+                />
               </div>
             </div>
           </div>
