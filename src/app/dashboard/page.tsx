@@ -48,6 +48,7 @@ export default function DashboardPage() {
   const [uploads, setUploads] = useState<Array<Record<string, unknown>>>([]);
   const [showAll, setShowAll] = useState(false);
   const [founder, setFounder] = useState<{ is_founder: boolean; is_beta?: boolean; position?: number; is_admin?: boolean } | null>(null);
+  const [badges, setBadges] = useState<string[]>([]);
   const [msg, setMsg] = useState('');
 
   useEffect(() => {
@@ -69,6 +70,8 @@ export default function DashboardPage() {
         if (tok) {
           const fr = await fetch(`${API_BASE}/api/profile/founder-status`, { headers: { Authorization: `Bearer ${tok}` } });
           if (fr.ok) setFounder(await fr.json());
+          const badgeData = await userApi.getBadges();
+          setBadges((badgeData.badges || []).filter((b: any) => b.unlocked).map((b: any) => b.id));
         }
       } catch {}
       setLoading(false);
@@ -146,6 +149,14 @@ export default function DashboardPage() {
                     <span className={`text-[10px] font-semibold ${founder.position && founder.position <= 10 ? 'text-amber-400' : 'text-cyan-400'}`}>#{founder.position} {founder.position && founder.position <= 10 ? 'Founder' : 'Beta'}</span>
                   </div>
                 ) : null}
+                {badges.includes('custode') && (
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/10 border border-red-500/20 shadow-lg shadow-red-500/10">
+                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center shrink-0">
+                      <svg className="w-3 h-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
+                    </div>
+                    <span className="text-[10px] font-semibold text-red-400">Custode</span>
+                  </div>
+                )}
               </div>
               <p className="section-subtitle max-w-xl">{t('dashboard.hero_desc')}</p>
             </div>

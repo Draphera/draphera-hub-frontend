@@ -17,6 +17,7 @@ interface LeaderboardEntry {
   company_name?: string;
   office?: string;
   role?: string;
+  badges?: string[];
   total_uploads: number;
   unique_files: number;
   bug_reports: number;
@@ -125,6 +126,18 @@ export default function CommunityPage() {
                                 {m.role === 'admin' && (
                                   <span className="inline-flex items-center px-1 py-0.5 rounded text-[8px] font-medium uppercase tracking-wider bg-drapera-gold/10 text-drapera-gold border border-drapera-gold/20">
                                     {_('Admin', 'Admin')}
+                                  </span>
+                                )}
+                                {m.badges?.includes('custode') && (
+                                  <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-[8px] font-medium uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20">
+                                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
+                                    Custode
+                                  </span>
+                                )}
+                                {m.badges?.includes('founder') && !m.badges?.includes('custode') && (
+                                  <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-[8px] font-medium uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                                    Founder
                                   </span>
                                 )}
                               </div>
