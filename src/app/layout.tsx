@@ -3,6 +3,7 @@ import { Inter, Manrope } from 'next/font/google';
 import '@/styles/globals.css';
 import { I18nProvider } from '@/lib/i18n';
 import Footer from '@/components/Footer';
+import DrapheraGlitch from '@/components/DrapheraGlitch';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap', preload: true });
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap', preload: true });
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <I18nProvider>
           <main className="flex-1">{children}</main>
           <Footer />
+          <DrapheraGlitch />
         </I18nProvider>
       </body>
     </html>
