@@ -120,48 +120,13 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
           {t('nav.home')}
         </Link>
         <span className="text-drapera-border mx-0.5 text-[10px] font-medium">/</span>
+        <Link href="/tools/hpgl" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/tools/hpgl' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
+          VectorEngine
+        </Link>
+        <span className="text-drapera-border mx-0.5 text-[10px] font-medium">/</span>
         <Link href="/dashboard" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
           Workspace
         </Link>
-        <Link href="/dashboard/community" className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${pathname === '/dashboard/community' ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
-          Community
-        </Link>
-        <span className="text-drapera-border mx-0.5 text-[10px] font-medium">/</span>
-        <div className="relative group">
-          <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-500 hover:text-white">
-            {t('nav.tools')}
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          <div className="absolute top-full left-0 mt-1 w-56 py-2 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-            {Object.values(toolGroups).map(group => (
-              <div key={group.label}>
-                <p className="px-3 py-1 text-[9px] font-semibold uppercase tracking-wider text-gray-600">{group.label}</p>
-                {group.tools.map(tool => (
-                  <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={e => { if (tool.comingSoon) e.preventDefault(); }}
-                    className={`flex items-center justify-between px-3 py-1.5 text-xs transition-colors ${tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                    {tool.label}
-                    {tool.comingSoon && <span className="text-[8px] uppercase text-gray-700 bg-drapera-border/50 px-1 py-0.5 rounded">{t('dashboard.soon')}</span>}
-                  </Link>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="relative" ref={ufficiRef}>
-          <button onClick={() => setUfficiOpen(!ufficiOpen)} className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${ufficiOpen ? 'text-drapera-gold bg-drapera-gold/10' : 'text-gray-500 hover:text-white'}`}>
-            Uffici
-            <svg className={`w-3 h-3 transition-transform ${ufficiOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          {ufficiOpen && (
-            <div className="absolute top-full left-0 mt-1 w-48 py-1.5 bg-drapera-dark border border-drapera-border rounded-xl shadow-2xl animate-fade-in">
-              {uffici.map(u => (
-                <Link key={u.href} href={u.href} onClick={() => setUfficiOpen(false)} className="block px-3 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 transition-colors">
-                  {u.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
       </nav>
 
       <div className="flex items-center gap-2 ml-auto">
@@ -250,27 +215,8 @@ export default function Header({ onExportPng, onExportZip, hasFile }: HeaderProp
               </div>
             )}
             <Link href="/" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('nav.home')}</Link>
+            <Link href="/tools/hpgl" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">VectorEngine</Link>
             <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">Workspace</Link>
-            <Link href="/dashboard/community" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">Community</Link>
-            <div className="h-px bg-drapera-border/50 my-2" />
-            <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">{t('nav.uffici')}</p>
-            {uffici.map(u => (
-              <Link key={u.href} href={u.href} onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{u.label}</Link>
-            ))}
-            <div className="h-px bg-drapera-border/50 my-2" />
-            {Object.values(toolGroups).map(group => (
-              <div key={group.label}>
-                <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">{group.label}</p>
-                {group.tools.map(tool => (
-                  <Link key={tool.href} href={tool.active ? tool.href : '#'} onClick={() => { if (tool.active) setMobileOpen(false); }}
-                    className={`flex items-center justify-between px-3 py-2 text-sm rounded-lg ${tool.comingSoon ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
-                    {tool.label}
-                    {tool.comingSoon && <span className="text-[9px] uppercase text-gray-700 bg-drapera-border/50 px-1.5 py-0.5 rounded">{t('dashboard.soon')}</span>}
-                  </Link>
-                ))}
-              </div>
-            ))}
-            <div className="h-px bg-drapera-border/50 my-2" />
             {session && (
               <>
                 <Link href="/dashboard/settings" onClick={() => setMobileOpen(false)} className="block px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5">{t('profile.title')}</Link>

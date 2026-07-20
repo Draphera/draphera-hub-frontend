@@ -9,12 +9,12 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope', display: 'swap', preload: true });
 
 export const metadata: Metadata = {
-  title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
-  description: 'Draphera Hub è il modulo operativo dell\'Ecosistema Draphera, parte dello Standard Draphera per modellistica, dati vettoriali e preservazione industriale. VectorEngine™ HPGL, ISO, DXF e strumenti CAD.',
-  keywords: ['VectorEngine', 'HPGL viewer', 'visualizzatore HPGL', 'HPGL online', 'CAD moda', 'file HPGL', 'HPGL plotter', 'Lectra HPGL', 'Gerber HPGL', 'visualizzatore CAD gratuito', 'HPGL to SVG', 'HPGL to PNG', 'Draphera Hub', 'VectorEngine', 'Standard Draphera'],
+  title: 'Draphera Hub — Technical Workspace for Fashion CAD Files',
+  description: 'Upload and inspect HPGL files with VISION. Analyze geometry, structure and probable CAD origin inside the Draphera technical workspace.',
+  keywords: ['Draphera Hub', 'VISION', 'VectorEngine', 'HPGL', 'CAD fashion', 'technical workspace', 'CAD origin recognition', 'HPGL viewer', 'geometric analysis', 'industrial geometry'],
   openGraph: {
-    title: 'Draphera Hub — Ecosistema Tecnico dello Standard Draphera',
-    description: 'Modulo operativo dell\'Ecosistema Draphera per modellistica, dati vettoriali e preservazione industriale.',
+    title: 'Draphera Hub — Technical Workspace for Fashion CAD Files',
+    description: 'Upload and inspect HPGL files with VISION. Analyze geometry, structure and probable CAD origin inside the Draphera technical workspace.',
     url: 'https://hub.draphera.com',
     siteName: 'Draphera Hub',
     type: 'website',
