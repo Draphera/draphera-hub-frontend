@@ -710,6 +710,12 @@ ${misure ? `<div class="section"><h2>${_('Misure', 'Measures')} (${measureResult
       setFeatures(result.features ?? null);
       setUploadId(result.upload?.id ?? '');
       setParsing(false);
+      // Auto-detect pieces
+      try {
+        const piecesResult = await hpglApi.pieces(file);
+        setPieces(piecesResult.pieces ?? []);
+        setFilteredContours(piecesResult.filtered_contours ?? []);
+      } catch {/* piece detection fallback silent */}
     } catch {
       try {
         const text = await file.text();
