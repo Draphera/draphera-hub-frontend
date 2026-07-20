@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,7 +13,8 @@ import type { Session } from '@supabase/supabase-js';
 const API_BASE = '';
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { lang, t } = useTranslation();
+  const _ = useCallback((it: string, en: string) => lang === 'en' ? en : it, [lang]);
   const router = useRouter();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +26,7 @@ export default function SettingsPage() {
   const [founder, setFounder] = useState<{ is_founder: boolean; is_beta?: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const [uploadCount, setUploadCount] = useState(0);
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'social' | 'account'>('profile');
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -249,6 +251,23 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* Tabs */}
+        <div className="flex rounded-lg border border-drapera-border overflow-hidden mb-6">
+          <button onClick={() => setSettingsTab('profile')}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'profile' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
+            {_('Profilo', 'Profile')}
+          </button>
+          <button onClick={() => setSettingsTab('social')}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'social' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
+            {_('Social', 'Social')}
+          </button>
+          <button onClick={() => setSettingsTab('account')}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'account' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
+            {_('Account', 'Account')}
+          </button>
+        </div>
+
+        {settingsTab === 'profile' && (
         <div className="premium-card p-6 space-y-5">
           {fields.map(f => (
             <div key={f.key}>
@@ -363,8 +382,10 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+        )}
 
-        <div className="mt-10 premium-card p-5 border border-red-500/20">
+        {settingsTab === 'account' && (
+        <div className="premium-card p-5 border border-red-500/20">
           <h2 className="section-title text-red-400 text-lg mb-2">{t('dashboard.danger_zone')}</h2>
           <p className="text-sm text-gray-500 mb-6">{t('dashboard.danger_zone_desc')}</p>
           <div className="grid md:grid-cols-2 gap-6">
@@ -424,6 +445,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
