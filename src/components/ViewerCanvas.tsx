@@ -541,10 +541,10 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             )}
             {/* Visible overlay — controlled by filled toggle */}
             <polygon points={pts}
-              fill={cleanView ? 'rgba(0,174,239,0.08)' : (filled ? `${color}30` : (isActive ? (selectedPieceId === p.id ? `${color}40` : `${color}30`) : 'transparent'))}
+              fill={filled ? (isActive ? (selectedPieceId === p.id ? `${color}40` : `${color}30`) : `${color}25`) : 'transparent'}
               stroke={isActive && selectedPieceId === p.id ? '#00FFAA' : color}
-              strokeWidth={(isActive && selectedPieceId === p.id ? 4 : (cleanView ? 1.5 : (selectedPieceId === p.id ? 3 : 2))) / effectiveZoom}
-              strokeOpacity={isActive && selectedPieceId === p.id ? 1 : (cleanView ? 0.6 : 1)}
+              strokeWidth={(isActive && selectedPieceId === p.id ? 4 : 1.5) / effectiveZoom}
+              strokeOpacity={isActive && selectedPieceId === p.id ? 1 : 0.5}
               strokeLinejoin="round"
               style={{ pointerEvents: 'none' }}
             />
