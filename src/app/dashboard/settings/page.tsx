@@ -273,6 +273,20 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {badges.find(b => b.id === 'tetris_secret')?.unlocked && (
+          <div className="premium-card p-2.5 border border-purple-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.08), rgba(168,85,247,0.02))' }}>
+            <div className="flex items-center gap-2 relative z-10">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-violet-700 flex items-center justify-center shrink-0 shadow-md shadow-purple-500/20">
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 2L2 22h20L12 2z" /></svg>
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-white font-semibold truncate">{badges.find(b => b.id === 'tetris_secret')?.name || 'Tetris Secret'}</p>
+                <p className="text-[9px] text-purple-400/70 uppercase tracking-wider">Ultra Secret</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         </div>
 
         {/* Tabs */}
