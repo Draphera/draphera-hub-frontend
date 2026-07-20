@@ -162,14 +162,13 @@ export default function SettingsPage() {
         </div>
 
         {founder?.is_admin && (
-          <div className="premium-card p-3 mb-3 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-drapera-gold/5 blur-3xl" />
+          <div className="premium-card p-3 mb-3 border border-amber-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.02))' }}>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                A
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
               </div>
               <div>
-                <p className="text-sm text-white font-bold">Admin</p>
+                <p className="text-sm text-white font-semibold">Admin</p>
                 <p className="text-[11px] text-gray-500">Amministratore di sistema</p>
               </div>
             </div>
@@ -177,16 +176,19 @@ export default function SettingsPage() {
         )}
 
         {(founder?.is_founder || founder?.is_beta) && (
-          <div className="premium-card p-3 mb-3 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
-            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-drapera-gold/5 blur-3xl" />
+          <div className="premium-card p-3 mb-3 border border-amber-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.08), rgba(251,191,36,0.02))' }}>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                {founder.position && founder.position <= 10 ? 'F' : 'B'}
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg ${founder.position && founder.position <= 10 ? 'bg-gradient-to-br from-amber-400 to-yellow-600 shadow-amber-500/20' : 'bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/20'}`}>
+                {founder.position && founder.position <= 10 ? (
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" /></svg>
+                ) : (
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" /></svg>
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-white font-bold">{founder.position && founder.position <= 10 ? t('settings.founder_badge') : 'Beta Tester'}</p>
-                  <span className="text-xs font-bold text-drapera-gold">#{founder.position ?? '?'}</span>
+                  <p className="text-sm text-white font-semibold">{founder.position && founder.position <= 10 ? t('settings.founder_badge') : 'Beta Tester'}</p>
+                  <span className={`text-xs font-bold ${founder.position && founder.position <= 10 ? 'text-amber-400' : 'text-cyan-400'}`}>#{founder.position ?? '?'}</span>
                 </div>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
               </div>
@@ -195,10 +197,10 @@ export default function SettingsPage() {
         )}
 
         {founder?.is_beta && !founder?.is_founder && betaApp === null && (
-          <div className="premium-card p-3 mb-3 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+          <div className="premium-card p-3 mb-3 border border-emerald-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.02))' }}>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                B
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base text-white font-bold">{t('settings.beta_apply')}</p>
@@ -221,13 +223,13 @@ export default function SettingsPage() {
         )}
 
         {betaApp?.status === 'pending' && (
-          <div className="premium-card p-3 mb-3 border border-yellow-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.1), rgba(234,179,8,0.02))' }}>
+          <div className="premium-card p-3 mb-3 border border-yellow-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(234,179,8,0.08), rgba(234,179,8,0.02))' }}>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                B
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-amber-600 flex items-center justify-center shrink-0 shadow-lg shadow-yellow-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <div>
-                <p className="text-sm text-white font-bold">{t('settings.beta_pending')}</p>
+                <p className="text-sm text-white font-semibold">{t('settings.beta_pending')}</p>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
               </div>
             </div>
@@ -235,15 +237,15 @@ export default function SettingsPage() {
         )}
 
         {betaApp?.status === 'approved' && (
-          <div className="premium-card p-3 mb-3 border border-drapera-gold/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(242,201,76,0.1), rgba(242,201,76,0.02))' }}>
+          <div className="premium-card p-3 mb-3 border border-blue-500/20 overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))' }}>
             <div className="flex items-center gap-3 relative z-10">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-drapera-gold to-amber-500 flex items-center justify-center text-sm font-bold text-drapera-dark shrink-0 shadow-gold-glow">
-                B
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <p className="text-sm text-white font-bold">{t('settings.beta_badge')}</p>
-                  <span className="text-xs font-bold text-drapera-gold">#{betaApp.founder_position ?? '?'}</span>
+                  <p className="text-sm text-white font-semibold">{t('settings.beta_badge')}</p>
+                  <span className="text-xs font-bold text-blue-400">#{betaApp.founder_position ?? '?'}</span>
                 </div>
                 <p className="text-[11px] text-gray-500">{t('settings.founder_subtitle')}</p>
               </div>
