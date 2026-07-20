@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const [founder, setFounder] = useState<{ is_founder: boolean; is_beta?: boolean; position?: number; is_admin?: boolean } | null>(null);
   const [betaApp, setBetaApp] = useState<{ status: string; founder_position?: number } | null>(null);
   const [uploadCount, setUploadCount] = useState(0);
-  const [settingsTab, setSettingsTab] = useState<'profile' | 'account'>('profile');
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'social' | 'account'>('profile');
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -257,6 +257,10 @@ export default function SettingsPage() {
             className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'profile' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
             {_('Profilo', 'Profile')}
           </button>
+          <button onClick={() => setSettingsTab('social')}
+            className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'social' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
+            {_('Social', 'Social')}
+          </button>
           <button onClick={() => setSettingsTab('account')}
             className={`flex-1 py-2 text-xs font-semibold transition-colors ${settingsTab === 'account' ? 'bg-drapera-gold/10 text-drapera-gold border-b-2 border-drapera-gold' : 'text-gray-500 hover:text-white'}`}>
             {_('Account', 'Account')}
@@ -324,6 +328,26 @@ export default function SettingsPage() {
               ))}
             </select>
           </div>
+          <div className="flex items-center gap-3 pt-2">
+            <button onClick={handleSave} disabled={saving} className="btn-gold text-sm px-6 py-2.5">
+              {saving ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-3.5 h-3.5 border-2 border-drapera-dark border-t-transparent rounded-full animate-spin" />
+                  ...
+                </span>
+              ) : t('profile.save')}
+            </button>
+            {msg && (
+              <span className={`text-xs ${msg === t('profile.saved') ? 'text-green-400' : 'text-red-400'}`}>
+                {msg}
+              </span>
+            )}
+          </div>
+        </div>
+        )}
+
+        {settingsTab === 'social' && (
+        <div className="premium-card p-6 space-y-5">
           <div className="flex items-center justify-between py-3 px-1">
             <div>
               <p className="text-xs text-gray-400 font-medium">Mostrami nella community</p>
@@ -371,11 +395,6 @@ export default function SettingsPage() {
                 </span>
               ) : t('profile.save')}
             </button>
-            {msg && (
-              <span className={`text-xs ${msg === t('profile.saved') ? 'text-green-400' : 'text-red-400'}`}>
-                {msg}
-              </span>
-            )}
           </div>
         </div>
         )}
