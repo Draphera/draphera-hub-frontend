@@ -413,8 +413,11 @@ export default function SettingsPage() {
         <div className="premium-card p-6 space-y-5">
           <div className="h-px bg-drapera-border/40 my-6" />
           <p className="text-xs text-gray-500 font-medium uppercase tracking-wider mb-3">{_('Badge', 'Badges')}</p>
-          <div className="grid grid-cols-2 gap-3">
-            {badges.map(b => {
+
+          {/* Ordinary badges */}
+          <p className="text-[9px] text-gray-600 font-medium uppercase tracking-wider mb-2">{_('Ordinary', 'Ordinary')}</p>
+          <div className="grid grid-cols-2 gap-3 mb-5">
+            {badges.filter(b => b.id !== 'tetris_secret').map(b => {
               const rarityColors: Record<string, string> = {
                 rare: 'border-blue-500/30 text-blue-400 bg-blue-500/5',
                 extra_rare: 'border-amber-500/30 text-amber-400 bg-amber-500/5',
@@ -456,8 +459,47 @@ export default function SettingsPage() {
               );
             })}
           </div>
-        </div>
-        )}
+
+          {/* Secret badges */}
+          <p className="text-[9px] text-gray-700 font-medium uppercase tracking-wider mb-2">{_('???', '???')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            {badges.filter(b => b.id === 'tetris_secret').map(b => {
+              const rarityColors: Record<string, string> = {
+                rare: 'border-blue-500/30 text-blue-400 bg-blue-500/5',
+                extra_rare: 'border-amber-500/30 text-amber-400 bg-amber-500/5',
+                ultra_secret: 'border-purple-500/30 text-purple-400 bg-purple-500/5',
+                legendary: 'border-cyan-500/30 text-cyan-400 bg-cyan-500/5',
+                mythic: 'border-red-500/30 text-red-400 bg-red-500/5',
+              };
+              const iconSvgs: Record<string, string> = {
+                triangle: 'M12 2L2 22h20L12 2z',
+              };
+              return (
+                <div key={b.id} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border ${b.unlocked ? rarityColors[b.rarity] || 'border-gray-500/20 text-gray-400' : 'border-drapera-border/30 text-gray-700 opacity-50'}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${b.unlocked ? 'bg-gradient-to-br from-blue-500/20 to-transparent' : ''}`}>
+                    {!b.unlocked ? (
+                      <span className="text-[10px] font-bold text-gray-700">?</span>
+                    ) : (
+                      <svg className="w-4 h-4 text-current" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d={iconSvgs.triangle} />
+                      </svg>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={`text-xs font-semibold truncate ${b.unlocked ? 'text-white' : 'text-gray-600'}`}>
+                      {!b.unlocked ? '???' : b.name}
+                    </p>
+                    <p className={`text-[8px] uppercase tracking-wider ${b.unlocked ? 'opacity-60 text-purple-400' : 'text-gray-700'}`}>
+                      {b.unlocked ? 'Ultra Secret' : '???'}
+                    </p>
+                  </div>
+                  {!b.unlocked && (
+                    <svg className="w-3 h-3 ml-auto text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
         {settingsTab === 'account' && (
 
