@@ -345,28 +345,28 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
   }, [wheelZoom, bounds]);
 
   const gridLines: JSX.Element[] = [];
-  for (let i = -2000; i < 2000; i += gridSize) {
+  for (let i = 0; i < 2000; i += gridSize) {
     gridLines.push(
-      <line key={`gv${i}`} x1={i} y1={-2000} x2={i} y2={2000} stroke={gridColor} strokeWidth={0.5} />,
-      <line key={`gh${i}`} x1={-2000} y1={i} x2={2000} y2={i} stroke={gridColor} strokeWidth={0.5} />,
+      <line key={`gv${i}`} x1={i} y1={0} x2={i} y2={2000} stroke={gridColor} strokeWidth={0.5} />,
+      <line key={`gh${i}`} x1={0} y1={i} x2={2000} y2={i} stroke={gridColor} strokeWidth={0.5} />,
     );
   }
 
-  // Ruler marks
-  const rulerColor = invertColors ? 'rgba(255,255,255,0.15)' : 'rgba(200,204,212,0.2)';
-  const rulerTextColor = invertColors ? 'rgba(255,255,255,0.25)' : 'rgba(200,204,212,0.3)';
+  // Ruler marks (anchored to viewer edges, outside content transform)
+  const rulerColor = invertColors ? 'rgba(255,255,255,0.2)' : 'rgba(200,204,212,0.25)';
+  const rulerTextColor = invertColors ? 'rgba(255,255,255,0.3)' : 'rgba(200,204,212,0.35)';
   const rulerLines: JSX.Element[] = [];
   const rulerStep = gridSize * 2;
-  for (let i = -2000; i < 2000; i += rulerStep) {
-    // X axis ruler (bottom)
+  for (let i = 0; i < 2000; i += rulerStep) {
+    // X axis ruler (bottom edge of viewer)
     rulerLines.push(
-      <line key={`rx${i}`} x1={i} y1={VIEW_H - 8} x2={i} y2={VIEW_H} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`tx${i}`} x={i} y={VIEW_H - 10} fill={rulerTextColor} fontSize={6} textAnchor="middle" fontFamily="monospace">{i}</text>,
+      <line key={`rx${i}`} x1={i} y1={viewH} x2={i} y2={viewH + 10} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`tx${i}`} x={i} y={viewH + 18} fill={rulerTextColor} fontSize={7} textAnchor="middle" fontFamily="monospace">{i}</text>,
     );
-    // Y axis ruler (left)
+    // Y axis ruler (left edge of viewer)
     rulerLines.push(
-      <line key={`ry${i}`} x1={0} y1={i} x2={8} y2={i} stroke={rulerColor} strokeWidth={0.5} />,
-      <text key={`ty${i}`} x={10} y={i + 2} fill={rulerTextColor} fontSize={6} textAnchor="start" fontFamily="monospace">{i}</text>,
+      <line key={`ry${i}`} x1={0} y1={i} x2={-8} y2={i} stroke={rulerColor} strokeWidth={0.5} />,
+      <text key={`ty${i}`} x={-10} y={i + 2} fill={rulerTextColor} fontSize={7} textAnchor="end" fontFamily="monospace">{i}</text>,
     );
   }
 
@@ -1018,22 +1018,21 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
             <path d="M 1 0 L 12 5 L 1 10 L 3 5 z" fill="#F2C94C" />
           </marker>
         </defs>
-        {data ? (
-          <>
-          <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
-             {contentTransform ? (
-               <g transform={contentTransform}>
-                 {!cleanView && gridLines}
-                 {renderPaths()}
-               </g>
-             ) : (
-               <>{!cleanView && gridLines}{renderPaths()}
-               </>
-             )}
-             {!cleanView && rulerLines}
-             {!cleanView && renderMeasurement()}
-            {/* Selection rectangle during drag */}
-            {dragRect && (
+         {data ? (
+           <>
+           <g transform={`translate(${pan.x}, ${pan.y}) scale(${effectiveZoom})`}>
+              {contentTransform ? (
+                <g transform={contentTransform}>
+                  {!cleanView && gridLines}
+                  {renderPaths()}
+                </g>
+              ) : (
+                <>{!cleanView && gridLines}{renderPaths()}
+                </>
+              )}
+              {!cleanView && renderMeasurement()}
+             {/* Selection rectangle during drag */}
+             {dragRect && (
               <rect x={dragRect.x} y={dragRect.y} width={dragRect.w} height={dragRect.h}
                 fill="rgba(242,201,76,0.08)" stroke="#F2C94C" strokeWidth={1.5 / effectiveZoom} strokeDasharray="4 3" />
             )}
@@ -1062,6 +1061,7 @@ export default function ViewerCanvas({ data, zoom, onZoomChange, invertColors, s
               );
             })}
           </g>
+          {!cleanView && rulerLines}
           {!cleanView && renderTackMarks()}
           {!cleanView && renderMeasureMarkers()}
           {placementBounds && (() => {
